@@ -1,13 +1,13 @@
 # Site settings
 title: My Blog
-SEOTitle: 敬方的个人博客 | JF Blog
+SEOTitle: LiangK的个人博客 | LK Blog
 header-img: img/post-bg-desk.jpg
-email: wangpengcheng2018@gmail.com
+email: KK@gmail.com
 description: "Leaning and function with your new object."
-keyword: "JF, JF Blog, 敬方的个人博客, OpenCV, 敬方, Qt, C++, 流媒体，计算机视觉，高性能计算"
-url: "https://wangpengcheng.github.io/"          # your host, for absolute URL
+keyword: "KK, LiangK Blog, LiangK的个人博客, OpenCV, Qt, C++, 流媒体，计算机视觉，高性能计算"
+url: "https://1915419156.github.io/myblog.github.io/"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
-github_repo: "https://github.com/wangpengcheng/wangpengcheng.github.io.git" # you code repository
+github_repo: "https://github.com/1915419156/myblog.github.io" # you code repository
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
@@ -20,8 +20,7 @@ sidebar-avatar: /img/avatar_m.jpg      # use absolute URL, seeing it's used in b
 RSS: false
 # weibo_username:     qiubaiying
 zhihu_username:     
-github_username:    wangpengcheng
-facebook_username:  wangpengcheng
+github_username:    KK
 jianshu_username:   
 #twitter_username:   qiubaiying
 
@@ -70,9 +69,9 @@ gitalk:
   enable: true    #是否开启Gitalk评论
   clientID: 0224d5b04da044c201d4                            #生成的clientID
   clientSecret: ccd26d0c1d8d4cc3377be7cb388f854ad2b4e5d0    #生成的clientSecret
-  repo: wangpengcheng.github.io    #仓库名称
-  owner: wangpengcheng    #github用户名
-  admin: wangpengcheng
+  repo: myblog.github.io    #仓库名称
+  owner: 1915419156    #github用户名
+  admin: 1915419156
   distractionFreeMode: true #是否启用类似FB的阴影遮罩
 
 
@@ -108,12 +107,6 @@ service-worker: true
 # Friends
 friends: [
     {
-        title: "WY",
-        href: "http://zhengwuyang.com"
-    },{
-        title: "简书·JF",
-        href: "http://www.jianshu.com/u/e71990ada2fd"
-    },{
         title: "Apple",
         href: "https://apple.com"
     },{
