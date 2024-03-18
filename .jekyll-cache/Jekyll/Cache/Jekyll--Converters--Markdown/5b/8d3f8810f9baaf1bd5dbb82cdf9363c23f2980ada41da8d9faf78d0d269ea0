@@ -1,0 +1,2 @@
+I"�<p><code class="language-plaintext highlighter-rouge">in1</code>和<code class="language-plaintext highlighter-rouge">in2</code>必须读取相同类型。如果他们都是尾后迭代器，或绑定到相同输入，则二者相等</p>
+:ET

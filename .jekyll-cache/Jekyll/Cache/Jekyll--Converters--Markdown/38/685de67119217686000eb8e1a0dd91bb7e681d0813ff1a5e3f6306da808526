@@ -1,0 +1,1505 @@
+I"�}<blockquote>
+  <p>2019-07-17 22:16:53</p>
+</blockquote>
+
+<h2 id="第八章-并发代码设计">第八章 并发代码设计</h2>
+
+<h3 id="81-线程间划分工作的技术">8.1 线程间划分工作的技术</h3>
+
+<p>一般的线程划分会，直接将数据划分线程；但是最后的多线程之间的结果数据同步会造成较多的麻烦，数据和算法符划分方式，在多线程编程中较为重要。</p>
+
+<h4 id="812-递归划分">8.1.2 递归划分</h4>
+
+<p>第四章中的<code class="language-plaintext highlighter-rouge">std::async()</code>方式的快速排序，在对于大量数据进行排序的时候，每一层递归都会产生一个新线程，最终会产生大量的线程；线程的性能开销反而会让程序的执行时间上升，不如单线程的快速排序。</p>
+
+<p>可以通过将数据打包后，交给固定线程处理，或者使用<code class="language-plaintext highlighter-rouge">std::thread::hardware_concurrency()</code>函数来确定线程的数量。</p>
+
+<p>使用栈的并行快速排序算法–等待数据块排序</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">sorter</span>
+<span class="p">{</span>
+    <span class="c1">//准备排序的数据块</span>
+
+    <span class="k">struct</span> <span class="nc">chunk_to_sort</span>
+    <span class="p">{</span>
+        <span class="c1">//排序数据</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
+        <span class="c1">//预期结果</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">promise</span><span class="p">;</span>
+    <span class="p">};</span>
+    <span class="c1">//线程安全的排序栈</span>
+
+    <span class="n">thread_safe_stack</span><span class="o">&lt;</span><span class="n">chunk_to_sort</span><span class="o">&gt;</span> <span class="n">chunks</span><span class="p">;</span>
+    <span class="c1">//工作线程列表</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">;</span>
+    <span class="c1">//最大线程数量</span>
+
+    <span class="kt">unsigned</span> <span class="k">const</span> <span class="n">max_thread_count</span><span class="p">;</span>
+    <span class="c1">//原子变量，是否达到数据末尾</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">end_of_data</span><span class="p">;</span>
+
+    <span class="n">sorter</span><span class="p">()</span><span class="o">:</span><span class="n">max_thread_count</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">hardware_concurrency</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">end_of_data</span><span class="p">(</span><span class="nb">false</span><span class="p">){}</span>
+    <span class="o">~</span><span class="n">sorter</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">end_of_data</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span>
+        <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">threads</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//等待线程结束</span>
+
+            <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">join</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="kt">void</span> <span class="n">try_sort_chunk</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//获取排序线程</span>
+
+        <span class="n">boost</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">chunk_to_sort</span> <span class="o">&gt;</span> <span class="n">chunk</span><span class="o">=</span><span class="n">chunks</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//开始排序</span>
+
+            <span class="n">sort_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">chunk_data</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">chunk_data</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="n">chunk_data</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+        <span class="c1">//拷贝数据的头指针</span>
+
+        <span class="n">result</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">chunk_data</span><span class="p">,</span><span class="n">chunk_data</span><span class="p">.</span><span class="n">begin</span><span class="p">());</span>
+        <span class="c1">//获取开头的数据</span>
+
+        <span class="n">T</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">partition_val</span><span class="o">=*</span><span class="n">result</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+        <span class="c1">//根据partition_val进行分组，获取中间分组的迭代器</span>
+
+        <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">divide_point</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">partition</span><span class="p">(</span><span class="n">chunk_data</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">chunk_data</span><span class="p">.</span><span class="n">end</span><span class="p">(),[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">T</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">val</span><span class="p">){</span><span class="k">return</span> <span class="n">val</span><span class="o">&lt;</span><span class="n">partition_val</span><span class="p">;});</span>
+        <span class="n">chunk_to_sort</span> <span class="n">new_lower_chunk</span><span class="p">;</span>
+        <span class="c1">//截取分组的前半段到new_lower_chunk</span>
+
+        <span class="n">new_lower_chunk</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span><span class="n">new_lower_chunk</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+            <span class="n">chunk_data</span><span class="p">,</span>
+            <span class="n">chunk_data</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span>
+            <span class="n">divide_point</span>
+            <span class="p">);</span>
+        <span class="c1">//获取new_chunk的future值</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">new_lower</span><span class="o">=</span><span class="n">new_lower_chunk</span><span class="p">.</span><span class="n">promise</span><span class="p">.</span><span class="n">get_future</span><span class="p">();</span>
+        <span class="c1">//压入排序栈</span>
+
+        <span class="n">chunks</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">new_lower_chunk</span><span class="p">));</span>
+        <span class="c1">//如果线程小于最大线程数</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">threads</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">&lt;</span><span class="n">max_thread_count</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//创建排序线程</span>
+
+            <span class="n">threads</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sorter</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">sort_thread</span><span class="p">,</span><span class="k">this</span><span class="p">));</span>
+
+        <span class="p">}</span>
+        <span class="c1">//获取大于的一部分，并返回排序结果</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">new_higher</span><span class="p">(</span><span class="n">do_sort</span><span class="p">(</span><span class="n">chunk_data</span><span class="p">));</span>
+        <span class="c1">//接上new_higher</span>
+
+        <span class="n">result</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="n">new_higher</span><span class="p">);</span>
+        <span class="c1">//循环执行排序线程，直到结束</span>
+
+        <span class="k">while</span><span class="p">(</span><span class="n">new_lower</span><span class="p">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">!=</span><span class="n">std</span><span class="o">::</span><span class="n">future_status</span><span class="o">::</span><span class="n">ready</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">try_sort_chunk</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="c1">//将前面排序结果放到result中</span>
+
+        <span class="n">result</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">new_lower</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+    <span class="p">}</span>
+    <span class="kt">void</span> <span class="n">sort_thread</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">end_of_data</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//没有到达数据末尾，尝试快排</span>
+
+            <span class="n">try_sort_chunk</span><span class="p">();</span>
+            <span class="c1">//线程休眠</span>
+
+            <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">yield</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="p">};</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">parallel_quick_sort</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">input</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">input</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">sorter</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">s</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">s</span><span class="p">.</span><span class="n">do_sort</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<h4 id="813-通过人去类型划分工作">8.1.3 通过人去类型划分工作</h4>
+
+<p>当通过任务类型对线程间的任务进行划分时,不应该让线程处于完全隔离的状态。当多个输入数据集需要使用同样的操作序列,可以将序列中的操作分成多个阶段,来让每个线程执行。</p>
+
+<p>这里可以使用cpu的流水先工作方式，对于CPU数据的处理有加好的平均性能</p>
+
+<h3 id="82-影响并发代码性能的因素">8.2 影响并发代码性能的因素</h3>
+
+<h4 id="处理器数量">处理器数量</h4>
+
+<p>首先线程是操作系统上的概念，在CPU中是不存在线程这个说法的，所以需要注意的时，在多线程编程，不等同于多核编程，中间操作系统起到了非常重要的作用。之间的调度并不明了。需要谨慎使用。</p>
+
+<h4 id="822-数据争用与乒乓缓存">8.2.2 数据争用与乒乓缓存</h4>
+
+<p>当两个线程并发的在不同处理器上执行时，对同意数据进行读取，通常不会出现问题；数据将会拷贝到每个线程的缓存中，可以让两个处理器同事进行处理。但是当有线程对数据进行修改的时候，修改数据需要更新到其它核芯的缓存中取，需要耗费一定的时间。通常会让工作中的CPU进行等待，直到缓存中的数据得到更新。</p>
+
+<p><strong>高竞争(high contention)</strong>:一个处理器准备更新这个值,另一个处理器正在修改这个值,所以该处理器就不得不等,待第二个处理器更新完成,并且完成更新传递时,才能执行更新。
+<strong>低竞争(low contention)</strong>: 如果处理器很少需要相互等待。</p>
+
+<p><strong>乒乓缓存(cache ping-pong)</strong>: 数据在每个缓存中传递若干次。</p>
+
+<p>在多线程编程中，互斥量，通常需要另外一个线程将数据进行转移，保证处理器之间的互斥性。当线程进行完修改后，其它线程对互斥量进行修改，并对线程进行解锁，再将互斥数据传递到下一个需要互斥量的线程上去。这个过程就是互斥量的获取和释放。</p>
+
+<p><strong>当多个线程高竞争访问时，会造成大量的资源浪费</strong></p>
+
+<p>注意：</p>
+
+<ul>
+  <li>互斥量的竞争通常不同于原子操作的竞争,最简单的原因是,互斥量通常使用操作系统级别的序列化线程,而非处理器级别的。因此不会影响操作系统中的其它线程，但是会影响本程序的线程。</li>
+  <li>尽量避免乒乓现象，减少两个线程对同一个内存位置的竞争。</li>
+</ul>
+
+<p><strong>缓存行</strong>：由处理器cache大小，决定的一次读取内存块的一行，内存块通常大小为32或64字节。在内存中称为缓存行(cache line);</p>
+
+<p><strong>伪共享</strong>: 即使给定内存位置被一个线程所访问,可能还是会有乒乓缓存的存在,是因为另一种叫做伪共享(false sharing)的效应。即使数据存储在缓存行中，多个线程对数据中的成员进行访问时，硬件缓存还是会产生乒乓缓存。缓存行是多个线程共享的，但实际并不被多个CPU共享，因此使用伪共享来声明这种方式。</p>
+
+<p><strong>伪共享发生的原因</strong>: 某个线程所要访问的数据过于接近另一线程的数据,另一个是与数据布局相关的陷阱会直接影响单线程的性能。
+<strong>避免伪共享</strong>：避免伪共享的方法是，实现数据分离，努力让不同线程访问不同缓存行。</p>
+
+<h4 id="824-紧凑的数据">8.2.4 紧凑的数据</h4>
+
+<p>当CPU中线程的关键数据分散在内存中时，会增加内存访问的次数和内存的延迟。因此尽量紧凑的内存设计会降低延迟。</p>
+
+<p>当处理器切换线程时，对不同内存上的数据进行重新加载(当不同线程使用的数据跨越了多个缓存行时)，而非对缓存中的数据保持原样(当线程中的数据都在同一缓存行时)。</p>
+
+<p>当线程数量对一二内核处理器数量，操作系统可能也会选择将一个线程更换芯核，缓存行从一个内核上，转移到另外一个内核上；这样对性能损害比较大。</p>
+
+<h4 id="825--超额认购和频繁的任务切换">8.2.5  超额认购和频繁的任务切换</h4>
+
+<p>当有超级多的线程准备运行时(非等待状态),任务切换问题就会频繁发生。这个问题我们之前也接触过:超额认购。</p>
+
+<h3 id="83-为多线程性能设计数据结构">8.3 为多线程性能设计数据结构</h3>
+
+<p>多线程性能设计考虑因素：</p>
+
+<ul>
+  <li>竞争</li>
+  <li>伪共享</li>
+  <li>数据距离</li>
+</ul>
+
+<h4 id="831-为复杂操作划分数组元素">8.3.1 为复杂操作划分数组元素</h4>
+
+<p>这里主要探究的是矩阵的乘法问题，比较建议的是将矩阵进行分块来，进行计算</p>
+
+<h4 id="832-其它数据结构中的数据访问模式">8.3.2 其它数据结构中的数据访问模式</h4>
+
+<p>当使用的互斥量和数据项在内存中很接近，对于一个需要获取互斥量的线程来说，比较理想；所需要的数据可能早就存入处理器的缓存中了；但是当其他线程尝试锁住互斥量时，线程就能对对应的数据进行访问。对于相同位置的操作都需要先获取互斥量，如果互斥量已锁，那就会调用系统内核。而原子的互斥量操作(“读，写，改”)，可能会让数据存储在缓存中，让线程获取的互斥量变得毫无作用。当互斥量共享同一缓存行时，其中存储的是线程已使用的数据，这时拥有互斥量的线程会遭受到性能打击，因为其他线程也在尝试锁住互斥量。</p>
+
+<h3 id="84-设计并发代码的注意事项">8.4 设计并发代码的注意事项</h3>
+
+<p>注意代码在物理硬件改变时的可扩展性，避免因为物理硬件的改变，造成代码错误。</p>
+
+<h4 id="841-并行算法中的异常安全">8.4.1 并行算法中的异常安全</h4>
+
+<p>在串行算法中抛出一个异常，算法只需要考虑其本身的处理，多线程中需要考虑到多个线程之间的相互影响。</p>
+
+<p>之前实现的线程安全的求和函数在执行线程创建时并不安全。因此在此基础之上改良线程安全函数。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+
+<span class="k">class</span> <span class="nc">join_threads</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;&amp;</span> <span class="n">threads</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="k">explicit</span> <span class="n">join_threads</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;&amp;</span> <span class="n">threads_</span><span class="p">)</span><span class="o">:</span><span class="n">threads</span><span class="p">(</span><span class="n">threads_</span><span class="p">){}</span>
+    <span class="o">~</span><span class="n">join_threads</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">threads</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">joinable</span><span class="p">())</span>
+                <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">join</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">iterator</span> <span class="p">,</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">accumulate_block</span>
+<span class="p">{</span>
+    <span class="c1">//构造操作</span>
+
+    <span class="n">T</span> <span class="k">operator</span><span class="p">()(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//返回所有数据和</span>
+
+        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">T</span><span class="p">());</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">T</span> <span class="nf">parallel_accumulate</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">T</span> <span class="n">init</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">init</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">min_pre_thread</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">max_thread</span><span class="o">=</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="n">min_pre_thread</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">min_pre_thread</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">hardware_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">hardware_concurrency</span><span class="p">();</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">num_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">hardware_threads</span><span class="o">!=</span><span class="mi">0</span><span class="o">?</span><span class="n">hardware_threads</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span><span class="n">max_threads</span><span class="p">);</span>
+    <span class="c1">//分块的大小</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">block_size</span><span class="o">=</span><span class="n">length</span><span class="o">/</span><span class="n">num_threads</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">futures</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="c1">//安全线程类</span>
+
+    <span class="n">join_threads</span> <span class="n">joiner</span><span class="p">(</span><span class="n">threads</span><span class="p">);</span>
+
+
+    <span class="n">Iterator</span> <span class="n">block_start</span><span class="o">=</span><span class="n">first</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Iterator</span> <span class="n">block_end</span><span class="o">=</span><span class="n">block_start</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">advance</span><span class="p">(</span><span class="n">block_end</span><span class="p">,</span><span class="n">block_size</span><span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">packaged_tack</span><span class="o">&lt;</span><span class="n">T</span><span class="p">(</span><span class="n">Iterator</span><span class="p">,</span><span class="n">Iterator</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">(</span><span class="n">accumulate_block</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">());</span>
+        <span class="n">futures</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">task</span><span class="p">.</span><span class="n">get_future</span><span class="p">();</span>
+        <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task</span><span class="p">),</span><span class="n">block_start</span><span class="p">,</span><span class="n">block_end</span><span class="p">);</span>
+        <span class="n">block_start</span><span class="o">=</span><span class="n">block_end</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">T</span> <span class="n">last_result</span><span class="o">=</span><span class="n">accumulate_block</span><span class="p">()(</span><span class="n">block_start</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span>
+        <span class="kr">thread</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span>
+        <span class="kr">thread</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">mem_fn</span><span class="p">(</span><span class="o">&amp;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">join</span><span class="p">)</span>
+        <span class="p">);</span>
+
+    <span class="n">T</span> <span class="n">result</span><span class="o">=</span><span class="n">init</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">result</span><span class="o">+=</span><span class="n">futures</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">get</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="n">result</span><span class="o">+=</span><span class="n">last_result</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="842-可扩展性和amdahl定律">8.4.2 可扩展性和Amdahl定律</h4>
+
+<p>将程序划分为”串行”和”并行”部分。可以使用下面的公式对程序性能的增益进行估计：</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-18-20-56-36.png" alt="" /></p>
+
+<p>其中：</p>
+
+<ul>
+  <li>fs表示串行时间</li>
+  <li>P表示性能增益</li>
+  <li>N处理器数量</li>
+</ul>
+
+<h4 id="843--使用多线程隐藏延迟">8.4.3  使用多线程隐藏延迟</h4>
+
+<p>比起添加线程数量让其对处理器进行充分利用,有时也要在增加线程的同时,确保外部事件被及时的处理,以提高系统的响应能力。</p>
+
+<h4 id="844--使用并发提高响应能力">8.4.4  使用并发提高响应能力</h4>
+
+<p>通常使用专用的GUI线程来处理这些事件。线程可以通过简单的机制进行通讯，而不是将时间处理代码和任务代码混在一起，GUI线程如下</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">task_thread</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span>   <span class="n">task_cancelled</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">gui_thread</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">event_data</span>  <span class="n">event</span><span class="o">=</span><span class="n">get_event</span><span class="p">();</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">type</span><span class="o">==</span><span class="n">quit</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="n">process</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">task</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">task_complete</span><span class="p">()</span><span class="o">&amp;&amp;!</span><span class="n">task_cancelled</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">do_next_operation</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">task_cancelled</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">perform_cleanup</span><span class="p">();</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="n">post_gui_event</span><span class="p">(</span><span class="n">task_complete</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">process</span><span class="p">(</span><span class="n">event_data</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">event</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">switch</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">type</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">case</span> <span class="n">start_task</span><span class="p">:</span>
+                <span class="n">task_cancelled</span><span class="o">=</span><span class="nb">false</span><span class="p">;</span>
+                <span class="n">task_thread</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="n">task</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="n">stop_task</span><span class="p">:</span>
+                <span class="n">task_cancelled</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span>
+                <span class="n">task_thread</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="n">task_complete</span><span class="p">:</span>
+                <span class="n">task_thread</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+                <span class="n">display_results</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="nl">default:</span>
+                <span class="c1">//...</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="85-在实践中设计并发代码">8.5 在实践中设计并发代码</h3>
+
+<h4 id="851-并行实现stdfor_each">8.5.1 并行实现:<code class="language-plaintext highlighter-rouge">std::for_each</code></h4>
+
+<p>for_each主要是容器类的内部迭代，因此主要是进行操作时候的存取锁；可以通过使用<code class="language-plaintext highlighter-rouge">std::packaged_task</code>和<code class="language-plaintext highlighter-rouge">std::future</code>机制对线程中的异常进行转移。下面是两种方式实现的<code class="language-plaintext highlighter-rouge">for_each</code></p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//使用 std::packaged_task和std::future</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">Func</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">parallel_for_each</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">Func</span> <span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">min_pre_thread</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">max_threads</span><span class="o">=</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="n">min_per_thread</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">min_pre_thread</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">hardware_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">hardware_concurrency</span><span class="p">();</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">num_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">hardware_threads</span><span class="o">!=</span><span class="mi">0</span><span class="o">?</span><span class="n">hardware_threads</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span><span class="n">max_threads</span><span class="p">);</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">block_size</span><span class="o">=</span><span class="n">length</span><span class="o">/</span><span class="n">num_threads</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">futures</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">join_threads</span> <span class="n">joiner</span><span class="p">(</span><span class="n">threads</span><span class="p">);</span>
+    <span class="n">Iterator</span> <span class="n">block_start</span><span class="o">=</span><span class="n">first</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Iterator</span> <span class="n">block_end</span><span class="o">=</span><span class="n">block_start</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">advance</span><span class="p">(</span><span class="n">block_end</span><span class="p">,</span><span class="n">block_size</span><span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">packaged_task</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">(</span>
+            <span class="p">[</span><span class="o">=</span><span class="p">](){</span>
+                <span class="c1">//执行相关函数</span>
+
+                <span class="n">std</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">block_start</span><span class="p">,</span><span class="n">block_end</span><span class="p">,</span><span class="n">f</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="p">);</span>
+        <span class="n">futures</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">task</span><span class="p">.</span><span class="n">get_future</span><span class="p">();</span>
+        <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task</span><span class="p">));</span>
+        <span class="n">block_start</span><span class="o">=</span><span class="n">block_end</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">block_start</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">f</span><span class="p">);</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">futures</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">get</span><span class="p">();</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+
+<span class="c1">//使用 std::async实现</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span>   <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span>   <span class="nc">Func</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">parallel_for_each</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">Func</span> <span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">min_per_thread</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">length</span><span class="o">&lt;</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">min_per_thread</span><span class="p">))</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">f</span><span class="p">);</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="n">Iterator</span> <span class="k">const</span> <span class="n">mid_point</span><span class="o">=</span><span class="n">first</span><span class="o">+</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">first_half</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">async</span><span class="p">(</span>
+            <span class="o">&amp;</span><span class="n">parallel_for_each</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="p">,</span><span class="n">Func</span><span class="o">&gt;</span><span class="p">,</span>
+            <span class="n">first</span><span class="p">,</span><span class="n">mid_point</span><span class="p">,</span>
+            <span class="n">f</span>
+            <span class="p">);</span>
+            <span class="n">parallel_for_each</span><span class="p">(</span><span class="n">mid_point</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">f</span><span class="p">);</span>
+            <span class="n">first_half</span><span class="p">.</span><span class="n">get</span><span class="p">();</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+
+
+</code></pre></div></div>
+<h3 id="852-并行实现-stdfind">8.5.2 并行实现: std::find</h3>
+
+<p>find需要在找到时，中断其它线程，可以使用一个原子变量作为标示，可以使用 <code class="language-plaintext highlighter-rouge">std::packaged_task</code>或者<code class="language-plaintext highlighter-rouge">std::promise</code>对异常和最终值进行设置;现在使用<code class="language-plaintext highlighter-rouge">std::promise</code>的方法如下：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">MatchType</span><span class="p">&gt;</span>
+<span class="c1">//并行查找函数</span>
+
+<span class="n">Iterator</span> <span class="nf">parallel_find</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">MatchType</span> <span class="n">match</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">find_element</span>
+    <span class="p">{</span>
+        <span class="c1">//重载操作符</span>
+
+        <span class="kt">void</span> <span class="k">operator</span><span class="p">()(</span>
+            <span class="n">Iterator</span> <span class="n">begin</span><span class="p">,</span>
+            <span class="n">Iterator</span> <span class="n">end</span><span class="p">,</span>
+            <span class="n">MatchType</span> <span class="n">match</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="o">&gt;*</span> <span class="n">result</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;*</span>  <span class="n">done_flag</span>
+            <span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">try</span>
+            <span class="p">{</span>
+                <span class="c1">//循环查找是否相等</span>
+
+                <span class="k">for</span><span class="p">(;(</span><span class="n">begin</span><span class="o">!=</span><span class="n">end</span><span class="p">)</span><span class="o">&amp;&amp;!</span><span class="n">done_flag</span><span class="o">-&gt;</span><span class="n">load</span><span class="p">();</span><span class="o">++</span><span class="n">begin</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="k">if</span><span class="p">(</span><span class="o">*</span><span class="n">begin</span><span class="o">==</span><span class="n">match</span><span class="p">)</span>
+                    <span class="p">{</span>
+                        <span class="n">result</span><span class="o">-&gt;</span><span class="n">set_value</span><span class="p">(</span><span class="n">begin</span><span class="p">);</span>
+                        <span class="n">done_flag</span><span class="o">-&gt;</span><span class="n">store</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+                        <span class="k">return</span><span class="p">;</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span><span class="k">catch</span><span class="p">(...)</span>
+            <span class="p">{</span>
+                <span class="k">try</span>
+                <span class="p">{</span>
+                    <span class="c1">//输出错误信息</span>
+
+                    <span class="n">result</span><span class="o">-&gt;</span><span class="n">set_exception</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">current_exception</span><span class="p">());</span>
+                    <span class="n">done_flag</span><span class="o">-&gt;</span><span class="n">store</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+                <span class="p">}</span><span class="k">catch</span><span class="p">(...){}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">};</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">last</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">min_per_thread</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">max_threads</span><span class="o">=</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="n">min_per_thread</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">min_per_thread</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">hardware_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">hardware_concurrency</span><span class="p">();</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">num_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">hardware_threads</span><span class="o">!=</span><span class="mi">0</span><span class="o">?</span><span class="n">hardware_threads</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span><span class="n">max_threads</span><span class="p">);</span>
+    <span class="c1">//每个线程数据块的大小</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">block_size</span><span class="o">=</span><span class="n">length</span><span class="o">/</span><span class="n">num_threads</span><span class="p">;</span>
+    <span class="c1">//result结果</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+    <span class="c1">//是否查找到的标志位</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">done_flag</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+    <span class="c1">//线程vector</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">{</span>
+        <span class="c1">//添加和启动线程</span>
+
+        <span class="n">join_threads</span> <span class="n">joiner</span><span class="p">(</span><span class="n">threads</span><span class="p">);</span>
+        <span class="c1">//迭代创建线程</span>
+
+        <span class="n">Iterator</span> <span class="n">block_start</span><span class="o">=</span><span class="n">first</span><span class="p">;</span>
+        <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Iterator</span> <span class="n">block_end</span><span class="o">=</span><span class="n">block_start</span><span class="p">;</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">advance</span><span class="p">(</span><span class="n">block_end</span><span class="p">,</span><span class="n">block_size</span><span class="p">);</span>
+            <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span>
+                <span class="n">find_element</span><span class="p">(),</span>
+                <span class="n">block_end</span><span class="p">,</span>
+                <span class="n">match</span><span class="p">,</span>
+                <span class="o">&amp;</span><span class="n">result</span><span class="p">,</span>
+                <span class="o">&amp;</span><span class="n">done_flag</span>
+                <span class="p">);</span>
+            <span class="n">block_start</span><span class="o">=</span><span class="n">block_end</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">done_flag</span><span class="p">.</span><span class="n">load</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="n">last</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">.</span><span class="n">get_future</span><span class="p">().</span><span class="n">get</span><span class="p">();</span>
+    <span class="p">}</span>
+</code></pre></div></div>
+
+<p>使用<code class="language-plaintext highlighter-rouge">std::async</code>实现的并行find算法</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">MatchType</span><span class="p">&gt;</span>
+<span class="n">Iterator</span> <span class="nf">parallel_find_impl</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> 
+<span class="n">last</span><span class="p">,</span><span class="n">MatchType</span> <span class="n">match</span><span class="p">,</span><span class="n">ne</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">try</span>
+    <span class="p">{</span>
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">min_per_thread</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+        <span class="c1">//小于最小线程数量的两倍直接查找</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">length</span><span class="o">&lt;</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">min_per_thread</span><span class="p">))</span>
+        <span class="p">{</span>
+            <span class="k">for</span><span class="p">(;(</span><span class="n">first</span><span class="o">!=</span><span class="n">last</span><span class="p">)</span><span class="o">&amp;&amp;!</span><span class="n">done</span><span class="p">.</span><span class="n">load</span><span class="p">();</span><span class="o">++</span><span class="n">first</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="o">==</span><span class="n">match</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="n">done</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span>
+                    <span class="k">return</span>  <span class="n">first</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="n">last</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="c1">//中间部分的迭代器</span>
+
+            <span class="n">Iterator</span> <span class="k">const</span> <span class="n">mid_point</span><span class="o">=</span><span class="n">first</span><span class="o">+</span><span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">);</span>
+            <span class="c1">//获取中间到最后位置的异步执行的结果</span>
+
+            <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="o">&gt;</span> <span class="n">async_result</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">async</span><span class="p">(</span><span class="o">&amp;</span><span class="n">parallel_find_impl</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="p">,</span><span class="n">MatchType</span><span class="o">&gt;</span><span class="p">,</span><span class="n">mid_point</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">match</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">ref</span><span class="p">(</span><span class="n">done</span><span class="p">));</span>
+            <span class="c1">//直接获取当前查找的结果</span>
+
+            <span class="n">Iterator</span> <span class="k">const</span> <span class="n">direct_result</span><span class="o">=</span><span class="n">parallel_find_impl</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">mid_point</span><span class="p">,</span><span class="n">match</span><span class="p">,</span><span class="n">done</span><span class="p">);</span>
+            <span class="c1">//查找结果是否为中间指针</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">direct_result</span><span class="o">==</span><span class="n">mid_point</span><span class="p">)</span><span class="o">?</span><span class="n">async_result</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="o">:</span><span class="n">direct_result</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">catch</span><span class="p">(...)</span>
+        <span class="p">{</span>
+            <span class="n">done</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span>
+            <span class="k">throw</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">//查找函数</span>
+
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">MatchType</span><span class="p">&gt;</span>
+    <span class="n">Iterator</span> <span class="n">parallel_find</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">MatchType</span> <span class="n">match</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">done</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">parallel_find_impl</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">match</span><span class="p">,</span><span class="n">done</span><span class="p">);</span>
+    <span class="p">}</span>
+
+
+
+
+
+</code></pre></div></div>
+
+<h4 id="853-并行实现stdpartial_sum">8.5.3 并行实现：<code class="language-plaintext highlighter-rouge">std::partial_sum</code></h4>
+
+<p>使用划分的方式实现并行的计算部分和</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span>   <span class="nc">Iterator</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">parallel_partial_sum</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//迭代器类型</span>
+
+    <span class="k">typedef</span> <span class="n">tycodepename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">value_type</span> <span class="n">value_type</span><span class="p">;</span>
+    <span class="c1">//定义处理单元类</span>
+
+    <span class="k">struct</span>  <span class="nc">process_chunk</span>
+        <span class="p">{</span>
+            <span class="c1">//()操作,主要用于构造函数</span>
+            <span class="kt">void</span> <span class="k">operator</span><span class="p">()(</span>
+                <span class="n">Iterator</span> <span class="n">begin</span><span class="p">,</span>
+                <span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;*</span> <span class="n">previous_end_value</span><span class="p">,</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;*</span><span class="n">end_value</span>
+                <span class="p">)</span>
+            <span class="p">{</span>
+                <span class="c1">//尝试工作</span>
+                <span class="k">try</span>
+                <span class="p">{</span>
+                    <span class="c1">//将end迭代器指向last</span>
+
+                    <span class="n">Iterator</span> <span class="n">end</span><span class="o">=</span><span class="n">last</span><span class="p">;</span>
+                    <span class="c1">//移动迭代器指针</span>
+
+                    <span class="o">++</span><span class="n">end</span><span class="p">;</span>
+                    <span class="c1">//对数据进行求和，并将结果存入begin中</span>
+
+                    <span class="n">std</span><span class="o">::</span><span class="n">partial_sum</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span><span class="n">end</span><span class="p">,</span><span class="n">begin</span><span class="p">);</span>
+                    <span class="c1">//如果预期结果存在</span>
+
+                    <span class="k">if</span><span class="p">(</span><span class="n">previous_end_value</span><span class="p">)</span>
+                    <span class="p">{</span>
+                        <span class="c1">//获取结果</span>
+                        <span class="n">value_type</span><span class="o">&amp;</span> <span class="n">addend</span><span class="o">=</span><span class="n">previous_end_value</span><span class="o">-&gt;</span><span class="n">get</span><span class="p">();</span>
+                        <span class="c1">//last值添加addend </span>
+
+                        <span class="o">*</span><span class="n">last</span><span class="o">+=</span><span class="n">addend</span><span class="p">;</span>
+                        <span class="c1">//检查end_value是否为空</span>
+
+                        <span class="k">if</span><span class="p">(</span><span class="n">end_value</span><span class="p">)</span>
+                        <span class="p">{</span>
+                            <span class="c1">//设置值</span>
+
+                            <span class="n">end_value</span><span class="o">-&gt;</span><span class="n">set_value</span><span class="p">(</span><span class="o">*</span><span class="n">last</span><span class="p">);</span>
+                        <span class="p">}</span>
+                        <span class="c1">//便利迭代器，将每个值添加addend,即每个值添加前一组的期望值</span>
+
+                        <span class="n">std</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span><span class="n">last</span><span class="p">,[</span><span class="n">addend</span><span class="p">](</span><span class="n">value_type</span><span class="o">&amp;</span> <span class="n">item</span><span class="p">){</span>
+                            <span class="n">item</span><span class="o">+=</span><span class="n">addend</span><span class="p">;</span>
+                        <span class="p">});</span>
+                        <span class="c1">//如果预期结果值不存在，检查end_value是否存在</span>
+
+                    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">end_value</span><span class="p">)</span>
+                    <span class="p">{</span>
+                        <span class="c1">//存在直接设置为期望值</span>
+
+                        <span class="n">end_value</span><span class="o">-&gt;</span><span class="n">set_value</span><span class="p">(</span><span class="o">*</span><span class="n">last</span><span class="p">);</span>
+                    <span class="p">}</span>
+                <span class="p">}</span><span class="k">catch</span><span class="p">(...)</span>
+                <span class="p">{</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">end_value</span><span class="p">)</span>
+                    <span class="p">{</span>
+                        <span class="n">end_value</span><span class="o">-&gt;</span><span class="n">set_exception</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">current_exception</span><span class="p">());</span>
+                    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                        <span class="k">throw</span><span class="p">;</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">};</span>
+
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">length</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">last</span><span class="p">;</span>
+        <span class="c1">//最小分块线程数</span>
+
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">min_per_thread</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+        <span class="c1">//计算最大线程数</span>
+
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">max_threads</span><span class="o">=</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="n">min_per_thread</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">min_per_thread</span><span class="p">;</span>
+        <span class="c1">//当前线程允许的最大线程数目</span>
+
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">hardware_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">hardware_concurrency</span><span class="p">();</span>
+        <span class="c1">//实际线程数目</span>
+
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">num_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">hardware_threads</span><span class="o">!=</span><span class="mi">0</span><span class="o">?</span>
+<span class="nl">hardware_threads:</span><span class="mi">2</span><span class="p">,</span><span class="n">max_threads</span><span class="p">);</span>
+        <span class="c1">//每个线程块的大小</span>
+
+        <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">block_size</span><span class="o">=</span><span class="n">length</span><span class="o">/</span><span class="n">num_threads</span><span class="p">;</span>
+        <span class="c1">//迭代器数据类型</span>
+
+        <span class="k">typedef</span> <span class="k">typename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">value_type</span> <span class="n">value_type</span><span class="p">;</span>
+        <span class="c1">//创建线程vector</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="c1">//创建对应的promise,即最终结果</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">end_values</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="c1">//创建期望</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">previous_end_values</span><span class="p">;</span>
+        <span class="c1">//设置期望大小</span>
+
+        <span class="n">previous_end_values</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="c1">//创建添加线程</span>
+
+        <span class="n">join_threads</span> <span class="n">joiner</span><span class="p">(</span><span class="n">threads</span><span class="p">);</span>
+        <span class="c1">//将block中的开始指针指向first</span>
+
+        <span class="n">Iterator</span> <span class="n">block_start</span><span class="o">=</span><span class="n">first</span><span class="p">;</span>
+        <span class="c1">//开始构造对应线程</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">){</span>
+            <span class="c1">//将尾迭代器指向block start</span>
+
+            <span class="n">Iterator</span> <span class="n">block_last</span><span class="o">=</span><span class="n">block_start</span><span class="p">;</span>
+            <span class="c1">//将block_last更新迭代器步长为block_size</span>
+
+            <span class="n">std</span><span class="o">::</span><span class="n">advance</span><span class="p">(</span><span class="n">block_last</span><span class="p">,</span><span class="n">block_size</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+            <span class="c1">//创建线程并，输入对应参数</span>
+
+            <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span>
+                <span class="n">process_chunk</span><span class="p">(),</span>
+                <span class="n">block_start</span><span class="p">,</span>
+                <span class="n">block_last</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">)</span><span class="o">?&amp;</span><span class="n">previous_end_values</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span>
+                <span class="o">&amp;</span><span class="n">end_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="p">);</span>
+            <span class="c1">//移动block指针</span>
+
+            <span class="n">block_start</span><span class="o">=</span><span class="n">block_last</span><span class="p">;</span>
+            <span class="o">++</span><span class="n">block_start</span><span class="p">;</span>
+            <span class="c1">//将最后的预计值放入end_values</span>
+
+            <span class="n">previous_end_values</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">end_values</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">get_future</span><span class="p">());</span>
+        <span class="p">}</span>
+        <span class="c1">//最后将指针指向分组后的最后一组</span>
+        
+        <span class="n">Iterator</span> <span class="n">final_element</span><span class="o">=</span><span class="n">block_start</span><span class="p">;</span>
+        <span class="c1">//移动尾指针到末尾</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">advance</span><span class="p">(</span><span class="n">final_element</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">block_start</span><span class="p">,</span><span class="n">last</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="c1">//计算剩余的值的和</span>
+
+        <span class="n">process_chunk</span><span class="p">()(</span>
+            <span class="n">block_start</span><span class="p">,</span>
+            <span class="n">final_element</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">num_threads</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">)</span><span class="o">?&amp;</span><span class="n">previous_end_values</span><span class="p">.</span><span class="n">back</span><span class="p">()</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p><strong>实现以2的幂级数为距离部分和算法</strong></p>
+
+<p>将数据进行分离，并实现SIMD，将中间的处理结果传递到下一个结果中去。</p>
+
+<p>简单的栅栏类实现</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">class</span> <span class="nc">barrier</span>
+<span class="p">{</span>
+    <span class="kt">unsigned</span> <span class="k">const</span> <span class="n">count</span><span class="p">;</span>
+    <span class="c1">//空值</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="o">&gt;</span> <span class="n">spaces</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="o">&gt;</span> <span class="n">generation</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="k">explicit</span> <span class="n">barrier</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">count_</span><span class="p">)</span><span class="o">:</span><span class="n">count_</span><span class="p">(</span><span class="n">count_</span><span class="p">),</span><span class="n">spaces</span><span class="p">(</span><span class="n">count</span><span class="p">),</span><span class="n">generation</span><span class="p">(</span><span class="mi">0</span><span class="p">){}</span>
+    <span class="kt">void</span> <span class="n">wait</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//更新当前线程的generation</span>
+
+        <span class="kt">unsigned</span> <span class="k">const</span> <span class="n">my_generation</span><span class="o">=</span><span class="n">generation</span><span class="p">;</span>
+        <span class="c1">//当space为0d的时候，重置space,添加gengeration</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="o">!--</span><span class="n">spaces</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">spaces</span><span class="o">=</span><span class="n">count</span><span class="p">;</span>
+            <span class="o">++</span><span class="n">generation</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="c1">//当space&gt;0 时</span>
+
+            <span class="c1">//检查是否相同</span>
+            <span class="k">while</span><span class="p">(</span><span class="n">generation</span><span class="o">==</span><span class="n">my_generation</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">//当没有改变，即不存在++generation,等待一段时间</span>
+
+                <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">yield</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">//总体而言实现了栅栏的核心，主要是使用所有进行等待，当栅栏满足之后，再同一开始工作，count是栅栏管控的线程总数</span>
+</code></pre></div></div>
+
+<p>上面的栅栏还是略显简陋，因此需要进一步改进</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">struct</span> <span class="nc">barrier</span>
+<span class="p">{</span>
+    <span class="c1">//线程总数统计</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="o">&gt;</span> <span class="n">count</span><span class="p">;</span>
+    <span class="c1">//空余总数统计</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="o">&gt;</span> <span class="n">spaces</span><span class="p">;</span>
+    <span class="c1">//栅栏执行相关次数统计</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="o">&gt;</span> <span class="n">generation</span><span class="p">;</span>
+    <span class="n">barrier</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">count_</span><span class="p">)</span><span class="o">:</span><span class="n">count</span><span class="p">(</span><span class="n">count_</span><span class="p">),</span><span class="n">spaces</span><span class="p">(</span><span class="n">count_</span><span class="p">),</span><span class="n">generation</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">{}</span>
+    <span class="c1">//wait相关函数</span>
+
+    <span class="kt">void</span> <span class="n">wait</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="kt">unsigned</span> <span class="k">const</span> <span class="n">gen</span><span class="o">=</span><span class="n">generation</span><span class="p">.</span><span class="n">load</span><span class="p">();</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!--</span><span class="n">spaces</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">spaces</span><span class="o">=</span><span class="n">count</span><span class="p">.</span><span class="n">load</span><span class="p">();</span>
+            <span class="o">++</span><span class="n">generation</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="c1">//没有到达条件，等待一会儿</span>
+
+            <span class="k">while</span><span class="p">(</span><span class="n">generation</span><span class="p">.</span><span class="n">load</span><span class="p">()</span><span class="o">==</span><span class="n">gen</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">yield</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">//执行等待操作</span>
+
+    <span class="kt">void</span> <span class="n">done_waiting</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="o">--</span><span class="n">count</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!--</span><span class="n">spaces</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">spaces</span><span class="o">=</span><span class="n">count</span><span class="p">.</span><span class="n">load</span><span class="p">();</span>
+            <span class="o">++</span><span class="n">generation</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+
+<span class="c1">//下面是栅栏的并行计算</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">parallel_partial_sum</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">typedef</span> <span class="k">typename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">value_type</span> <span class="n">value_type</span><span class="p">;</span>
+    <span class="c1">//处理元素类，主要是来运行一组线程</span>
+
+    <span class="k">struct</span> <span class="nc">process_element</span>
+    <span class="p">{</span>
+        <span class="kt">void</span> <span class="k">operator</span><span class="p">()(</span>
+            <span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span>
+            <span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span>
+            <span class="n">sstd</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;&amp;</span> <span class="n">buffer</span><span class="p">,</span>
+            <span class="kt">unsigned</span> <span class="n">i</span><span class="p">,</span>
+            <span class="n">barrier</span><span class="o">&amp;</span> <span class="n">b</span>
+            <span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//获取尾部元素</span>
+
+            <span class="n">value_type</span><span class="o">&amp;</span> <span class="n">ith_element</span><span class="o">=*</span><span class="p">(</span><span class="n">first</span><span class="o">+</span><span class="n">i</span><span class="p">);</span>
+            <span class="c1">//是否更新源</span>
+
+            <span class="kt">bool</span> <span class="n">update_source</span><span class="o">=</span><span class="nb">false</span><span class="p">;</span>
+            <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="n">stride</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">;</span><span class="o">++</span><span class="n">step</span><span class="p">,</span><span class="n">stride</span><span class="o">*=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="c1">//step为偶数则返回buffer[i],否则返回当前元素</span>
+                <span class="c1">//主要是从原始数据或者缓存中添加元素</span>
+
+                <span class="n">value_type</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">source</span><span class="o">=</span><span class="p">(</span><span class="n">step</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span><span class="o">?</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">:</span><span class="n">ith_element</span><span class="p">;</span>
+
+                <span class="n">value_type</span><span class="o">&amp;</span> <span class="n">dest</span><span class="o">=</span><span class="p">(</span><span class="n">step</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span><span class="o">?</span><span class="n">ith_element</span><span class="o">:</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+                <span class="n">value_type</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">addend</span><span class="o">=</span><span class="p">(</span><span class="n">step</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span><span class="o">?</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">stride</span><span class="p">]</span><span class="o">:*</span><span class="p">(</span><span class="n">first</span><span class="o">+</span><span class="n">i</span><span class="o">-</span><span class="n">stride</span><span class="p">);</span>
+                <span class="c1">//将计算后的值，添加到缓存</span>
+
+                <span class="n">dest</span><span class="o">=</span><span class="n">source</span><span class="o">+</span><span class="n">addend</span><span class="p">;</span>
+                <span class="n">update_source</span><span class="o">=!</span><span class="p">(</span><span class="n">step</span><span class="o">%</span><span class="mi">2</span><span class="p">);</span>
+                <span class="c1">//执行栅栏等待同步</span>
+
+                <span class="n">b</span><span class="p">.</span><span class="n">wait</span><span class="p">();</span>
+            <span class="p">}</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">update_source</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">ith_element</span><span class="o">=</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+            <span class="p">}</span>
+            <span class="c1">//开始等待同步，结束本次新城</span>
+
+            <span class="n">b</span><span class="p">.</span><span class="n">done_waiting</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">};</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">length</span><span class="o">&lt;=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="c1">//创建缓冲向量</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span> <span class="n">buffer</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
+    <span class="c1">//创建栅栏</span>
+
+    <span class="n">barrier</span> <span class="n">b</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
+    <span class="c1">//创建线程</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="kr">thread</span><span class="p">(</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">join_threads</span> <span class="n">joiner</span><span class="p">(</span><span class="n">threads</span><span class="p">);</span>
+    <span class="c1">//更新线程数</span>
+
+    <span class="n">Iterator</span> <span class="n">block_start</span><span class="o">=</span><span class="n">first</span><span class="p">;</span>
+    <span class="c1">//遍历，创建线程</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span>
+            <span class="n">process_element</span><span class="p">(),</span>
+            <span class="n">first</span><span class="p">,</span>
+            <span class="n">last</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">ref</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span>
+            <span class="n">i</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">ref</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="p">);</span>
+    <span class="p">}</span>
+    <span class="c1">//最后处理剩下的元素</span>
+    <span class="n">process_element</span><span class="p">()(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">buffer</span><span class="p">,</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">b</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="第9章-高级线程池">第9章 高级线程池</h2>
+<p>关于线程池在之前的文章中有过介绍，因此不再做过多说明</p>
+
+<p>可等待任务的线程池</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">class</span> <span class="nc">function_wrapper</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">impl_base</span>
+    <span class="p">{</span>
+        <span class="k">virtual</span> <span class="kt">void</span> <span class="n">call</span><span class="p">()</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+        <span class="k">virtual</span> <span class="o">~</span><span class="n">impl_base</span><span class="p">(){}</span>
+    <span class="p">};</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">impl_base</span><span class="o">&gt;</span>  <span class="n">impl</span><span class="p">;</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span>   <span class="nc">F</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">impl_type</span><span class="o">:</span><span class="n">impl_base</span>
+    <span class="p">{</span>
+        <span class="n">F</span> <span class="n">f</span><span class="p">;</span>
+        <span class="n">impl_type</span><span class="p">(</span><span class="n">F</span><span class="o">&amp;&amp;</span> <span class="n">f_</span><span class="p">)</span><span class="o">:</span><span class="n">f</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f_</span><span class="p">)){}</span>
+        <span class="kt">void</span> <span class="n">call</span><span class="p">(){</span><span class="n">f</span><span class="p">();}</span>
+    <span class="p">};</span>
+<span class="nl">public:</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">F</span><span class="p">&gt;</span>
+    <span class="n">function_wrapper</span><span class="p">(</span><span class="n">F</span><span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">)</span><span class="o">:</span><span class="n">impl</span><span class="p">(</span><span class="k">new</span> <span class="n">impl_type</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">))){}</span>
+    <span class="kt">void</span> <span class="k">operator</span><span class="p">()(){</span><span class="n">impl</span><span class="o">-&gt;</span><span class="n">call</span><span class="p">();}</span>
+    <span class="n">function_wrapper</span><span class="p">()</span><span class="o">=</span><span class="k">default</span><span class="p">;</span>
+    <span class="n">function_wrapper</span><span class="p">(</span><span class="n">function_wrapper</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">)</span><span class="o">:</span><span class="n">impl</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">other</span><span class="p">.</span><span class="n">impl</span><span class="p">)){}</span>
+    <span class="n">function_wrapper</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">function_wrapper</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">impl</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">other</span><span class="p">.</span><span class="n">impl</span><span class="p">);</span>
+        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">function_wrapper</span><span class="p">(</span><span class="k">const</span> <span class="n">function_wrapper</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+    <span class="n">function_wrapper</span><span class="p">(</span><span class="n">function_wrapper</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+    <span class="n">function_wrapper</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">function_wrapper</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">class</span> <span class="nc">thread_pool</span>
+<span class="p">{</span>
+    <span class="n">thread_safe_queue</span><span class="o">&lt;</span><span class="n">function_wrapper</span><span class="o">&gt;</span> <span class="n">work_queue</span><span class="p">;</span> <span class="c1">//使用function_wrapper,而非使用std::function</span>
+    <span class="kt">void</span> <span class="n">worker_thread</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">done</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">function_wrapper</span> <span class="n">task</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">work_queue</span><span class="p">.</span><span class="n">try_pop</span><span class="p">(</span><span class="n">task</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="n">task</span><span class="p">();</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">yield</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="nl">public:</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">FunctionType</span><span class="p">&gt;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">result_of</span><span class="o">&lt;</span><span class="n">FunctionType</span><span class="p">()</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span> <span class="n">submit</span><span class="p">(</span><span class="n">FunctionType</span> <span class="n">f</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">typedef</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">result_of</span><span class="o">&lt;</span><span class="n">FunctionType</span><span class="p">()</span><span class="o">&gt;::</span><span class="n">type</span> <span class="n">result_type</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">packaged_task</span><span class="o">&lt;</span><span class="n">result_type</span><span class="p">()</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">));</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">result_type</span><span class="o">&gt;</span> <span class="n">res</span><span class="p">(</span><span class="n">task</span><span class="p">.</span><span class="n">get_future</span><span class="p">());</span>
+        <span class="n">work_queue</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task</span><span class="p">));</span>
+        <span class="k">return</span>  <span class="n">res</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+
+
+</code></pre></div></div>
+<p>使用线程池求和</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">T</span> <span class="nf">parallel_accumulate</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">T</span> <span class="n">init</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">init</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">block_size</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">num_blocks</span><span class="o">=</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="n">block_size</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block_size</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>  <span class="o">&gt;</span> <span class="n">futures</span><span class="p">(</span><span class="n">num_blocks</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">thread_pool</span> <span class="n">pool</span><span class="p">;</span>
+    <span class="n">Iterator</span> <span class="n">block_start</span><span class="o">=</span><span class="n">first</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_blocks</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Iteratorblock_end</span><span class="o">=</span><span class="n">block_start</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">advance</span><span class="p">(</span><span class="n">block_end</span><span class="p">,</span><span class="n">block_size</span><span class="p">);</span>
+        <span class="n">futures</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">pool</span><span class="p">.</span><span class="n">submit</span><span class="p">(</span><span class="n">accumulate_block</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">());</span>
+        <span class="n">block_start</span><span class="o">=</span><span class="n">block_end</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">T</span> <span class="n">last_result</span><span class="o">=</span><span class="n">accumulate_block</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">()(</span><span class="n">block_start</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="n">T</span> <span class="n">result</span><span class="o">=</span><span class="n">init</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_blocks</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">result</span><span class="o">+=</span><span class="n">futures</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">get</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="n">result</span><span class="o">+=</span><span class="n">last_result</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</code></pre></div></div>
+
+<p>基于线程池的快速排序实现</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">sorter</span>
+<span class="p">{</span>
+    <span class="n">thread_pool</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">chunk_data</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">chunk_data</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="n">chunk_data</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+        <span class="c1">//分割数据</span>
+
+        <span class="n">result</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">chunk_data</span><span class="p">,</span><span class="n">chunk_data</span><span class="p">.</span><span class="n">begin</span><span class="p">());</span>
+        <span class="n">T</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">partition_val</span><span class="o">=*</span><span class="n">result</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+        <span class="c1">//分割数组，并返回关键迭代指针</span>
+
+        <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">divide_point</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">partition</span><span class="p">(</span>
+            <span class="n">chunk_data</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span>
+            <span class="n">chunk_data</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+            <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">T</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">val</span><span class="p">){</span><span class="k">return</span> <span class="n">val</span><span class="o">&lt;</span><span class="n">partition_val</span><span class="p">;}</span>
+            <span class="p">);</span>
+        <span class="c1">//创建较小部分的数据块</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">new_lower_chunk</span><span class="p">;</span>
+        <span class="c1">//赋值初始化</span>
+
+        <span class="n">new_lower_chunk</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span>
+            <span class="n">new_lower_chunk</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+            <span class="n">chunk_data</span><span class="p">,</span>
+            <span class="n">chunk_data</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span>
+            <span class="n">divide_point</span>
+            <span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">new_higher</span><span class="p">(</span><span class="n">do_sort</span><span class="p">(</span><span class="n">chunk_data</span><span class="p">));</span>
+        <span class="c1">//将高部数据拷贝到result</span>
+
+        <span class="n">result</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="n">new_higher</span><span class="p">);</span>
+
+        <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">new_lower</span><span class="p">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">==</span><span class="n">std</span><span class="o">::</span><span class="n">future_status</span><span class="o">::</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">pool</span><span class="p">.</span><span class="n">run_pending_task</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="n">result</span><span class="p">.</span><span class="n">splice</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">new_lower</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">parallel_quick_sort</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">input</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">input</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">sorter</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">s</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">s</span><span class="p">.</span><span class="n">do_sort</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+<h4 id="915--窃取任务">9.1.5  窃取任务</h4>
+
+<p>为了让没有任务的线程能从其他线程的任务队列中获取任务,就需要本地任务列表可以进行访问,这样才能让run_pending_tasks()窃取任务。需要每个线程在线程池队列上进行注册,或由线程池指定一个线程。同样,还需要保证数据队列中的任务适当的被同步和保护,这样队列的不变量就不会被破坏。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">work_stealing_queue</span>
+<span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="k">typedef</span> <span class="n">function_wrapper</span> <span class="n">data_type</span><span class="p">;</span>
+    <span class="c1">//数据队列</span>
+    
+    <span class="n">std</span><span class="o">::</span><span class="n">deque</span><span class="o">&lt;</span><span class="n">data_type</span><span class="o">&gt;</span> <span class="n">the_queue</span><span class="p">;</span>
+    <span class="k">mutable</span> <span class="n">std</span><span class="o">::</span><span class="n">mutex</span>  <span class="n">the_mutex</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="n">work_stealing_queue</span><span class="p">(){}</span>
+    <span class="n">work_stealing_queue</span><span class="p">(</span><span class="k">const</span> <span class="n">work_stealing_queue</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+    <span class="n">work_stealing_queue</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">work_stealing_queue</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">push</span><span class="p">(</span><span class="n">data_type</span>  <span class="n">data</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">the_mutex</span><span class="p">);</span>
+        <span class="n">the_queue</span><span class="p">.</span><span class="n">push_front</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">data</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="kt">bool</span> <span class="n">empty</span><span class="p">()</span> <span class="k">const</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">the_mutex</span><span class="p">);</span>
+        <span class="k">return</span>  <span class="n">the_queue</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="c1">//安全的取出数据</span>
+
+    <span class="kt">bool</span> <span class="n">try_pop</span><span class="p">(</span><span class="n">data_type</span><span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">the_mutex</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">the_queue</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">res</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">the_queue</span><span class="p">.</span><span class="n">front</span><span class="p">());</span>
+        <span class="n">the_queue</span><span class="p">.</span><span class="n">pop_front</span><span class="p">();</span>
+        <span class="k">return</span>  <span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//对队列后端进行操作</span>
+
+    <span class="kt">bool</span> <span class="n">try_steal</span><span class="p">(</span><span class="n">data_type</span><span class="o">&amp;</span> <span class="n">res</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">the_mutex</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">the_queue</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">res</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">the_queue</span><span class="p">.</span><span class="n">back</span><span class="p">());</span>
+        <span class="n">the_queue</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
+        <span class="k">return</span>  <span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+<p>使用任务窃取的线程池</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">class</span> <span class="nc">thread_pool</span>
+<span class="p">{</span>
+    <span class="k">typedef</span> <span class="n">function_wrapper</span> <span class="n">task_type</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic_bool</span> <span class="n">done</span><span class="p">;</span>
+    <span class="n">thread_safe_queue</span><span class="o">&lt;</span><span class="n">task_type</span><span class="o">&gt;</span> <span class="n">pool_work_queue</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">work_stealing_queue</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">queues</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">;</span>
+    <span class="n">join_threads</span> <span class="n">joiner</span><span class="p">;</span>
+    <span class="k">static</span> <span class="k">thread_local</span> <span class="n">work_stealing_queue</span><span class="o">*</span> <span class="n">local_work_queue</span><span class="p">;</span>
+    <span class="k">static</span> <span class="k">thread_local</span> <span class="kt">unsigned</span> <span class="n">my_index</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">worker_thread</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">my_index_</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">my_index</span><span class="o">=</span><span class="n">my_index_</span><span class="p">;</span>
+        <span class="n">local_work_queue</span><span class="o">=</span><span class="n">queues</span><span class="p">[</span><span class="n">my_index</span><span class="p">].</span><span class="n">get</span><span class="p">();</span>
+        <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">done</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">run_pending_task</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="kt">bool</span> <span class="n">pop_task_from_local_queue</span><span class="p">(</span><span class="n">task_type</span><span class="o">&amp;</span> <span class="n">task</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">local_work_queue</span> <span class="o">&amp;&amp;</span> <span class="n">local_work_queue</span><span class="o">-&gt;</span><span class="n">try_pop</span><span class="p">(</span><span class="n">task</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="kt">bool</span> <span class="n">pop_task_from_pool_queue</span><span class="p">(</span><span class="n">task_type</span><span class="o">&amp;</span> <span class="n">task</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span>  <span class="n">pool_work_queue</span><span class="p">.</span><span class="n">try_pop</span><span class="p">(</span><span class="n">task</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="kt">bool</span> <span class="n">pop_task_from_other_thread_queue</span><span class="p">(</span><span class="n">task_type</span><span class="o">&amp;</span> <span class="n">task</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span>  <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">queues</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="kt">unsigned</span> <span class="k">const</span> <span class="n">index</span><span class="o">=</span><span class="p">(</span><span class="n">my_index</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">%</span><span class="n">queues</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">queues</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">try_steal</span><span class="p">(</span><span class="n">task</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="nl">public:</span>
+    <span class="n">thread_pool</span><span class="p">()</span><span class="o">:</span><span class="n">done</span><span class="p">(</span><span class="nb">false</span><span class="p">),</span><span class="n">joiner</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">unsigned</span> <span class="k">const</span> <span class="n">thread_count</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">hardware_concurrency</span><span class="p">();</span>
+        <span class="k">try</span>
+        <span class="p">{</span>
+            <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">thread_count</span><span class="p">;</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">queues</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">work_stealing_queue</span><span class="o">&gt;</span><span class="p">(</span><span class="n">threads</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread_pool</span><span class="o">::</span><span class="n">worker_thread</span><span class="p">,</span><span class="k">this</span><span class="p">,</span><span class="n">i</span><span class="p">))));</span>
+            <span class="p">}</span>
+        <span class="p">}</span><span class="k">catch</span><span class="p">(...)</span>
+        <span class="p">{</span>
+            <span class="n">done</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span>
+            <span class="k">throw</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="o">~</span><span class="n">thread_pool</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">done</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">FunctionType</span><span class="p">&gt;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">result_of</span><span class="o">&lt;</span><span class="n">FunctionType</span><span class="p">()</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span> <span class="n">submit</span><span class="p">(</span><span class="n">FunctionType</span> <span class="n">f</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">typedef</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">result_of</span><span class="o">&lt;</span><span class="n">FunctionType</span><span class="p">()</span><span class="o">&gt;::</span><span class="n">type</span> <span class="n">result_type</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">packaged_task</span><span class="o">&lt;</span><span class="n">result_type</span><span class="p">()</span><span class="o">&gt;</span> <span class="n">task</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;</span><span class="n">result_type</span><span class="o">&gt;</span> <span class="n">res</span><span class="p">(</span><span class="n">task</span><span class="p">.</span><span class="n">get_future</span><span class="p">());</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">local_work_queue</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">local_work_queue</span><span class="o">-&gt;</span><span class="n">push</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task</span><span class="p">));</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="n">pool_work_queue</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task</span><span class="p">));</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="kt">void</span> <span class="n">run_pending_task</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">task_type</span> <span class="n">task</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">pop_task_from_local_queue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span><span class="o">||</span>
+           <span class="n">pop_task_from_pool_queue</span><span class="p">(</span><span class="n">task</span><span class="p">)</span><span class="o">||</span>
+           <span class="n">pop_task_from_other_thread_queue</span><span class="p">(</span><span class="n">task</span><span class="p">))</span>
+        <span class="p">{</span>
+            <span class="n">task</span><span class="p">();</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">yield</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+
+<h3 id="92-线程中断">9.2 线程中断</h3>
+
+<p>操作系统中的线程中断和挂起机制，需要使用信号来让未结束线程停止运行。这里需要一种合适的方式让线程主动的停下来,而非让线程戛然而止。</p>
+
+<h4 id="921-启动和中断线程">9.2.1 启动和中断线程</h4>
+
+<p>线程的中断多需要在线程的原有基础之上，添加线程中断的程序。</p>
+
+<p>std::condition_variable 在interruptible_wait中使用超时</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">class</span> <span class="nc">interrupt_flag</span>
+<span class="p">{</span>
+    <span class="c1">//是否中断</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">flag</span><span class="p">;</span>
+    <span class="c1">//环境变量</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span><span class="o">*</span> <span class="n">thread_cond</span><span class="p">;</span>
+    <span class="c1">//清除信号量</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">set_clear_mutex</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="n">interrupt_flag</span><span class="p">()</span><span class="o">:</span><span class="n">thread_cond</span><span class="p">(</span><span class="mi">0</span><span class="p">){}</span>
+    <span class="kt">void</span> <span class="n">set</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">flag</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">set_clear_mutex</span><span class="p">);</span>
+        <span class="c1">//设计环境变量</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">thread_cond</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//发射环境信号</span>
+
+            <span class="n">thread_cond</span><span class="o">-&gt;</span><span class="n">notify_all</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">//查看是否设置</span>
+
+    <span class="kt">bool</span> <span class="n">is_set</span><span class="p">()</span> <span class="k">const</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">flag</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="kt">void</span> <span class="n">set_condition_variable</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span><span class="o">&amp;</span> <span class="n">cv</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//信号加锁</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">set_clear_mutex</span><span class="p">);</span>
+        <span class="c1">//更新条件变量</span>
+
+        <span class="n">thread_cond</span><span class="o">=&amp;</span><span class="n">cv</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//清除环境变量</span>
+
+    <span class="kt">void</span> <span class="n">clear_condition_variable</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">set_clear_mutex</span><span class="p">);</span>
+        <span class="n">thread_cond</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">struct</span> <span class="nc">clear_cv_on_destruct</span>
+    <span class="p">{</span>
+        <span class="o">~</span><span class="n">clear_cv_on_destruct</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="n">this_thread_interrupt_flag</span><span class="p">.</span><span class="n">clear_condition_variable</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">};</span>
+<span class="p">};</span>
+<span class="k">thread_local</span> <span class="n">interrupt_flag</span> <span class="n">this_thread_interrupt_flag</span><span class="p">;</span>
+<span class="c1">//检查中断点，通过检查flag值来判断，如果flag为true抛出信号</span>
+
+<span class="kt">void</span> <span class="nf">interruption_point</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">this_thread_interrupt_flag</span><span class="p">.</span><span class="n">is_set</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="k">throw</span> <span class="n">thread_interrupted</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//中断等待</span>
+
+<span class="kt">void</span> <span class="nf">interruptible_wait</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span><span class="o">&amp;</span> <span class="n">cv</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;&amp;</span> <span class="n">lk</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">interruption_point</span><span class="p">();</span>
+    <span class="n">this_thread_interrupt_flag</span><span class="p">.</span><span class="n">set_condition_variable</span><span class="p">(</span><span class="n">cv</span><span class="p">);</span>
+    <span class="c1">//临时锁</span>
+
+    <span class="n">interrupt_flag</span><span class="o">::</span><span class="n">clear_cv_on_destruct</span> <span class="n">gurad</span><span class="p">;</span>
+    <span class="c1">//再次检查</span>
+    <span class="n">cv</span><span class="p">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">lk</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+    <span class="n">interruption_point</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="c1">//中断等待</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Predicate</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">interruptible_wait</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span><span class="o">&amp;</span> <span class="n">cv</span><span class="p">,</span>
+                        <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;&amp;</span> <span class="n">lk</span><span class="p">,</span>
+                        <span class="n">Predicate</span> <span class="n">pred</span>
+                        <span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">interruption_point</span><span class="p">();</span>
+    <span class="n">this_thread_interrupt_flag</span><span class="p">.</span><span class="n">set_condition_variable</span><span class="p">(</span><span class="n">cv</span><span class="p">);</span>
+    <span class="n">interrupt_flag</span><span class="o">::</span><span class="n">clear_cv_on_destruct</span> <span class="n">gurad</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">this_thread_interrupt_flag</span><span class="p">.</span><span class="n">is_set</span><span class="p">()</span><span class="o">&amp;&amp;!</span><span class="n">pred</span><span class="p">())</span> 
+    <span class="p">{</span>
+        <span class="n">cv</span><span class="p">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">lk</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="n">interruption_point</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>为std::condition_variable_any 设计的interruptible_wait</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">class</span> <span class="nc">interrupt_flag</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">flag</span><span class="p">;</span>
+    <span class="c1">//环境条件变量</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span><span class="o">*</span> <span class="n">thread_cond</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">condition_variable_any</span><span class="o">*</span> <span class="n">thread_cond_any</span><span class="p">;</span>
+    <span class="c1">//访问互斥信号量</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">set_clear_mutex</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="n">interrupt_flag</span><span class="p">()</span><span class="o">:</span>   
+    <span class="n">thread_cond</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="n">thread_cond_any</span><span class="p">(</span><span class="mi">0</span><span class="p">){}</span>
+    <span class="kt">void</span> <span class="n">set</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//更改值</span>
+        
+        <span class="n">flag</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">);</span>
+        <span class="c1">//加锁</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">set_clear_mutex</span><span class="p">);</span>
+        <span class="c1">//环境变量</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">thread_cond</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">thread_cond</span><span class="o">-&gt;</span><span class="n">notify_all</span><span class="p">();</span>
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">thread_cond_any</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">thread_cond_any</span><span class="o">-&gt;</span><span class="n">notify_all</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">//等待函数</span>
+
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Lockable</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">wait</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">condition_variable_any</span><span class="o">&amp;</span> <span class="n">cv</span><span class="p">,</span><span class="n">Lockable</span><span class="o">&amp;</span> <span class="n">lk</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//传统默认锁</span>
+
+            <span class="k">struct</span>  <span class="nc">custom_lock</span>
+            <span class="p">{</span>
+                <span class="n">interrupt_flag</span><span class="o">*</span> <span class="n">self</span><span class="p">;</span>
+                <span class="n">Lockable</span><span class="o">&amp;</span> <span class="n">lk</span><span class="p">;</span>
+                
+                <span class="n">custom_lock</span><span class="p">(</span>
+                    <span class="n">interrupt_flag</span><span class="o">*</span> <span class="n">self_</span><span class="p">,</span>
+                    <span class="n">std</span><span class="o">::</span><span class="n">condition_variable_any</span><span class="o">&amp;</span> <span class="n">cond</span><span class="p">,</span>
+                    <span class="n">Lockable</span><span class="o">&amp;</span> <span class="n">lk_</span><span class="p">)</span><span class="o">:</span>
+                <span class="n">self</span><span class="p">(</span><span class="n">self_</span><span class="p">),</span>
+                <span class="n">lk</span><span class="p">(</span><span class="n">lk_</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="n">self</span><span class="o">-&gt;</span><span class="n">set_clear_mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
+                    <span class="n">self</span><span class="o">-&gt;</span><span class="n">thread_cond_any</span><span class="o">=&amp;</span><span class="n">cond</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="kt">void</span> <span class="n">unlock</span><span class="p">()</span>
+                <span class="p">{</span>
+                    <span class="n">lk</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
+                    <span class="n">self</span><span class="o">-&gt;</span><span class="n">set_clear_mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
+                <span class="p">}</span>
+
+                <span class="kt">void</span> <span class="n">lock</span><span class="p">()</span>
+                <span class="p">{</span>
+                    <span class="n">std</span><span class="o">::</span><span class="n">lock</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">set_clear_mutex</span><span class="p">,</span><span class="n">lk</span><span class="p">);</span>
+                <span class="p">}</span>
+                <span class="o">~</span><span class="n">custom_lock</span><span class="p">()</span>
+                <span class="p">{</span>
+                    <span class="n">self</span><span class="o">-&gt;</span><span class="n">thread_cond_any</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+                    <span class="n">self</span><span class="o">-&gt;</span><span class="n">set_clear_mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
+                <span class="p">}</span>
+            <span class="p">};</span>
+            <span class="n">custom_lock</span> <span class="n">cl</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="n">cv</span><span class="p">,</span><span class="n">lk</span><span class="p">);</span>
+            <span class="n">interruption_point</span><span class="p">();</span>
+            <span class="n">cv</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">cl</span><span class="p">);</span>
+            <span class="n">interruption_point</span><span class="p">();</span>
+        <span class="p">}</span>
+<span class="p">};</span>
+<span class="c1">//中断等待</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Lockable</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">interruptible_wait</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">condition_variable_any</span><span class="o">&amp;</span> <span class="n">cv</span><span class="p">,</span><span class="n">Lockable</span><span class="o">&amp;</span> <span class="n">lk</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">this_thread_interrupt_flag</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">cv</span><span class="p">,</span><span class="n">lk</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+</code></pre></div></div>
+<h3 id="第10章-多线程程序的测试和调试">第10章 多线程程序的测试和调试</h3>
+
+<h4 id="101-与并发相关的错误类型">10.1 与并发相关的错误类型</h4>
+
+<ul>
+  <li>不必要阻塞：一个线程被阻塞的时候,不能处理任何任务,因为它在等待其他“条件”的达成。即阻塞不是必要的
+    <ul>
+      <li>死锁:相互等待直到永远，无法自己跳出,主要原因是无法检查其它相关变量的变化</li>
+      <li>活锁:与死锁基本相同但不是线程阻塞等待，而是在循环中持续检查，如:自旋锁。问题可以解决。</li>
+      <li>I/O阻塞或外部输入:当线程被外部输入所阻塞,线程也就不能做其他事情了(即使,等待输入的情况永远不会发生)。</li>
+    </ul>
+  </li>
+  <li>条件竞争:
+    <ul>
+      <li>数据竞争：因为未同步访问一块共享内存,将会导致代码产生未定义行为</li>
+      <li>破坏不变量:主要表现为悬空指针(因为其他线程已经将要访问的数据删除了),随机存储错误(因为局部更新,导致线程读取了不一样的数据),以及双重释放(比如:当两个线程对同一个队列同时执行pop操作,想要删除同一个关联数据),等等。</li>
+      <li>生命周期问题:线程访问变量时，变量的声明周期已经结束。</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="102-定位并发错误的技术">10.2 定位并发错误的技术</h3>
+
+<ul>
+  <li>代码审阅——发现潜在的错误，主要考虑的问题
+    <ul>
+      <li>并发访问时,那些数据需要保护?</li>
+      <li>如何确定访问数据受到了保护?</li>
+      <li>是否会有多个线程同时访问这段代码?</li>
+      <li>这个线程获取了哪个互斥量?</li>
+      <li>其他线程可能获取哪些互斥量?</li>
+      <li>两个线程间的操作是否有依赖关系?如何满足这种关系？</li>
+      <li>这个线程加载的数据还是合法数据吗?数据是否被其他线程修改过?</li>
+      <li>当假设其他线程可以对数据进行修改,这将意味着什么?并且,怎么确保这样的事情不
+会发生?</li>
+    </ul>
+  </li>
+  <li>通过测试定位并发相关的错误，考虑因素
+    <ul>
+      <li>“多线程”是有多少个线程(3个,4个,还是1024个?)</li>
+      <li>系统中是否有足够的处理器,能让每个线程运行在属于自己的处理器上</li>
+      <li>测试需要运行在哪种处理器架构上</li>
+      <li>在测试中如何对“同时”进行合理的安排</li>
+    </ul>
+  </li>
+  <li>可测试性设计
+    <ul>
+      <li>每个函数和类的关系都很清楚。</li>
+      <li>函数短小精悍。</li>
+      <li>测试用例可以完全控制被测试代码周边的环境。</li>
+      <li>执行特定操作的代码应该集中测试,而非分布式测试。</li>
+      <li>需要在完成编写后,考虑如何进行测试。</li>
+    </ul>
+  </li>
+</ul>
+
+:ET

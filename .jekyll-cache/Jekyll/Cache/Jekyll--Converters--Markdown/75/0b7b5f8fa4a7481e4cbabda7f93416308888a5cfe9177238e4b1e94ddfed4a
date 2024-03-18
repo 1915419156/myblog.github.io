@@ -1,0 +1,2 @@
+I"�<p>若p是唯一指向其对象的<code class="language-plaintext highlighter-rouge">shared_ptr</code>，reset会释放此对象。</p>
+:ET

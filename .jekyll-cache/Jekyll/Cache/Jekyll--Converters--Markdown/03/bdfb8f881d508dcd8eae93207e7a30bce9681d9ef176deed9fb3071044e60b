@@ -1,0 +1,2 @@
+I"f<p><code class="language-plaintext highlighter-rouge">$(patsubst %.c,%.o,x.c.c bar.c)</code></p>
+:ET

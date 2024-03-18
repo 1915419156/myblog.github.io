@@ -1,0 +1,1856 @@
+I",�<h1 id="sql练习笔记">SQL练习笔记</h1>
+<blockquote>
+  <p>2023-11-07 14:35:58</p>
+</blockquote>
+
+<p>SQL 练习笔记，包含leetcode等SQL题目冲刺笔记</p>
+
+<h2 id="参考链接">参考链接</h2>
+<ul>
+  <li><a href="https://leetcode.cn/problemset/database/">leetcode-shell</a></li>
+</ul>
+
+<h2 id="leetcode-题目">leetcode 题目</h2>
+
+<h3 id="175-组合两个表"><a href="https://leetcode.cn/problems/combine-two-tables/description/">175. 组合两个表</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">直接正常查询即可</span> 
+<span class="k">SELECT</span> <span class="n">Person</span><span class="p">.</span><span class="n">FirstName</span> <span class="k">as</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">Person</span><span class="p">.</span><span class="n">LastName</span> <span class="k">as</span> <span class="n">lastName</span><span class="p">,</span> <span class="n">Address</span><span class="p">.</span><span class="n">City</span> <span class="k">as</span> <span class="n">city</span><span class="p">,</span> <span class="n">Address</span><span class="p">.</span><span class="k">State</span> <span class="k">AS</span> <span class="k">state</span>  <span class="k">FROM</span> <span class="n">Person</span> <span class="k">LEFT</span> <span class="k">JOIN</span>  <span class="n">Address</span> <span class="k">ON</span> <span class="n">Person</span><span class="p">.</span><span class="n">PersonId</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">PersonId</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">SELECT</span> <span class="n">firstname</span><span class="p">,</span> <span class="n">lastname</span><span class="p">,</span> <span class="n">city</span><span class="p">,</span> <span class="k">state</span> <span class="k">FROM</span> <span class="n">person</span> <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">address</span> <span class="k">ON</span> <span class="n">person</span><span class="p">.</span><span class="n">personid</span> <span class="o">=</span> <span class="n">address</span><span class="p">.</span><span class="n">personid</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="n">FirstName</span><span class="p">,</span> <span class="n">LastName</span><span class="p">,</span> <span class="n">City</span><span class="p">,</span> <span class="k">State</span>
+<span class="k">from</span> <span class="n">Person</span> <span class="k">left</span> <span class="k">join</span> <span class="n">Address</span>
+<span class="k">on</span> <span class="n">Person</span><span class="p">.</span><span class="n">PersonId</span> <span class="o">=</span> <span class="n">Address</span><span class="p">.</span><span class="n">PersonId</span><span class="p">;</span>
+</code></pre></div></div>
+<blockquote>
+
+  <p>作者：LeetCode
+链接：https://leetcode.cn/problems/combine-two-tables/
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+
+</blockquote>
+
+<h3 id="176第二高的薪水"><a href="https://leetcode.cn/problems/second-highest-salary/description/">176.第二高的薪水</a></h3>
+
+<ul>
+  <li>提交解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="n">notice</span><span class="p">:</span> <span class="err">这里必须使用</span><span class="k">SELECT</span> <span class="err">子查询才能让空行显示</span><span class="k">null</span>
+<span class="k">SELECT</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">salary</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="n">SecondHighestSalary</span><span class="p">;</span>
+
+
+<span class="o">#</span> <span class="err">使用</span><span class="n">ISFULL</span> <span class="err">进行二次替换</span>
+<span class="k">SELECT</span> <span class="p">(</span>
+    <span class="n">IFNULL</span><span class="p">((</span><span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">salary</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="k">NULL</span><span class="p">)</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="n">SecondHighestSalary</span><span class="p">;</span>
+
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">使用</span><span class="k">offset</span><span class="err">加快了速度</span>
+<span class="k">SELECT</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">Salary</span> <span class="k">AS</span> <span class="s1">'SecondHighestSalary'</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">Salary</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">1</span> <span class="k">OFFSET</span> <span class="mi">1</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="s1">'SecondHighestSalary'</span><span class="p">;</span>  
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">思路相同</span>
+<span class="k">SELECT</span>
+    <span class="n">IFNULL</span><span class="p">(</span>
+      <span class="p">(</span><span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">Salary</span>
+       <span class="k">FROM</span> <span class="n">Employee</span>
+       <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">Salary</span> <span class="k">DESC</span>
+        <span class="k">LIMIT</span> <span class="mi">1</span> <span class="k">OFFSET</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="k">NULL</span><span class="p">)</span> <span class="k">AS</span> <span class="n">SecondHighestSalary</span>
+</code></pre></div></div>
+
+<h3 id="177第n高的薪水"><a href="https://leetcode.cn/problems/nth-highest-salary/description/">177.第N高的薪水</a></h3>
+
+<ul>
+  <li>参考链接：
+    <ul>
+      <li><a href="https://zhuanlan.zhihu.com/p/128744140">MySQL之自定义函数</a></li>
+      <li><a href="https://www.cnblogs.com/wzh2010/p/13843095.html">MySQL全面瓦解18：自定义函数</a></li>
+    </ul>
+  </li>
+  <li>个人解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">FUNCTION</span> <span class="n">getNthHighestSalary</span><span class="p">(</span><span class="n">N</span> <span class="nb">INT</span><span class="p">)</span> <span class="k">RETURNS</span> <span class="nb">INT</span>
+<span class="k">BEGIN</span>
+    <span class="k">declare</span> <span class="n">a</span> <span class="nb">int</span><span class="p">;</span>
+   <span class="k">SET</span> <span class="n">a</span> <span class="o">=</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+  <span class="k">RETURN</span> <span class="p">(</span>
+    <span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span><span class="p">.</span>
+   <span class="k">SELECT</span> <span class="n">IFNULL</span><span class="p">((</span><span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">salary</span>  <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">1</span> <span class="k">OFFSET</span> <span class="n">a</span><span class="p">),</span><span class="k">NULL</span><span class="p">)</span>
+   
+  <span class="p">);</span>
+<span class="k">END</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">FUNCTION</span> <span class="n">getNthHighestSalary</span><span class="p">(</span><span class="n">N</span> <span class="nb">INT</span><span class="p">)</span> <span class="k">RETURNS</span> <span class="nb">INT</span>
+<span class="k">BEGIN</span>
+<span class="k">Declare</span> <span class="n">M</span> <span class="nb">INT</span><span class="p">;</span>
+<span class="k">set</span> <span class="n">M</span><span class="o">=</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+  <span class="k">RETURN</span> <span class="p">(</span>
+      <span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span><span class="p">.</span>
+<span class="k">select</span> <span class="k">distinct</span> <span class="n">Salary</span>
+      <span class="k">from</span> <span class="n">Employee</span>
+      <span class="k">order</span> <span class="k">by</span> <span class="n">Salary</span> <span class="k">desc</span>
+      <span class="k">limit</span> <span class="n">M</span><span class="p">,</span><span class="mi">1</span>
+  <span class="p">);</span>
+<span class="k">END</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">FUNCTION</span> <span class="n">getNthHighestSalary</span><span class="p">(</span><span class="n">N</span> <span class="nb">INT</span><span class="p">)</span> <span class="k">RETURNS</span> <span class="nb">INT</span>
+<span class="k">BEGIN</span>
+<span class="k">DECLARE</span> <span class="n">M</span> <span class="nb">INT</span><span class="p">;</span> 
+    <span class="k">SET</span> <span class="n">M</span> <span class="o">=</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> 
+  <span class="k">RETURN</span> <span class="p">(</span>
+      <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">salary</span>
+      <span class="k">FROM</span> <span class="n">Employee</span>
+      <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span>
+      <span class="k">LIMIT</span> <span class="n">M</span><span class="p">,</span> <span class="mi">1</span>
+  <span class="p">);</span>
+<span class="k">END</span>
+
+<span class="o">#</span> <span class="err">作者：力扣官方题解</span>
+<span class="o">#</span> <span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">nth</span><span class="o">-</span><span class="n">highest</span><span class="o">-</span><span class="n">salary</span><span class="o">/</span>
+<span class="o">#</span> <span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span> <span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="178-分数排名"><a href="https://leetcode.cn/problems/rank-scores/description/">178. 分数排名</a></h3>
+
+<ul>
+  <li>参考链接：
+    <ul>
+      <li><a href="https://segmentfault.com/a/1190000014386692">mysql 计算排名，生成排行榜</a></li>
+      <li><a href="https://dev.mysql.com/doc/refman/8.0/en/window-functions-usage.html">mysql窗口函数</a></li>
+    </ul>
+  </li>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+ <span class="n">a</span><span class="p">.</span><span class="n">score</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span>  <span class="n">score</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">Scores</span> <span class="k">AS</span> <span class="n">b</span> <span class="k">WHERE</span>  <span class="n">b</span><span class="p">.</span><span class="n">score</span> <span class="o">&gt;</span> <span class="n">a</span><span class="p">.</span><span class="n">score</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">AS</span> <span class="s1">'rank'</span>
+<span class="k">FROM</span> <span class="n">Scores</span> <span class="k">AS</span> <span class="n">a</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">score</span> <span class="k">DESC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">select</span>  <span class="o">*</span> <span class="k">from</span>  <span class="n">Scores</span> <span class="n">id</span>  <span class="k">where</span> <span class="n">score</span> <span class="k">order</span> <span class="k">by</span> <span class="k">desc</span><span class="p">;</span>
+<span class="o">#</span> <span class="n">dense_rank</span><span class="p">()</span><span class="err">窗口函数进行排序</span>
+<span class="o">#</span><span class="err">对</span><span class="n">Scores</span><span class="err">这张表的</span><span class="n">S</span><span class="err">字段进行排序</span>
+<span class="o">#</span><span class="err">对</span><span class="n">score</span><span class="err">字段进行排序按照降序排序</span>
+<span class="o">#</span><span class="err">最后放到</span><span class="n">rank</span><span class="err">这个新的列中</span>
+<span class="k">select</span> <span class="n">S</span><span class="p">.</span><span class="n">score</span><span class="p">,</span> <span class="n">dense_rank</span><span class="p">()</span> <span class="n">over</span><span class="p">(</span>
+    <span class="k">order</span> <span class="k">by</span> <span class="n">S</span><span class="p">.</span><span class="n">score</span> <span class="k">desc</span>
+<span class="p">)</span> <span class="k">As</span> <span class="s1">'rank'</span> <span class="k">from</span> <span class="n">Scores</span> <span class="n">S</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+  <span class="n">S</span><span class="p">.</span><span class="n">score</span><span class="p">,</span>
+  <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span> <span class="n">T</span><span class="p">.</span><span class="n">score</span><span class="p">)</span> <span class="k">AS</span> <span class="s1">'rank'</span>
+<span class="k">FROM</span>
+  <span class="n">Scores</span> <span class="n">S</span>
+  <span class="k">INNER</span> <span class="k">JOIN</span> <span class="n">Scores</span> <span class="n">T</span> <span class="k">ON</span> <span class="n">S</span><span class="p">.</span><span class="n">score</span> <span class="o">&lt;=</span> <span class="n">T</span><span class="p">.</span><span class="n">score</span>
+<span class="k">GROUP</span> <span class="k">BY</span>
+  <span class="n">S</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+  <span class="n">S</span><span class="p">.</span><span class="n">score</span>
+<span class="k">ORDER</span> <span class="k">BY</span>
+  <span class="n">S</span><span class="p">.</span><span class="n">score</span> <span class="k">DESC</span><span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">rank</span><span class="o">-</span><span class="n">scores</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+  <span class="n">S</span><span class="p">.</span><span class="n">score</span><span class="p">,</span>
+  <span class="n">DENSE_RANK</span><span class="p">()</span> <span class="n">OVER</span> <span class="p">(</span>
+    <span class="k">ORDER</span> <span class="k">BY</span>
+      <span class="n">S</span><span class="p">.</span><span class="n">score</span> <span class="k">DESC</span>
+  <span class="p">)</span> <span class="k">AS</span> <span class="s1">'rank'</span>
+<span class="k">FROM</span>
+  <span class="n">Scores</span> <span class="n">S</span><span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">rank</span><span class="o">-</span><span class="n">scores</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="180-连续出现的数字"><a href="https://leetcode.cn/problems/consecutive-numbers/description/">180. 连续出现的数字</a></h3>
+
+<ul>
+  <li>参考链接：
+    <ul>
+      <li><a href="https://blog.csdn.net/Guanjs2016/article/details/80237490">mysql in 多个字段的用法</a></li>
+    </ul>
+  </li>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="err">使用</span><span class="k">in</span><span class="err">语句</span><span class="p">,</span><span class="err">保证</span><span class="n">id</span><span class="err">进行同匹配即可</span>
+<span class="k">SELECT</span> <span class="k">DISTINCT</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">AS</span> <span class="n">ConsecutiveNums</span>   <span class="k">FROM</span> <span class="n">Logs</span>
+<span class="k">WHERE</span> <span class="p">(</span><span class="n">id</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span> <span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span><span class="n">num</span> <span class="k">FROM</span> <span class="n">Logs</span><span class="p">)</span>
+<span class="k">AND</span> <span class="p">(</span><span class="n">id</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span> <span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span><span class="n">num</span> <span class="k">FROM</span> <span class="n">Logs</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> 
+<span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">查询</span><span class="n">num</span> <span class="err">别名</span>
+<span class="k">select</span> <span class="k">distinct</span> <span class="n">Num</span> <span class="k">as</span> <span class="n">ConsecutiveNums</span>
+<span class="k">from</span> <span class="p">(</span>
+  <span class="k">select</span> <span class="n">Num</span><span class="p">,</span> 
+    <span class="o">#</span> <span class="err">筛选</span><span class="n">CNT</span>
+    <span class="k">case</span> 
+      <span class="k">when</span> <span class="o">@</span><span class="n">prev</span> <span class="o">=</span> <span class="n">Num</span> <span class="k">then</span> <span class="o">@</span><span class="k">count</span> <span class="p">:</span><span class="o">=</span> <span class="o">@</span><span class="k">count</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="k">when</span> <span class="p">(</span><span class="o">@</span><span class="n">prev</span> <span class="p">:</span><span class="o">=</span> <span class="n">Num</span><span class="p">)</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">then</span> <span class="o">@</span><span class="k">count</span> <span class="p">:</span><span class="o">=</span> <span class="mi">1</span>
+    <span class="k">end</span> <span class="k">as</span> <span class="n">CNT</span>
+  <span class="k">from</span> <span class="n">Logs</span><span class="p">,</span> <span class="p">(</span><span class="k">select</span> <span class="o">@</span><span class="n">prev</span> <span class="p">:</span><span class="o">=</span> <span class="k">null</span><span class="p">,</span><span class="o">@</span><span class="k">count</span> <span class="p">:</span><span class="o">=</span> <span class="k">null</span><span class="p">)</span> <span class="k">as</span> <span class="n">t</span>
+<span class="p">)</span> <span class="k">as</span> <span class="k">temp</span>
+<span class="k">where</span> <span class="k">temp</span><span class="p">.</span><span class="n">CNT</span> <span class="o">&gt;=</span> <span class="mi">3</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">##</span> <span class="err">直接使用别名进行简单计算即可</span>
+<span class="k">SELECT</span> <span class="k">DISTINCT</span>
+    <span class="n">l1</span><span class="p">.</span><span class="n">Num</span> <span class="k">AS</span> <span class="n">ConsecutiveNums</span>
+<span class="k">FROM</span>
+    <span class="n">Logs</span> <span class="n">l1</span><span class="p">,</span>
+    <span class="n">Logs</span> <span class="n">l2</span><span class="p">,</span>
+    <span class="n">Logs</span> <span class="n">l3</span>
+<span class="k">WHERE</span>
+    <span class="n">l1</span><span class="p">.</span><span class="n">Id</span> <span class="o">=</span> <span class="n">l2</span><span class="p">.</span><span class="n">Id</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">AND</span> <span class="n">l2</span><span class="p">.</span><span class="n">Id</span> <span class="o">=</span> <span class="n">l3</span><span class="p">.</span><span class="n">Id</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">AND</span> <span class="n">l1</span><span class="p">.</span><span class="n">Num</span> <span class="o">=</span> <span class="n">l2</span><span class="p">.</span><span class="n">Num</span>
+    <span class="k">AND</span> <span class="n">l2</span><span class="p">.</span><span class="n">Num</span> <span class="o">=</span> <span class="n">l3</span><span class="p">.</span><span class="n">Num</span>
+<span class="p">;</span>
+<span class="o">#</span> <span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span> <span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">consecutive</span><span class="o">-</span><span class="n">numbers</span><span class="o">/</span>
+<span class="o">#</span> <span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span> <span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="181-超过经理收入的员工"><a href="https://leetcode.cn/problems/employees-earning-more-than-their-managers/description/">181. 超过经理收入的员工</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">直接使用子查询别名进行筛选</span>
+<span class="k">SELECT</span> <span class="n">name</span> <span class="k">as</span> <span class="n">Employee</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">JOIN</span> <span class="p">(</span>
+ <span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span> <span class="n">salary</span> <span class="k">FROM</span> <span class="n">Employee</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="n">new_table</span> <span class="k">ON</span> <span class="n">Employee</span><span class="p">.</span><span class="n">managerId</span> <span class="o">=</span> <span class="n">new_table</span><span class="p">.</span><span class="n">id</span> <span class="k">WHERE</span>  <span class="n">Employee</span><span class="p">.</span><span class="n">salary</span> <span class="o">&gt;</span> <span class="n">new_table</span><span class="p">.</span><span class="n">salary</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用</span><span class="k">inner</span> <span class="k">join</span> <span class="err">进行快速查询</span>
+<span class="k">select</span> <span class="n">a</span><span class="p">.</span><span class="n">name</span> <span class="k">as</span> <span class="n">Employee</span>
+<span class="k">from</span>  <span class="n">Employee</span> <span class="k">as</span> <span class="n">a</span>  <span class="k">inner</span> <span class="k">join</span> <span class="n">Employee</span> <span class="k">as</span> <span class="n">b</span>
+<span class="k">on</span> <span class="n">a</span><span class="p">.</span><span class="n">managerId</span><span class="o">=</span><span class="n">b</span><span class="p">.</span><span class="n">id</span> <span class="k">and</span> <span class="n">a</span><span class="p">.</span><span class="n">salary</span><span class="o">&gt;</span><span class="n">b</span><span class="p">.</span><span class="n">salary</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="err">直接别名进行联表查询</span>
+<span class="k">SELECT</span>
+    <span class="o">*</span>
+<span class="k">FROM</span>
+    <span class="n">Employee</span> <span class="k">AS</span> <span class="n">a</span><span class="p">,</span>
+    <span class="n">Employee</span> <span class="k">AS</span> <span class="n">b</span>
+<span class="k">WHERE</span>
+    <span class="n">a</span><span class="p">.</span><span class="n">ManagerId</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">Id</span>
+        <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">Salary</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">.</span><span class="n">Salary</span><span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">employees</span><span class="o">-</span><span class="n">earning</span><span class="o">-</span><span class="k">more</span><span class="o">-</span><span class="k">than</span><span class="o">-</span><span class="n">their</span><span class="o">-</span><span class="n">managers</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+
+<span class="o">#</span> <span class="err">使用</span><span class="k">join</span> <span class="err">进行查询</span>
+<span class="k">SELECT</span>
+     <span class="n">a</span><span class="p">.</span><span class="n">NAME</span> <span class="k">AS</span> <span class="n">Employee</span>
+<span class="k">FROM</span> <span class="n">Employee</span> <span class="k">AS</span> <span class="n">a</span> <span class="k">JOIN</span> <span class="n">Employee</span> <span class="k">AS</span> <span class="n">b</span>
+     <span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">ManagerId</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">Id</span>
+     <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">Salary</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">.</span><span class="n">Salary</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">employees</span><span class="o">-</span><span class="n">earning</span><span class="o">-</span><span class="k">more</span><span class="o">-</span><span class="k">than</span><span class="o">-</span><span class="n">their</span><span class="o">-</span><span class="n">managers</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="182-查找重复的电子邮箱"><a href="https://leetcode.cn/problems/duplicate-emails/description/">182. 查找重复的电子邮箱</a></h3>
+
+<ul>
+  <li>提交解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+
+<span class="k">SELECT</span> <span class="n">email</span> <span class="k">AS</span> <span class="n">Email</span> <span class="k">FROM</span> <span class="n">Person</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">email</span> <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">Email</span> <span class="k">FROM</span> <span class="n">PERSON</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">EMAIL</span> <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="n">EMAIL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">##</span> <span class="mi">1</span><span class="p">.</span> <span class="err">直接使用</span><span class="k">group</span> <span class="k">by</span> <span class="err">和临时表</span>
+<span class="k">select</span> <span class="n">Email</span> <span class="k">from</span>
+<span class="p">(</span>
+  <span class="k">select</span> <span class="n">Email</span><span class="p">,</span> <span class="k">count</span><span class="p">(</span><span class="n">Email</span><span class="p">)</span> <span class="k">as</span> <span class="n">num</span>
+  <span class="k">from</span> <span class="n">Person</span>
+  <span class="k">group</span> <span class="k">by</span> <span class="n">Email</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">statistic</span>
+<span class="k">where</span> <span class="n">num</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">duplicate</span><span class="o">-</span><span class="n">emails</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+
+<span class="o">##</span> <span class="mi">2</span><span class="p">.</span> <span class="k">group</span> <span class="k">by</span> <span class="err">和</span><span class="k">having</span>
+
+<span class="k">select</span> <span class="n">Email</span> <span class="k">from</span> <span class="n">Person</span> <span class="k">group</span> <span class="k">by</span> <span class="n">Email</span> <span class="k">having</span> <span class="k">count</span><span class="p">(</span><span class="n">Email</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">;</span>
+
+</code></pre></div></div>
+
+<h3 id="183-从不订购的客户"><a href="https://leetcode.cn/problems/customers-who-never-order/description/">183. 从不订购的客户</a></h3>
+
+<ul>
+  <li>提交解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+
+<span class="k">SELECT</span> <span class="n">name</span> <span class="k">AS</span> <span class="n">Customers</span> <span class="k">FROM</span> <span class="n">Customers</span> <span class="k">WHERE</span> <span class="n">Id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span> 
+    <span class="k">SELECT</span> <span class="k">DISTINCT</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span> <span class="k">AS</span> <span class="n">customerId</span> <span class="k">FROM</span> <span class="n">Orders</span>
+<span class="p">);</span> 
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">思路相同，没有使用</span><span class="k">DISTINCT</span> <span class="err">节省了时间</span>
+<span class="k">SELECT</span>
+    <span class="n">name</span> <span class="k">as</span> <span class="n">Customers</span>
+<span class="k">FROM</span>
+    <span class="n">Customers</span>
+<span class="k">WHERE</span>
+    <span class="n">id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">customerId</span> <span class="k">as</span> <span class="n">id</span> <span class="k">FROM</span> <span class="n">Orders</span><span class="p">)</span>
+
+<span class="o">#</span> <span class="err">使用</span><span class="k">NOT</span> <span class="k">EXISTS</span> <span class="err">函数节省了时间</span>
+<span class="k">SELECT</span> <span class="n">Name</span> <span class="k">as</span> <span class="n">Customers</span> <span class="k">FROM</span> <span class="n">Customers</span> <span class="k">as</span> <span class="n">c1</span>
+<span class="k">WHERE</span> <span class="k">NOT</span> <span class="k">EXISTS</span><span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">Id</span> <span class="k">FROM</span> <span class="n">Orders</span> <span class="k">as</span> <span class="n">c2</span>
+    <span class="k">WHERE</span> <span class="n">c2</span><span class="p">.</span><span class="n">CustomerId</span> <span class="o">=</span> <span class="n">c1</span><span class="p">.</span><span class="n">Id</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="err">使用</span> <span class="k">not</span> <span class="k">in</span> <span class="err">进行排除</span>
+<span class="k">select</span> <span class="n">customers</span><span class="p">.</span><span class="n">name</span> <span class="k">as</span> <span class="s1">'Customers'</span>
+<span class="k">from</span> <span class="n">customers</span>
+<span class="k">where</span> <span class="n">customers</span><span class="p">.</span><span class="n">id</span> <span class="k">not</span> <span class="k">in</span>
+<span class="p">(</span>
+    <span class="k">select</span> <span class="n">customerid</span> <span class="k">from</span> <span class="n">orders</span>
+<span class="p">);</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">customers</span><span class="o">-</span><span class="n">who</span><span class="o">-</span><span class="n">never</span><span class="o">-</span><span class="k">order</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+
+<span class="o">#</span> <span class="err">使用左连接</span>
+<span class="k">SELECT</span> <span class="n">Customers</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="n">Customers</span> 
+<span class="k">FROM</span> <span class="n">Customers</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">Orders</span> <span class="k">ON</span> <span class="n">Customers</span><span class="p">.</span><span class="n">Id</span> <span class="o">=</span> <span class="n">Orders</span><span class="p">.</span><span class="n">CustomerId</span> <span class="k">WHERE</span> <span class="n">customerId</span> <span class="k">is</span> <span class="k">NULL</span><span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">customers</span><span class="o">-</span><span class="n">who</span><span class="o">-</span><span class="n">never</span><span class="o">-</span><span class="k">order</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+
+</code></pre></div></div>
+
+<h3 id="184-部门工资最高的员工"><a href="https://leetcode.cn/problems/department-highest-salary/description/">184. 部门工资最高的员工</a></h3>
+
+<ul>
+  <li>提交解答:</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用子查询，找出每个部门的最大值，然后匹配即可</span>
+
+<span class="k">SELECT</span> <span class="n">b</span><span class="p">.</span><span class="n">department_name</span> <span class="k">AS</span> <span class="n">Department</span><span class="p">,</span> <span class="n">Employee</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="n">Employee</span><span class="p">,</span> <span class="n">Employee</span><span class="p">.</span><span class="n">Salary</span> <span class="k">AS</span> <span class="n">Salary</span>
+<span class="k">FROM</span> <span class="n">Employee</span><span class="p">,</span> <span class="p">(</span>
+		<span class="k">SELECT</span> <span class="k">MAX</span><span class="p">(</span><span class="n">salary</span><span class="p">)</span> <span class="k">AS</span> <span class="n">max_salary</span><span class="p">,</span> <span class="n">Department</span><span class="p">.</span><span class="n">id</span> <span class="k">AS</span> <span class="n">department_id</span><span class="p">,</span> <span class="n">Department</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="n">department_name</span>
+		<span class="k">FROM</span> <span class="n">Employee</span>
+			<span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">Department</span> <span class="k">ON</span> <span class="n">Department</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">Employee</span><span class="p">.</span><span class="n">departmentId</span>
+		<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">departmentId</span>
+	<span class="p">)</span> <span class="n">b</span>
+<span class="k">WHERE</span> <span class="n">Employee</span><span class="p">.</span><span class="n">departmentId</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">department_id</span>
+	<span class="k">AND</span> <span class="n">Employee</span><span class="p">.</span><span class="n">Salary</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">max_salary</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答1：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用</span><span class="n">rank</span> <span class="err">统计最大值</span>
+<span class="k">SELECT</span> <span class="n">Department</span><span class="p">,</span> <span class="n">name</span> <span class="k">AS</span> <span class="n">Employee</span><span class="p">,</span> <span class="n">salary</span> <span class="k">AS</span> <span class="n">Salary</span> 
+<span class="k">FROM</span>
+<span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="n">Department</span><span class="p">,</span> 
+           <span class="n">RANK</span><span class="p">()</span> <span class="n">OVER</span><span class="p">(</span><span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">departmentId</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span><span class="p">)</span> <span class="k">AS</span> <span class="n">rk</span>
+    <span class="k">FROM</span> <span class="n">Employee</span> <span class="n">a</span> <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">Department</span> <span class="n">b</span> <span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">departmentId</span> <span class="o">=</span><span class="n">b</span><span class="p">.</span><span class="n">id</span>
+<span class="p">)</span> <span class="n">t</span>
+<span class="k">WHERE</span> <span class="n">rk</span> <span class="o">=</span> <span class="mi">1</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答2：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用连接后，直接使用</span><span class="k">IN</span> <span class="err">查询</span>
+<span class="k">SELECT</span> <span class="n">Department</span><span class="p">.</span><span class="n">Name</span> <span class="k">AS</span> <span class="s1">'Department'</span><span class="p">,</span> <span class="n">Employee</span><span class="p">.</span><span class="n">Name</span> <span class="k">AS</span> <span class="s1">'Employee'</span><span class="p">,</span> <span class="n">Salary</span>
+<span class="k">FROM</span> <span class="n">Employee</span>
+<span class="k">JOIN</span> <span class="n">Department</span> 
+<span class="k">ON</span> <span class="n">Employee</span><span class="p">.</span><span class="n">DepartmentId</span> <span class="o">=</span> <span class="n">Department</span><span class="p">.</span><span class="n">Id</span>
+<span class="k">WHERE</span> <span class="p">(</span><span class="n">Employee</span><span class="p">.</span><span class="n">DepartmentId</span><span class="p">,</span> <span class="n">Salary</span><span class="p">)</span> 
+<span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">DepartmentId</span><span class="p">,</span> <span class="k">MAX</span><span class="p">(</span><span class="n">Salary</span><span class="p">)</span>
+   <span class="k">FROM</span> <span class="n">Employee</span>
+   <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">DepartmentId</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">Department</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="s1">'Department'</span><span class="p">,</span>
+    <span class="n">Employee</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="s1">'
+
+Employee'</span><span class="p">,</span>
+    <span class="n">Salary</span>
+<span class="k">FROM</span>
+    <span class="n">Employee</span>
+        <span class="k">JOIN</span>
+    <span class="n">Department</span> <span class="k">ON</span> <span class="n">Employee</span><span class="p">.</span><span class="n">DepartmentId</span> <span class="o">=</span> <span class="n">Department</span><span class="p">.</span><span class="n">Id</span>
+<span class="k">WHERE</span>
+    <span class="p">(</span><span class="n">Employee</span><span class="p">.</span><span class="n">DepartmentId</span> <span class="p">,</span> <span class="n">Salary</span><span class="p">)</span> <span class="k">IN</span>
+    <span class="p">(</span>   <span class="k">SELECT</span>
+            <span class="n">DepartmentId</span><span class="p">,</span> <span class="k">MAX</span><span class="p">(</span><span class="n">Salary</span><span class="p">)</span>
+        <span class="k">FROM</span>
+            <span class="n">Employee</span>
+        <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">DepartmentId</span>
+    <span class="p">)</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">department</span><span class="o">-</span><span class="n">highest</span><span class="o">-</span><span class="n">salary</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+
+</code></pre></div></div>
+
+<h3 id="185-部门工资前三高的所有员工"><a href="https://leetcode.cn/problems/department-top-three-salaries/description/">185. 部门工资前三高的所有员工</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="err">子查询排序后，使用</span> <span class="n">ROW_NUMBER</span> <span class="err">窗口函数统计行数</span>
+<span class="k">SELECT</span>  <span class="n">Department</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="n">Department</span><span class="p">,</span> <span class="n">Employee</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="n">Employee</span> <span class="p">,</span> <span class="n">Employee</span><span class="p">.</span><span class="n">salary</span> <span class="k">AS</span> <span class="n">Salary</span>  
+<span class="k">FROM</span> <span class="n">Employee</span> <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">departmentId</span><span class="p">,</span> <span class="k">MIN</span><span class="p">(</span><span class="n">salary</span><span class="p">)</span> <span class="k">as</span> <span class="n">min_salary</span>  <span class="k">FROM</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">departmentId</span><span class="p">,</span><span class="n">salary</span><span class="p">,</span>
+        <span class="n">ROW_NUMBER</span><span class="p">()</span>  <span class="n">OVER</span><span class="p">(</span><span class="n">partition</span> <span class="k">by</span> <span class="n">departmentId</span>  <span class="k">order</span> <span class="k">by</span> <span class="n">salary</span>  <span class="k">desc</span><span class="p">)</span> <span class="k">as</span> <span class="n">num</span>
+    <span class="k">FROM</span> 
+    <span class="p">(</span>
+        <span class="k">select</span> <span class="n">departmentId</span><span class="p">,</span><span class="n">salary</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">departmentId</span><span class="p">,</span><span class="n">salary</span> <span class="p">)</span> <span class="n">b</span>
+    <span class="p">)</span> <span class="k">c</span>
+    <span class="k">WHERE</span> <span class="n">num</span> <span class="o">&lt;=</span> <span class="mi">3</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">departmentId</span>
+<span class="p">)</span> <span class="n">d</span> <span class="k">ON</span>  <span class="n">Employee</span><span class="p">.</span><span class="n">departmentId</span> <span class="o">=</span> <span class="n">d</span><span class="p">.</span><span class="n">departmentId</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">Department</span>  <span class="k">ON</span> <span class="n">Employee</span><span class="p">.</span><span class="n">departmentId</span> <span class="o">=</span> <span class="n">Department</span><span class="p">.</span><span class="n">id</span> 
+<span class="k">WHERE</span> <span class="n">Employee</span><span class="p">.</span><span class="n">salary</span> <span class="o">&gt;=</span> <span class="n">d</span><span class="p">.</span><span class="n">min_salary</span> <span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答1：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">##</span> <span class="err">直接左连接相同表，找到比自己小的表，最终统计小的数目即可</span>
+<span class="k">SELECT</span>  <span class="n">d</span><span class="p">.</span><span class="n">name</span> <span class="n">Department</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">name</span> <span class="n">Employee</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">salary</span> <span class="n">Salary</span>
+<span class="k">FROM</span> <span class="n">Employee</span> <span class="n">e</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">Employee</span> <span class="n">ee</span>
+<span class="k">ON</span> <span class="n">e</span><span class="p">.</span><span class="n">departmentId</span> <span class="o">=</span> <span class="n">ee</span><span class="p">.</span><span class="n">departmentId</span> <span class="k">AND</span> <span class="n">e</span><span class="p">.</span><span class="n">salary</span> <span class="o">&lt;</span> <span class="n">ee</span><span class="p">.</span><span class="n">salary</span>
+<span class="k">JOIN</span> <span class="n">Department</span> <span class="n">d</span>
+<span class="k">ON</span> <span class="n">d</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">departmentId</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">e</span><span class="p">.</span><span class="n">id</span>
+<span class="k">HAVING</span> <span class="k">count</span><span class="p">(</span><span class="k">distinct</span><span class="p">(</span><span class="n">ee</span><span class="p">.</span><span class="n">salary</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答2：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">直接使用</span> <span class="n">DENSE_RANK</span> <span class="err">窗口函数，统计去重后的行数</span>
+<span class="k">SELECT</span> <span class="n">Department</span><span class="p">,</span> <span class="n">name</span> <span class="k">AS</span> <span class="n">Employee</span><span class="p">,</span> <span class="n">salary</span> <span class="k">AS</span> <span class="n">Salary</span> 
+<span class="k">FROM</span>
+<span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">name</span> <span class="k">AS</span> <span class="n">Department</span><span class="p">,</span> 
+           <span class="n">DENSE_RANK</span><span class="p">()</span> <span class="n">OVER</span><span class="p">(</span><span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">a</span><span class="p">.</span><span class="n">departmentId</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span><span class="p">)</span> <span class="k">AS</span> <span class="n">rk</span>
+    <span class="k">FROM</span> <span class="n">Employee</span> <span class="n">a</span> <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">Department</span> <span class="n">b</span> <span class="k">ON</span> <span class="n">a</span><span class="p">.</span><span class="n">departmentId</span> <span class="o">=</span><span class="n">b</span><span class="p">.</span><span class="n">id</span>
+<span class="p">)</span> <span class="n">t</span>
+<span class="k">WHERE</span> <span class="n">rk</span> <span class="o">&lt;=</span> <span class="mi">3</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">d</span><span class="p">.</span><span class="n">Name</span> <span class="k">AS</span> <span class="s1">'Department'</span><span class="p">,</span> <span class="n">e1</span><span class="p">.</span><span class="n">Name</span> <span class="k">AS</span> <span class="s1">'Employee'</span><span class="p">,</span> <span class="n">e1</span><span class="p">.</span><span class="n">Salary</span>
+<span class="k">FROM</span>
+    <span class="n">Employee</span> <span class="n">e1</span>
+        <span class="k">JOIN</span>
+    <span class="n">Department</span> <span class="n">d</span> <span class="k">ON</span> <span class="n">e1</span><span class="p">.</span><span class="n">DepartmentId</span> <span class="o">=</span> <span class="n">d</span><span class="p">.</span><span class="n">Id</span>
+<span class="k">WHERE</span>
+    <span class="mi">3</span> <span class="o">&gt;</span> <span class="p">(</span><span class="k">SELECT</span>
+            <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span> <span class="n">e2</span><span class="p">.</span><span class="n">Salary</span><span class="p">)</span>
+        <span class="k">FROM</span>
+            <span class="n">Employee</span> <span class="n">e2</span>
+        <span class="k">WHERE</span>
+            <span class="n">e2</span><span class="p">.</span><span class="n">Salary</span> <span class="o">&gt;</span> <span class="n">e1</span><span class="p">.</span><span class="n">Salary</span>
+                <span class="k">AND</span> <span class="n">e1</span><span class="p">.</span><span class="n">DepartmentId</span> <span class="o">=</span> <span class="n">e2</span><span class="p">.</span><span class="n">DepartmentId</span>
+        <span class="p">)</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">department</span><span class="o">-</span><span class="n">top</span><span class="o">-</span><span class="n">three</span><span class="o">-</span><span class="n">salaries</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="196-删除重复的电子邮箱"><a href="https://leetcode.cn/problems/delete-duplicate-emails/description/">196. 删除重复的电子邮箱</a></h3>
+
+<ul>
+  <li>提交解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用子查询找出最小的</span><span class="n">id</span><span class="err">即可</span>
+<span class="k">DELETE</span> <span class="k">FROM</span>  <span class="n">Person</span> <span class="k">WHERE</span> <span class="n">id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">min_id</span> <span class="k">FROM</span>
+        <span class="p">(</span><span class="k">select</span> <span class="n">email</span><span class="p">,</span> <span class="k">MIN</span><span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">min_id</span> <span class="k">FROM</span> <span class="n">Person</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">email</span><span class="p">)</span> <span class="n">a</span>
+<span class="p">);</span>
+
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">delete</span> <span class="k">from</span> <span class="n">Person</span>
+<span class="k">where</span> <span class="n">id</span> <span class="k">in</span><span class="p">(</span>
+    <span class="k">select</span> <span class="n">id</span> <span class="k">from</span><span class="p">(</span>
+        <span class="k">select</span> <span class="o">*</span><span class="p">,</span><span class="n">row_number</span><span class="p">()</span> <span class="n">over</span><span class="p">(</span><span class="n">partition</span> <span class="k">by</span> <span class="n">email</span> <span class="k">order</span> <span class="k">by</span> <span class="n">id</span> <span class="p">)</span> <span class="k">as</span> <span class="n">row_num</span>
+        <span class="k">from</span> <span class="n">Person</span>
+    <span class="p">)</span> <span class="n">a</span>
+    <span class="k">where</span> <span class="n">row_num</span> <span class="o">&gt;</span><span class="mi">1</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">使用</span><span class="k">where</span><span class="err">语句更加简洁</span>
+<span class="k">DELETE</span> <span class="n">p1</span> <span class="k">FROM</span>
+    <span class="n">Person</span> <span class="n">p1</span><span class="p">,</span>
+    <span class="n">Person</span> <span class="n">p2</span>
+<span class="k">WHERE</span>
+    <span class="n">p1</span><span class="p">.</span><span class="n">Email</span> <span class="o">=</span> <span class="n">p2</span><span class="p">.</span><span class="n">Email</span> <span class="k">AND</span> <span class="n">p1</span><span class="p">.</span><span class="n">Id</span> <span class="o">&gt;</span> <span class="n">p2</span><span class="p">.</span><span class="n">Id</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="k">delete</span><span class="o">-</span><span class="n">duplicate</span><span class="o">-</span><span class="n">emails</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+
+</code></pre></div></div>
+
+<h3 id="511-游戏玩法分析-i"><a href="https://leetcode.cn/problems/game-play-analysis-i/description/">511. 游戏玩法分析 I</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">SELECT</span> <span class="n">player_id</span><span class="p">,</span> <span class="k">MIN</span><span class="p">(</span><span class="n">event_date</span><span class="p">)</span> <span class="k">AS</span> <span class="n">first_login</span>  <span class="k">FROM</span> <span class="n">Activity</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">player_id</span><span class="p">;</span> 
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">elect</span> <span class="n">a1</span><span class="p">.</span><span class="n">player_id</span><span class="p">,</span> <span class="k">min</span><span class="p">(</span><span class="n">a1</span><span class="p">.</span><span class="n">event_date</span><span class="p">)</span> <span class="k">as</span> <span class="n">first_login</span>
+<span class="k">from</span> <span class="n">Activity</span> <span class="k">as</span> <span class="n">a1</span>
+<span class="k">group</span> <span class="k">by</span> <span class="n">a1</span><span class="p">.</span><span class="n">player_id</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">使用窗口函数进行解决</span>
+<span class="k">SELECT</span> <span class="k">DISTINCT</span>
+  <span class="n">A</span><span class="p">.</span><span class="n">player_id</span><span class="p">,</span>
+  <span class="n">FIRST_VALUE</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">event_date</span><span class="p">)</span> <span class="n">OVER</span> <span class="p">(</span>
+    <span class="n">PARTITION</span> <span class="k">BY</span>
+      <span class="n">A</span><span class="p">.</span><span class="n">player_id</span>
+    <span class="k">ORDER</span> <span class="k">BY</span>
+      <span class="n">A</span><span class="p">.</span><span class="n">event_date</span>
+  <span class="p">)</span> <span class="k">AS</span> <span class="n">first_login</span>
+<span class="k">FROM</span>
+  <span class="n">Activity</span> <span class="n">A</span><span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">game</span><span class="o">-</span><span class="n">play</span><span class="o">-</span><span class="n">analysis</span><span class="o">-</span><span class="n">i</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="550-游戏玩法分析-iv"><a href="https://leetcode.cn/problems/game-play-analysis-iv/description/">550. 游戏玩法分析 IV</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">SELECT</span>  <span class="n">IFNULL</span><span class="p">(</span>
+    <span class="n">ROUND</span><span class="p">(</span>
+        <span class="k">COUNT</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">player_id</span><span class="p">)</span> <span class="o">/</span> <span class="k">c</span><span class="p">.</span><span class="n">all_user</span><span class="p">,</span> 
+        <span class="mi">2</span>
+    <span class="p">),</span> 
+    <span class="mi">0</span>
+    <span class="p">)</span> <span class="k">AS</span> <span class="n">fraction</span> <span class="k">FROM</span> 
+<span class="n">Activity</span> <span class="n">a</span><span class="p">,</span>
+<span class="o">#</span> <span class="err">首次登陆时间</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">player_id</span><span class="p">,</span> <span class="k">MIN</span><span class="p">(</span><span class="n">event_date</span><span class="p">)</span> <span class="k">AS</span> <span class="n">frist_date</span> <span class="k">FROM</span> <span class="n">Activity</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">player_id</span><span class="p">)</span> <span class="n">b</span><span class="p">,</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="p">(</span><span class="n">player_id</span><span class="p">))</span>  <span class="k">AS</span> <span class="n">all_user</span> <span class="k">FROM</span>  <span class="n">Activity</span><span class="p">)</span>  <span class="k">c</span>
+<span class="k">WHERE</span> <span class="n">a</span><span class="p">.</span><span class="n">player_id</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">player_id</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">event_date</span> <span class="o">=</span> <span class="n">date_add</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">frist_date</span><span class="p">,</span> <span class="n">interval</span> <span class="mi">1</span> <span class="k">day</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+
+<span class="o">#</span> <span class="err">使用</span><span class="n">datediff</span><span class="err">直接进行判断</span>
+<span class="k">select</span> <span class="n">round</span><span class="p">(</span><span class="k">avg</span><span class="p">(</span><span class="n">if</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">event_date</span> <span class="k">is</span> <span class="k">null</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span> <span class="n">fraction</span>
+<span class="k">from</span> 
+    <span class="p">(</span><span class="k">select</span> <span class="n">player_id</span><span class="p">,</span> <span class="k">min</span><span class="p">(</span><span class="n">event_date</span><span class="p">)</span> <span class="k">as</span> <span class="n">login</span>
+    <span class="k">from</span> <span class="n">activity</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="n">player_id</span><span class="p">)</span> <span class="n">p</span> 
+<span class="k">left</span> <span class="k">join</span> <span class="n">activity</span> <span class="n">a</span> 
+<span class="k">on</span> <span class="n">p</span><span class="p">.</span><span class="n">player_id</span><span class="o">=</span><span class="n">a</span><span class="p">.</span><span class="n">player_id</span> <span class="k">and</span> <span class="n">datediff</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">event_date</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">login</span><span class="p">)</span><span class="o">=</span><span class="mi">1</span>
+
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答2：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">思路基本相同</span>
+<span class="k">SELECT</span> 
+    <span class="n">IFNULL</span><span class="p">(</span><span class="n">ROUND</span><span class="p">(</span><span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="p">(</span><span class="k">result</span><span class="p">.</span><span class="n">player_id</span><span class="p">))</span> <span class="o">/</span> <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="p">(</span><span class="n">Activity</span><span class="p">.</span><span class="n">player_id</span><span class="p">)),</span><span class="mi">2</span><span class="p">),</span><span class="mi">0</span><span class="p">)</span> 
+    <span class="k">AS</span> <span class="n">fraction</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="n">Activity</span><span class="p">.</span><span class="n">player_id</span> <span class="k">as</span> <span class="n">player_id</span>
+<span class="k">FROM</span> 
+<span class="p">(</span><span class="k">SELECT</span> 
+    <span class="n">player_id</span><span class="p">,</span>
+    <span class="n">DATE_ADD</span><span class="p">(</span><span class="k">MIN</span><span class="p">(</span><span class="n">event_date</span><span class="p">),</span><span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">DAY</span><span class="p">)</span> <span class="k">AS</span> <span class="n">second_date</span>
+<span class="k">FROM</span>
+    <span class="n">Activity</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">player_id</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="n">excepted</span><span class="p">,</span><span class="n">Activity</span>
+<span class="k">WHERE</span> <span class="n">Activity</span><span class="p">.</span><span class="n">event_date</span> <span class="o">=</span> <span class="n">excepted</span><span class="p">.</span><span class="n">second_date</span> <span class="k">and</span> <span class="n">Activity</span><span class="p">.</span><span class="n">player_id</span> <span class="o">=</span> <span class="n">excepted</span><span class="p">.</span><span class="n">player_id</span>
+<span class="p">)</span> <span class="k">AS</span> <span class="k">result</span><span class="p">,</span><span class="n">Activity</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="n">IFNULL</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="k">count</span><span class="p">(</span><span class="k">distinct</span><span class="p">(</span><span class="k">Result</span><span class="p">.</span><span class="n">player_id</span><span class="p">))</span> <span class="o">/</span> <span class="k">count</span><span class="p">(</span><span class="k">distinct</span><span class="p">(</span><span class="n">Activity</span><span class="p">.</span><span class="n">player_id</span><span class="p">)),</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="k">as</span> <span class="n">fraction</span>
+<span class="k">from</span> <span class="p">(</span>
+  <span class="k">select</span> <span class="n">Activity</span><span class="p">.</span><span class="n">player_id</span> <span class="k">as</span> <span class="n">player_id</span>
+  <span class="k">from</span> <span class="p">(</span>
+    <span class="k">select</span> <span class="n">player_id</span><span class="p">,</span> <span class="n">DATE_ADD</span><span class="p">(</span><span class="k">MIN</span><span class="p">(</span><span class="n">event_date</span><span class="p">),</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">DAY</span><span class="p">)</span> <span class="k">as</span> <span class="n">second_date</span>
+    <span class="k">from</span> <span class="n">Activity</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="n">player_id</span>
+  <span class="p">)</span> <span class="k">as</span> <span class="n">Expected</span><span class="p">,</span> <span class="n">Activity</span>
+  <span class="k">where</span> <span class="n">Activity</span><span class="p">.</span><span class="n">event_date</span> <span class="o">=</span> <span class="n">Expected</span><span class="p">.</span><span class="n">second_date</span> <span class="k">and</span> <span class="n">Activity</span><span class="p">.</span><span class="n">player_id</span> <span class="o">=</span> <span class="n">Expected</span><span class="p">.</span><span class="n">player_id</span>
+<span class="p">)</span> <span class="k">as</span> <span class="k">Result</span><span class="p">,</span> <span class="n">Activity</span>
+
+<span class="o">#</span> <span class="err">作者：力扣官方题解</span>
+<span class="o">#</span> <span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">game</span><span class="o">-</span><span class="n">play</span><span class="o">-</span><span class="n">analysis</span><span class="o">-</span><span class="n">iv</span><span class="o">/</span>
+<span class="o">#</span> <span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span> <span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="577-员工奖金"><a href="https://leetcode.cn/problems/employee-bonus/description/">577. 员工奖金</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">Employee</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">bonus</span> <span class="k">FROM</span> <span class="n">Employee</span> 
+<span class="k">LEFT</span> <span class="k">JOIN</span>  <span class="n">Bonus</span> <span class="k">ON</span> 
+    <span class="n">Employee</span><span class="p">.</span><span class="n">empId</span> <span class="o">=</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">empId</span> 
+<span class="k">WHERE</span> <span class="n">Employee</span><span class="p">.</span><span class="n">empId</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">empId</span> <span class="k">FROM</span> <span class="n">Bonus</span> <span class="k">WHERE</span> <span class="n">bonus</span> <span class="o">&gt;=</span><span class="mi">1000</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">select</span> <span class="n">Employee</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">bonus</span> <span class="k">from</span> <span class="n">Employee</span> <span class="k">left</span> <span class="k">join</span> <span class="n">Bonus</span> <span class="k">on</span> <span class="n">Employee</span><span class="p">.</span><span class="n">empId</span><span class="o">=</span><span class="n">Bonus</span><span class="p">.</span><span class="n">empId</span> <span class="k">where</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">bonus</span> <span class="o">&lt;</span><span class="mi">1000</span> <span class="k">or</span> <span class="n">bonus</span>  <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">select</span> <span class="n">name</span><span class="p">,</span> <span class="n">bonus</span>
+<span class="k">from</span> <span class="n">Employee</span> <span class="k">left</span> <span class="k">join</span> <span class="n">Bonus</span>
+<span class="k">on</span> <span class="n">Employee</span><span class="p">.</span><span class="n">EmpId</span> <span class="o">=</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">EmpId</span>
+<span class="k">where</span> <span class="n">bonus</span> <span class="k">is</span> <span class="k">null</span> <span class="k">or</span> <span class="n">bonus</span> <span class="o">&lt;</span> <span class="mi">1000</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">employee</span><span class="o">-</span><span class="n">bonus</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="262-行程和用户"><a href="https://leetcode.cn/problems/trips-and-users/description/">262. 行程和用户</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="mi">1</span><span class="p">.</span> <span class="err">先做子查询，查询出非禁止用户的所有订单</span>
+<span class="o">#</span> <span class="mi">2</span><span class="p">.</span> <span class="err">子查询统计，每天订单总数</span><span class="o">/</span><span class="err">取消订单数，天数</span>
+<span class="o">#</span> <span class="mi">3</span><span class="p">.</span> <span class="n">round</span><span class="err">计算对应值</span>
+
+<span class="k">SELECT</span> <span class="n">b</span><span class="p">.</span><span class="n">request_at</span> <span class="k">AS</span> <span class="k">Day</span><span class="p">,</span> <span class="n">IFNULL</span><span class="p">(</span><span class="n">ROUND</span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">completed_count</span> <span class="o">/</span><span class="n">b</span><span class="p">.</span><span class="n">completed_count</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">.</span><span class="mi">00</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"Cancellation Rate"</span> <span class="k">FROM</span> <span class="p">(</span>
+    <span class="k">SELECT</span>  <span class="n">request_at</span> <span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">completed_count</span> <span class="k">FROM</span> <span class="p">(</span>
+        <span class="k">SELECT</span> <span class="n">status</span><span class="p">,</span> <span class="n">request_at</span>   <span class="k">FROM</span> <span class="n">Trips</span> <span class="k">WHERE</span> <span class="n">client_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+            <span class="k">SELECT</span> <span class="n">users_id</span> <span class="k">FROM</span> <span class="n">Users</span> <span class="k">WHERE</span> <span class="n">banned</span> <span class="o">=</span> <span class="nv">"Yes"</span>
+        <span class="p">)</span> <span class="k">AND</span> <span class="n">driver_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+            <span class="k">SELECT</span> <span class="n">users_id</span> <span class="k">FROM</span> <span class="n">Users</span> <span class="k">WHERE</span> <span class="n">banned</span> <span class="o">=</span> <span class="nv">"Yes"</span>
+        <span class="p">)</span> <span class="p">)</span> <span class="n">a</span> <span class="k">WHERE</span> <span class="n">request_at</span> <span class="k">between</span>  <span class="nv">"2013-10-01"</span> <span class="k">and</span> <span class="nv">"2013-10-03"</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">request_at</span> 
+    <span class="p">)</span> <span class="n">b</span>  
+<span class="k">LEFT</span> <span class="k">JOIN</span> 
+    <span class="p">(</span>
+    <span class="k">SELECT</span>  <span class="n">request_at</span> <span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">completed_count</span> <span class="k">FROM</span> <span class="p">(</span>
+        <span class="k">SELECT</span> <span class="n">status</span><span class="p">,</span> <span class="n">request_at</span>   <span class="k">FROM</span> <span class="n">Trips</span> <span class="k">WHERE</span> <span class="n">client_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+            <span class="k">SELECT</span> <span class="n">users_id</span> <span class="k">FROM</span> <span class="n">Users</span> <span class="k">WHERE</span> <span class="n">banned</span> <span class="o">=</span> <span class="nv">"Yes"</span>
+        <span class="p">)</span> <span class="k">AND</span> <span class="n">driver_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+            <span class="k">SELECT</span> <span class="n">users_id</span> <span class="k">FROM</span> <span class="n">Users</span> <span class="k">WHERE</span> <span class="n">banned</span> <span class="o">=</span> <span class="nv">"Yes"</span>
+        <span class="p">)</span> <span class="p">)</span> <span class="n">b</span> <span class="k">WHERE</span> <span class="n">status</span>  <span class="o">!=</span> <span class="nv">"completed"</span> <span class="k">AND</span>  <span class="n">request_at</span> <span class="k">between</span>  <span class="nv">"2013-10-01"</span> <span class="k">and</span> <span class="nv">"2013-10-03"</span>  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">request_at</span> 
+    <span class="p">)</span> <span class="k">c</span>  
+<span class="k">ON</span> <span class="n">b</span><span class="p">.</span><span class="n">request_at</span> <span class="o">=</span> <span class="k">c</span><span class="p">.</span><span class="n">request_at</span> 
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答1：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="err">直接使用</span><span class="k">AVG</span><span class="err">函数，统计特殊状态的值</span>
+<span class="k">SELECT</span> 
+    <span class="n">request_at</span> <span class="k">Day</span><span class="p">,</span><span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="n">status</span> <span class="o">!=</span> <span class="s1">'completed'</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span> <span class="s1">'Cancellation Rate'</span> 
+  <span class="k">FROM</span> 
+    <span class="n">Trips</span> 
+  <span class="k">WHERE</span> 
+      <span class="n">client_id</span> <span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">users_id</span> <span class="k">FROM</span> <span class="n">Users</span> <span class="k">WHERE</span> <span class="n">banned</span> <span class="o">=</span> <span class="s1">'No'</span><span class="p">)</span> 
+    <span class="k">AND</span> 
+      <span class="n">driver_id</span> <span class="k">in</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">users_id</span> <span class="k">FROM</span> <span class="n">Users</span> <span class="k">WHERE</span> <span class="n">banned</span> <span class="o">=</span> <span class="s1">'No'</span><span class="p">)</span> 
+    <span class="k">AND</span> 
+      <span class="n">request_at</span> <span class="k">BETWEEN</span> <span class="s1">'2013-10-01'</span> <span class="k">AND</span> <span class="s1">'2013-10-03'</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">request_at</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答2：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用了</span><span class="n">IF</span> <span class="k">SUM</span> <span class="err">运算更快</span>
+<span class="k">SELECT</span> <span class="n">T</span><span class="p">.</span><span class="n">request_at</span> <span class="k">AS</span> <span class="nv">`Day`</span><span class="p">,</span> 
+<span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">IF</span><span class="p">(</span><span class="n">T</span><span class="p">.</span><span class="n">STATUS</span> <span class="o">=</span> <span class="s1">'completed'</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span> <span class="k">COUNT</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">`Cancellation Rate`</span>
+<span class="k">FROM</span> <span class="n">Trips</span> <span class="k">AS</span> <span class="n">T</span>
+<span class="k">JOIN</span> <span class="n">Users</span> <span class="k">AS</span> <span class="n">U1</span> <span class="k">ON</span> <span class="p">(</span><span class="n">T</span><span class="p">.</span><span class="n">client_id</span> <span class="o">=</span> <span class="n">U1</span><span class="p">.</span><span class="n">users_id</span> <span class="k">AND</span> <span class="n">U1</span><span class="p">.</span><span class="n">banned</span> <span class="o">=</span><span class="s1">'No'</span><span class="p">)</span>
+<span class="k">JOIN</span> <span class="n">Users</span> <span class="k">AS</span> <span class="n">U2</span> <span class="k">ON</span> <span class="p">(</span><span class="n">T</span><span class="p">.</span><span class="n">driver_id</span> <span class="o">=</span> <span class="n">U2</span><span class="p">.</span><span class="n">users_id</span> <span class="k">AND</span> <span class="n">U2</span><span class="p">.</span><span class="n">banned</span> <span class="o">=</span><span class="s1">'No'</span><span class="p">)</span>
+<span class="k">WHERE</span> <span class="n">T</span><span class="p">.</span><span class="n">request_at</span> <span class="k">BETWEEN</span> <span class="s1">'2013-10-01'</span> <span class="k">AND</span> <span class="s1">'2013-10-03'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">T</span><span class="p">.</span><span class="n">request_at</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：
+无</li>
+</ul>
+
+<h3 id="570-至少有5名直接下属的经理"><a href="https://leetcode.cn/problems/managers-with-at-least-5-direct-reports/description/">570. 至少有5名直接下属的经理</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+
+<span class="o">#</span> <span class="err">直接使用子查询</span>
+<span class="k">SELECT</span> <span class="n">name</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">WHERE</span> <span class="n">id</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">managerId</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">managerId</span> <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">5</span>
+<span class="p">);</span>
+
+<span class="o">#</span> <span class="err">使用连表查询</span>
+<span class="k">SELECT</span> <span class="n">e1</span><span class="p">.</span><span class="n">name</span> <span class="k">FROM</span> 
+<span class="n">Employee</span> <span class="n">e1</span> <span class="k">LEFT</span> <span class="k">JOIN</span>  <span class="n">Employee</span> <span class="n">e2</span> <span class="k">ON</span>  <span class="n">e1</span><span class="p">.</span><span class="n">Id</span> <span class="o">=</span> <span class="n">e2</span><span class="p">.</span><span class="n">managerId</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">e1</span><span class="p">.</span><span class="n">id</span> <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;=</span><span class="mi">5</span><span class="p">;</span> 
+
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">select</span>
+    <span class="n">m</span><span class="p">.</span><span class="n">name</span> <span class="k">as</span> <span class="n">name</span>
+<span class="k">from</span> 
+    <span class="n">employee</span> <span class="n">e</span> 
+<span class="k">join</span> 
+    <span class="n">employee</span> <span class="n">m</span> 
+<span class="k">on</span> <span class="n">e</span><span class="p">.</span><span class="n">managerId</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">id</span>
+<span class="k">group</span> <span class="k">by</span>
+    <span class="n">e</span><span class="p">.</span><span class="n">managerId</span>
+<span class="k">having</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">5</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="n">Employee</span><span class="p">.</span><span class="n">Name</span> <span class="k">as</span> <span class="n">Name</span>
+<span class="k">from</span> <span class="p">(</span>
+  <span class="k">select</span> <span class="n">ManagerId</span> <span class="k">as</span> <span class="n">Id</span>
+  <span class="k">from</span> <span class="n">Employee</span>
+  <span class="k">group</span> <span class="k">by</span> <span class="n">ManagerId</span>
+  <span class="k">having</span> <span class="k">count</span><span class="p">(</span><span class="n">Id</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">5</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">Manager</span> <span class="k">join</span> <span class="n">Employee</span>
+<span class="k">on</span> <span class="n">Manager</span><span class="p">.</span><span class="n">Id</span> <span class="o">=</span> <span class="n">Employee</span><span class="p">.</span><span class="n">Id</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">managers</span><span class="o">-</span><span class="k">with</span><span class="o">-</span><span class="k">at</span><span class="o">-</span><span class="n">least</span><span class="o">-</span><span class="mi">5</span><span class="o">-</span><span class="n">direct</span><span class="o">-</span><span class="n">reports</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="584-寻找用户推荐人"><a href="https://leetcode.cn/problems/find-customer-referee/description/">584. 寻找用户推荐人</a></h3>
+
+<p><em>参考链接：</em></p>
+<ul>
+  <li>
+    <p><a href="https://blog.csdn.net/lewky_liu/article/details/103059943">SQL - where条件里的!=会过滤值为null的数据</a></p>
+  </li>
+  <li>
+    <p>提交解答：</p>
+  </li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">SELECT</span> <span class="n">name</span> <span class="k">FROM</span> <span class="n">Customer</span>  <span class="k">WHERE</span> <span class="n">referee_id</span> <span class="o">&lt;&gt;</span> <span class="mi">2</span> <span class="k">OR</span> <span class="n">referee_id</span> <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">进行过滤筛选</span>
+<span class="k">select</span> <span class="n">t</span><span class="p">.</span><span class="n">name</span> <span class="k">from</span> <span class="n">Customer</span> <span class="n">t</span> <span class="k">where</span> <span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">referee_id</span><span class="o">!=</span><span class="mi">2</span> <span class="k">or</span> <span class="n">t</span><span class="p">.</span><span class="n">referee_id</span> <span class="k">is</span> <span class="k">null</span><span class="p">)</span>
+<span class="o">#</span> <span class="err">进行对应的过滤筛选</span>
+<span class="k">select</span> <span class="n">name</span> <span class="k">from</span> <span class="n">Customer</span> <span class="k">where</span> <span class="n">referee_id</span> <span class="o">!=</span> <span class="mi">2</span> <span class="k">or</span> <span class="n">referee_id</span> <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">name</span> <span class="k">FROM</span> <span class="n">customer</span> <span class="k">WHERE</span> <span class="n">referee_id</span> <span class="o">!=</span> <span class="mi">2</span> <span class="k">OR</span> <span class="n">referee_id</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="统计用户每天登陆时长"><a href="https://zhuanlan.zhihu.com/p/358887348">统计用户每天登陆时长</a></h3>
+
+<h3 id="577员工奖金"><a href="https://leetcode.cn/problems/employee-bonus/description/">577.员工奖金</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">直接反向取数即可</span>
+<span class="k">SELECT</span> <span class="n">Employee</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">bonus</span> <span class="k">FROM</span> <span class="n">Employee</span> <span class="k">LEFT</span> <span class="k">JOIN</span>  <span class="n">Bonus</span> <span class="k">ON</span> <span class="n">Employee</span><span class="p">.</span><span class="n">empId</span> <span class="o">=</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">empId</span> <span class="k">WHERE</span> <span class="n">Employee</span><span class="p">.</span><span class="n">empId</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">empId</span> <span class="k">FROM</span> <span class="n">Bonus</span> <span class="k">WHERE</span> <span class="n">bonus</span> <span class="o">&gt;=</span><span class="mi">1000</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答(官方题解)：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">直接使用</span><span class="k">null</span><span class="err">过滤</span>
+<span class="k">select</span> <span class="n">Employee</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">bonus</span> <span class="k">from</span> <span class="n">Employee</span> <span class="k">left</span> <span class="k">join</span> <span class="n">Bonus</span> <span class="k">on</span> <span class="n">Employee</span><span class="p">.</span><span class="n">empId</span><span class="o">=</span><span class="n">Bonus</span><span class="p">.</span><span class="n">empId</span> <span class="k">where</span> <span class="n">Bonus</span><span class="p">.</span><span class="n">bonus</span> <span class="o">&lt;</span><span class="mi">1000</span> <span class="k">or</span> <span class="n">bonus</span>  <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="585-2016年的投资"><a href="https://leetcode.cn/problems/investments-in-2016/">585. 2016年的投资</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+
+
+<span class="o">#</span> <span class="err">保留两位小数</span>
+<span class="k">SELECT</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">tiv_2016</span><span class="p">),</span><span class="mi">2</span> <span class="p">)</span> <span class="k">AS</span> <span class="n">tiv_2016</span> <span class="k">FROM</span> <span class="n">Insurance</span> 
+<span class="k">WHERE</span> <span class="n">pid</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="o">#</span> <span class="err">条件</span><span class="mi">1</span>
+    <span class="k">SELECT</span>  <span class="n">a</span><span class="p">.</span><span class="n">pid</span> <span class="k">FROM</span> <span class="n">Insurance</span> <span class="n">a</span><span class="p">,</span> <span class="n">Insurance</span> <span class="n">b</span> <span class="k">WHERE</span> <span class="n">a</span><span class="p">.</span><span class="n">pid</span> <span class="o">!=</span> <span class="n">b</span><span class="p">.</span><span class="n">pid</span>  <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">tiv_2015</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">tiv_2015</span><span class="p">)</span> 
+<span class="k">AND</span> <span class="n">pid</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="o">#</span> <span class="err">条件</span><span class="mi">2</span>
+    <span class="k">SELECT</span>  <span class="n">a</span><span class="p">.</span><span class="n">pid</span> <span class="k">FROM</span> <span class="n">Insurance</span> <span class="n">a</span><span class="p">,</span> <span class="n">Insurance</span> <span class="n">b</span> <span class="k">WHERE</span> <span class="n">a</span><span class="p">.</span><span class="n">pid</span> <span class="o">!=</span> <span class="n">b</span><span class="p">.</span><span class="n">pid</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">lat</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">lat</span> <span class="k">AND</span> <span class="n">a</span><span class="p">.</span><span class="n">lon</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">lon</span>
+<span class="p">);</span>
+
+
+
+<span class="o">#</span> <span class="err">保留两位小数</span>
+<span class="k">SELECT</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">tiv_2016</span><span class="p">),</span><span class="mi">2</span> <span class="p">)</span> <span class="k">AS</span> <span class="n">tiv_2016</span> 
+<span class="k">FROM</span> <span class="n">Insurance</span> 
+<span class="k">WHERE</span>  <span class="n">tiv_2015</span>  <span class="k">IN</span> <span class="p">(</span>
+    <span class="o">#</span> <span class="err">至少一相同</span>
+    <span class="k">SELECT</span> <span class="n">tiv_2015</span>  <span class="k">FROM</span> <span class="n">Insurance</span>  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">tiv_2015</span> <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;</span><span class="mi">1</span> <span class="p">)</span> 
+<span class="k">AND</span> <span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">lat</span><span class="p">,</span><span class="n">lon</span> <span class="k">FROM</span> <span class="n">Insurance</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">lat</span><span class="p">,</span><span class="n">lon</span> <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">使用</span><span class="n">partition</span> <span class="err">直接统计数量</span>
+<span class="k">select</span> <span class="n">round</span><span class="p">(</span> <span class="k">sum</span><span class="p">(</span><span class="n">tiv_2016</span><span class="p">)</span> <span class="p">,</span><span class="mi">2</span><span class="p">)</span>  <span class="n">tiv_2016</span>
+<span class="k">from</span><span class="p">(</span>
+    <span class="k">select</span> <span class="o">*</span><span class="p">,</span>
+    <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="n">over</span><span class="p">(</span><span class="n">partition</span> <span class="k">by</span> <span class="n">tiv_2015</span><span class="p">)</span> <span class="n">c1</span><span class="p">,</span>
+    <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="n">over</span><span class="p">(</span><span class="n">partition</span> <span class="k">by</span> <span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">)</span> <span class="n">c2</span>
+    <span class="k">from</span> <span class="n">Insurance</span>
+<span class="p">)</span> <span class="n">t1</span>
+<span class="k">where</span> <span class="n">t1</span><span class="p">.</span><span class="n">c1</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">and</span> <span class="n">t1</span><span class="p">.</span><span class="n">c2</span> <span class="o">=</span> <span class="mi">1</span> 
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">SELECT</span>
+    <span class="k">SUM</span><span class="p">(</span><span class="n">insurance</span><span class="p">.</span><span class="n">TIV_2016</span><span class="p">)</span> <span class="k">AS</span> <span class="n">TIV_2016</span>
+<span class="k">FROM</span>
+    <span class="n">insurance</span>
+<span class="k">WHERE</span>
+    <span class="n">insurance</span><span class="p">.</span><span class="n">TIV_2015</span> <span class="k">IN</span>
+    <span class="p">(</span>
+      <span class="k">SELECT</span>
+        <span class="n">TIV_2015</span>
+      <span class="k">FROM</span>
+        <span class="n">insurance</span>
+      <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">TIV_2015</span>
+      <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="k">AND</span> <span class="n">CONCAT</span><span class="p">(</span><span class="n">LAT</span><span class="p">,</span> <span class="n">LON</span><span class="p">)</span> <span class="k">IN</span>
+    <span class="p">(</span>
+      <span class="k">SELECT</span>
+        <span class="n">CONCAT</span><span class="p">(</span><span class="n">LAT</span><span class="p">,</span> <span class="n">LON</span><span class="p">)</span>
+      <span class="k">FROM</span>
+        <span class="n">insurance</span>
+      <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">LAT</span> <span class="p">,</span> <span class="n">LON</span>
+      <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="p">)</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">##</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="586-订单最多的客户"><a href="https://leetcode.cn/problems/customer-placing-the-largest-number-of-orders/description/">586. 订单最多的客户</a></h3>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">SELECT</span> <span class="n">customer_number</span> <span class="k">FROM</span> <span class="n">Orders</span> <span class="k">GROUP</span> <span class="k">bY</span> <span class="n">customer_number</span> <span class="k">ORDER</span> <span class="k">BY</span>  <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">不使用</span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="err">直接指明字段，提升了速度</span>
+<span class="k">select</span>  <span class="n">customer_number</span>
+<span class="k">from</span> <span class="n">Orders</span>
+<span class="k">group</span> <span class="k">by</span> <span class="n">customer_number</span>
+<span class="k">order</span> <span class="k">by</span> <span class="k">count</span><span class="p">(</span><span class="n">customer_number</span><span class="p">)</span> <span class="k">desc</span>
+<span class="k">limit</span> <span class="mi">1</span>
+
+
+<span class="o">##</span>  <span class="err">使用子查询</span>
+<span class="k">select</span> <span class="n">cn</span> <span class="n">customer_number</span> 
+<span class="k">from</span> <span class="p">(</span>
+    <span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="n">customer_number</span><span class="p">)</span> <span class="n">cc</span><span class="p">,</span> <span class="n">customer_number</span> <span class="n">cn</span>
+    <span class="k">from</span> <span class="n">Orders</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="n">customer_number</span>
+<span class="p">)</span> <span class="n">T</span>
+<span class="k">order</span> <span class="k">by</span> <span class="n">T</span><span class="p">.</span><span class="n">cc</span> <span class="k">desc</span>
+<span class="k">limit</span> <span class="mi">0</span><span class="p">,</span><span class="mi">1</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">customer_number</span>
+<span class="k">FROM</span>
+    <span class="n">orders</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">customer_number</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">1</span>
+<span class="p">;</span>
+
+<span class="o">#</span> <span class="err">作者：力扣官方题解</span>
+<span class="o">#</span> <span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">customer</span><span class="o">-</span><span class="k">placing</span><span class="o">-</span><span class="n">the</span><span class="o">-</span><span class="n">largest</span><span class="o">-</span><span class="n">number</span><span class="o">-</span><span class="k">of</span><span class="o">-</span><span class="n">orders</span><span class="o">/</span><span class="n">solutions</span><span class="o">/</span><span class="mi">2366301</span><span class="o">/</span><span class="n">ding</span><span class="o">-</span><span class="n">dan</span><span class="o">-</span><span class="n">zui</span><span class="o">-</span><span class="n">duo</span><span class="o">-</span><span class="n">de</span><span class="o">-</span><span class="n">ke</span><span class="o">-</span><span class="n">hu</span><span class="o">-</span><span class="k">by</span><span class="o">-</span><span class="n">leetcode</span><span class="o">-</span><span class="n">so</span><span class="o">-</span><span class="n">bywe</span><span class="o">/</span>
+<span class="o">#</span> <span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span> <span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="595-大的国家"><a href="https://leetcode.cn/problems/big-countries/description/">595. 大的国家</a></h3>
+
+<p>World 表：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| name        | varchar |
+| continent   | varchar |
+| area        | int     |
+| population  | int     |
+| gdp         | bigint  |
++-------------+---------+
+</code></pre></div></div>
+
+<p>name 是该表的主键（具有唯一值的列）。
+这张表的每一行提供：国家名称、所属大陆、面积、人口和 GDP 值。</p>
+
+<p>如果一个国家满足下述两个条件之一，则认为该国是 大国 ：</p>
+
+<p>面积至少为 300 万平方公里（即，3000000 km2），或者
+人口至少为 2500 万（即 25000000）
+编写解决方案找出 大国 的国家名称、人口和面积。</p>
+
+<p>按 任意顺序 返回结果表。</p>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">SELECT</span> <span class="n">name</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">area</span> <span class="k">FROM</span> <span class="n">World</span> <span class="k">WHERE</span> <span class="n">population</span> <span class="o">&gt;=</span> <span class="mi">25000000</span> <span class="k">OR</span> <span class="n">area</span> <span class="o">&gt;=</span> <span class="mi">3000000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">select</span> <span class="n">name</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">area</span>
+<span class="k">from</span> <span class="n">World</span>
+<span class="k">where</span> <span class="n">area</span> <span class="o">&gt;=</span> <span class="mi">3000000</span> <span class="k">or</span> <span class="n">population</span> <span class="o">&gt;=</span><span class="mi">25000000</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">area</span>
+<span class="k">FROM</span>
+    <span class="n">world</span>
+<span class="k">WHERE</span>
+    <span class="n">area</span> <span class="o">&gt;=</span> <span class="mi">3000000</span> <span class="k">OR</span> <span class="n">population</span> <span class="o">&gt;=</span> <span class="mi">25000000</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">big</span><span class="o">-</span><span class="n">countries</span><span class="o">/</span><span class="n">solutions</span><span class="o">/</span><span class="mi">2366084</span><span class="o">/</span><span class="n">big</span><span class="o">-</span><span class="n">countries</span><span class="o">-</span><span class="k">by</span><span class="o">-</span><span class="n">leetcode</span><span class="o">-</span><span class="n">solution</span><span class="o">-</span><span class="mi">8</span><span class="n">k13</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="596-超过5名学生的课"><a href="https://leetcode.cn/problems/classes-more-than-5-students/description/">596. 超过5名学生的课</a></h3>
+
+<p>表: Courses</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| student     | varchar |
+| class       | varchar |
++-------------+---------+
+</code></pre></div></div>
+
+<p>在 SQL 中，(student, class)是该表的主键列。
+该表的每一行表示学生的名字和他们注册的班级。</p>
+
+<p>查询 至少有5个学生 的所有班级。</p>
+
+<p>以 任意顺序 返回结果表。</p>
+
+<p>查询结果格式如下所示。</p>
+
+<p>示例 1:</p>
+
+<p>输入:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Courses table:
++---------+----------+
+| student | class    |
++---------+----------+
+| A       | Math     |
+| B       | English  |
+| C       | Math     |
+| D       | Biology  |
+| E       | Math     |
+| F       | Computer |
+| G       | Math     |
+| H       | Math     |
+| I       | Math     |
++---------+----------+
+</code></pre></div></div>
+
+<p>输出:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+---------+ 
+| class   | 
++---------+ 
+| Math    | 
++---------+
+</code></pre></div></div>
+
+<p>解释: 
+-数学课有6个学生，所以我们包括它。
+-英语课有1名学生，所以我们不包括它。
+-生物课有1名学生，所以我们不包括它。
+-计算机课有1个学生，所以我们不包括它。</p>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">主要思路直接使用</span><span class="k">GROUP</span> <span class="err">和</span><span class="k">having</span><span class="err">进行解决</span>
+<span class="k">SELECT</span> <span class="k">class</span> <span class="k">FROM</span> <span class="n">Courses</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="k">class</span> <span class="k">HAVING</span> <span class="k">COUNT</span><span class="p">()</span> <span class="o">&gt;=</span><span class="mi">5</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">select</span>
+    <span class="k">class</span>
+<span class="k">From</span>
+    <span class="n">Courses</span>
+<span class="k">group</span> <span class="k">by</span> 
+    <span class="k">class</span>
+<span class="k">having</span> <span class="k">count</span><span class="p">(</span><span class="n">student</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">5</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">##</span> <span class="err">使用子查询对每个班级的学生进行统计</span>
+<span class="o">##</span> <span class="err">统计完成后执行过滤</span>
+<span class="k">SELECT</span>
+    <span class="k">class</span>
+<span class="k">FROM</span>
+    <span class="p">(</span><span class="k">SELECT</span>
+        <span class="k">class</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="n">student</span><span class="p">)</span> <span class="k">AS</span> <span class="n">num</span>
+    <span class="k">FROM</span>
+        <span class="n">courses</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> <span class="k">class</span><span class="p">)</span> <span class="k">AS</span> <span class="n">temp_table</span>
+<span class="k">WHERE</span>
+    <span class="n">num</span> <span class="o">&gt;=</span> <span class="mi">5</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">classes</span><span class="o">-</span><span class="k">more</span><span class="o">-</span><span class="k">than</span><span class="o">-</span><span class="mi">5</span><span class="o">-</span><span class="n">students</span><span class="o">/</span><span class="n">solutions</span><span class="o">/</span><span class="mi">2366294</span><span class="o">/</span><span class="n">chao</span><span class="o">-</span><span class="n">guo</span><span class="o">-</span><span class="mi">5</span><span class="n">ming</span><span class="o">-</span><span class="n">xue</span><span class="o">-</span><span class="n">sheng</span><span class="o">-</span><span class="n">de</span><span class="o">-</span><span class="n">ke</span><span class="o">-</span><span class="k">by</span><span class="o">-</span><span class="n">leetco</span><span class="o">-</span><span class="n">l4es</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="602-好友申请-ii-谁有最多的好友httpsleetcodecnproblemsfriend-reqz">[602. 好友申请 II ：谁有最多的好友](https://leetcode.cn/problems/friend-reqz</h3>
+
+<p>RequestAccepted 表：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+----------------+---------+
+| Column Name    | Type    |
++----------------+---------+
+| requester_id   | int     |
+| accepter_id    | int     |
+| accept_date    | date    |
++----------------+---------+
+</code></pre></div></div>
+
+<p>(requester_id, accepter_id) 是这张表的主键(具有唯一值的列的组合)。
+这张表包含发送好友请求的人的 ID ，接收好友请求的人的 ID ，以及好友请求通过的日期。</p>
+
+<p>编写解决方案，找出拥有最多的好友的人和他拥有的好友数目。</p>
+
+<p>生成的测试用例保证拥有最多好友数目的只有 1 个人。</p>
+
+<p>查询结果格式如下例所示。</p>
+
+<p>示例 1：</p>
+
+<p>输入：
+RequestAccepted 表：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+--------------+-------------+-------------+
+| requester_id | accepter_id | accept_date |
++--------------+-------------+-------------+
+| 1            | 2           | 2016/06/03  |
+| 1            | 3           | 2016/06/08  |
+| 2            | 3           | 2016/06/08  |
+| 3            | 4           | 2016/06/09  |
++--------------+-------------+-------------+
+</code></pre></div></div>
+
+<p>输出：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+----+-----+
+| id | num |
++----+-----+
+| 3  | 3   |
++----+-----+
+</code></pre></div></div>
+
+<p>解释：
+编号为 3 的人是编号为 1 ，2 和 4 的人的好友，所以他总共有 3 个好友，比其他人都多。</p>
+
+<p>进阶：在真实世界里，可能会有多个人拥有好友数相同且最多，你能找到所有这些人吗？</p>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">##</span> <span class="err">主要思路</span>
+<span class="o">#</span> <span class="err">先分别统计作为发送者和接收者的子表，再进行合并统计</span>
+<span class="o">#</span> <span class="err">注意这里使用</span> <span class="k">UNION</span> <span class="k">ALL</span> <span class="err">进行两张表的合并</span>
+<span class="k">SELECT</span> <span class="k">user</span> <span class="k">AS</span> <span class="n">id</span> <span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="k">count</span><span class="p">)</span>  <span class="k">AS</span> <span class="n">num</span>   <span class="k">FROM</span> 
+<span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">accepter_id</span> <span class="k">AS</span> <span class="k">user</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="k">count</span> <span class="k">FROM</span> <span class="n">RequestAccepted</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">accepter_id</span>
+    <span class="k">union</span> 
+    <span class="k">SELECT</span>  <span class="n">requester_id</span> <span class="k">AS</span> <span class="k">user</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="k">count</span> <span class="k">FROM</span> <span class="n">RequestAccepted</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">requester_id</span>
+<span class="p">)</span> <span class="k">c</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">id</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">num</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">0</span><span class="p">,</span><span class="mi">1</span>
+
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用</span><span class="k">union</span> <span class="err">与组合</span><span class="k">group</span><span class="err">，</span> <span class="err">进行了统一去重</span>
+<span class="k">select</span> <span class="n">id</span><span class="p">,</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">num</span> <span class="k">from</span> <span class="p">(</span>
+    <span class="k">select</span> <span class="n">r</span><span class="p">.</span><span class="n">requester_id</span> <span class="k">as</span> <span class="n">id</span><span class="p">,</span> <span class="n">accepter_id</span> <span class="k">as</span> <span class="n">sid</span><span class="p">,</span> <span class="n">accept_date</span> <span class="k">from</span> <span class="n">requestaccepted</span> <span class="n">r</span> <span class="k">group</span> <span class="k">by</span> <span class="n">id</span><span class="p">,</span> <span class="n">sid</span>
+    <span class="k">union</span> 
+    <span class="p">(</span>   
+        <span class="o">#</span> <span class="err">这个子查询巧妙的将列进行了转换</span> 
+        <span class="k">select</span> <span class="n">t</span><span class="p">.</span><span class="n">accepter_id</span> <span class="k">as</span> <span class="n">id</span><span class="p">,</span> <span class="n">requester_id</span> <span class="k">as</span> <span class="n">sid</span><span class="p">,</span> <span class="n">accept_date</span> <span class="k">from</span> <span class="n">requestaccepted</span> <span class="n">t</span> <span class="k">group</span> <span class="k">by</span> <span class="n">id</span><span class="p">,</span> <span class="n">sid</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">tmp</span> <span class="k">group</span> <span class="k">by</span> <span class="n">id</span> <span class="k">order</span> <span class="k">by</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">desc</span> <span class="k">limit</span> <span class="mi">1</span>
+
+<span class="o">#</span> <span class="err">思路相同</span>
+<span class="k">select</span> <span class="n">id</span><span class="p">,</span> <span class="n">num</span> <span class="k">from</span>
+<span class="p">(</span><span class="k">select</span> <span class="n">pid</span> <span class="k">as</span> <span class="n">id</span><span class="p">,</span> <span class="k">sum</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span> <span class="k">as</span> <span class="n">num</span> <span class="k">from</span>
+    <span class="p">(</span><span class="k">select</span> <span class="n">accepter_id</span> <span class="k">as</span> <span class="n">pid</span><span class="p">,</span> <span class="k">count</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">as</span> <span class="n">cnt</span> <span class="k">from</span> <span class="n">request_accepted</span> <span class="k">group</span> <span class="k">by</span> <span class="n">accepter_id</span>
+    <span class="k">union</span> <span class="k">all</span>
+    <span class="k">select</span> <span class="n">requester_id</span> <span class="k">as</span> <span class="n">pid</span><span class="p">,</span> <span class="k">count</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">as</span> <span class="n">cnt</span> <span class="k">from</span> <span class="n">request_accepted</span> <span class="k">group</span> <span class="k">by</span> <span class="n">requester_id</span><span class="p">)</span> <span class="n">t1</span>
+<span class="k">group</span> <span class="k">by</span> <span class="n">pid</span><span class="p">)</span> <span class="n">t2</span>
+<span class="k">order</span> <span class="k">by</span> <span class="n">num</span> <span class="k">desc</span>
+<span class="k">limit</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="o">#</span> <span class="err">思路相同，代码更加简洁</span>
+<span class="k">select</span> <span class="n">t1</span><span class="p">.</span><span class="n">ids</span> <span class="k">as</span> <span class="n">id</span><span class="p">,</span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">num</span>
+<span class="k">from</span><span class="p">(</span>
+        <span class="k">select</span> <span class="n">requester_id</span> <span class="k">as</span> <span class="n">ids</span> <span class="k">from</span> <span class="n">RequestAccepted</span> 
+        <span class="k">union</span> <span class="k">all</span>
+        <span class="k">select</span> <span class="n">accepter_id</span> <span class="k">as</span> <span class="n">ids</span> <span class="k">from</span> <span class="n">RequestAccepted</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">t1</span>
+<span class="k">group</span> <span class="k">by</span> <span class="n">id</span>
+<span class="k">order</span> <span class="k">by</span> <span class="n">num</span> <span class="k">desc</span>
+<span class="k">limit</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="n">ids</span> <span class="k">as</span> <span class="n">id</span><span class="p">,</span> <span class="n">cnt</span> <span class="k">as</span> <span class="n">num</span>
+<span class="k">from</span>
+<span class="p">(</span>
+<span class="k">select</span> <span class="n">ids</span><span class="p">,</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">cnt</span>
+   <span class="k">from</span>
+   <span class="p">(</span>
+        <span class="k">select</span> <span class="n">requester_id</span> <span class="k">as</span> <span class="n">ids</span> <span class="k">from</span> <span class="n">request_accepted</span>
+        <span class="k">union</span> <span class="k">all</span>
+        <span class="k">select</span> <span class="n">accepter_id</span> <span class="k">from</span> <span class="n">request_accepted</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">tbl1</span>
+   <span class="k">group</span> <span class="k">by</span> <span class="n">ids</span>
+   <span class="p">)</span> <span class="k">as</span> <span class="n">tbl2</span>
+<span class="k">order</span> <span class="k">by</span> <span class="n">cnt</span> <span class="k">desc</span>
+<span class="k">limit</span> <span class="mi">1</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">friend</span><span class="o">-</span><span class="n">requests</span><span class="o">-</span><span class="n">ii</span><span class="o">-</span><span class="n">who</span><span class="o">-</span><span class="n">has</span><span class="o">-</span><span class="n">the</span><span class="o">-</span><span class="n">most</span><span class="o">-</span><span class="n">friends</span><span class="o">/</span><span class="n">solutions</span><span class="o">/</span><span class="mi">23104</span><span class="o">/</span><span class="n">hao</span><span class="o">-</span><span class="n">you</span><span class="o">-</span><span class="n">shen</span><span class="o">-</span><span class="n">qing</span><span class="o">-</span><span class="n">ii</span><span class="o">-</span><span class="n">shui</span><span class="o">-</span><span class="n">you</span><span class="o">-</span><span class="n">zui</span><span class="o">-</span><span class="n">duo</span><span class="o">-</span><span class="n">de</span><span class="o">-</span><span class="n">hao</span><span class="o">-</span><span class="n">you</span><span class="o">-</span><span class="n">b</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="607-销售员"><a href="https://leetcode.cn/problems/sales-person/description/">607. 销售员</a></h3>
+
+<p>表: SalesPerson</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-----------------+---------+
+| Column Name     | Type    |
++-----------------+---------+
+| sales_id        | int     |
+| name            | varchar |
+| salary          | int     |
+| commission_rate | int     |
+| hire_date       | date    |
++-----------------+---------+
+</code></pre></div></div>
+
+<p>sales_id 是该表的主键列(具有唯一值的列)。
+该表的每一行都显示了销售人员的姓名和 ID ，以及他们的工资、佣金率和雇佣日期。</p>
+
+<p>表: Company</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| com_id      | int     |
+| name        | varchar |
+| city        | varchar |
++-------------+---------+
+</code></pre></div></div>
+
+<p>com_id 是该表的主键列(具有唯一值的列)。
+该表的每一行都表示公司的名称和 ID ，以及公司所在的城市。</p>
+
+<p>表: Orders</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-------------+------+
+| Column Name | Type |
++-------------+------+
+| order_id    | int  |
+| order_date  | date |
+| com_id      | int  |
+| sales_id    | int  |
+| amount      | int  |
++-------------+------+
+</code></pre></div></div>
+
+<p>order_id 是该表的主键列(具有唯一值的列)。
+com_id 是 Company 表中 com_id 的外键（reference 列）。
+sales_id 是来自销售员表 sales_id 的外键（reference 列）。
+该表的每一行包含一个订单的信息。这包括公司的 ID 、销售人员的 ID 、订单日期和支付的金额。</p>
+
+<p>编写解决方案，找出没有任何与名为 “RED” 的公司相关的订单的所有销售人员的姓名。</p>
+
+<p>以 任意顺序 返回结果表。</p>
+
+<p>返回结果格式如下所示。</p>
+
+<p>示例 1：</p>
+
+<p>输入：
+SalesPerson 表:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+----------+------+--------+-----------------+------------+
+| sales_id | name | salary | commission_rate | hire_date  |
++----------+------+--------+-----------------+------------+
+| 1        | John | 100000 | 6               | 4/1/2006   |
+| 2        | Amy  | 12000  | 5               | 5/1/2010   |
+| 3        | Mark | 65000  | 12              | 12/25/2008 |
+| 4        | Pam  | 25000  | 25              | 1/1/2005   |
+| 5        | Alex | 5000   | 10              | 2/3/2007   |
++----------+------+--------+-----------------+------------+
+</code></pre></div></div>
+
+<p>Company 表:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+--------+--------+----------+
+| com_id | name   | city     |
++--------+--------+----------+
+| 1      | RED    | Boston   |
+| 2      | ORANGE | New York |
+| 3      | YELLOW | Boston   |
+| 4      | GREEN  | Austin   |
++--------+--------+----------+
+</code></pre></div></div>
+
+<p>Orders 表:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+----------+------------+--------+----------+--------+
+| order_id | order_date | com_id | sales_id | amount |
++----------+------------+--------+----------+--------+
+| 1        | 1/1/2014   | 3      | 4        | 10000  |
+| 2        | 2/1/2014   | 4      | 5        | 5000   |
+| 3        | 3/1/2014   | 1      | 1        | 50000  |
+| 4        | 4/1/2014   | 1      | 4        | 25000  |
++----------+------------+--------+----------+--------+
+</code></pre></div></div>
+
+<p>输出：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+------+
+| name |
++------+
+| Amy  |
+| Mark |
+| Alex |
++------+
+</code></pre></div></div>
+
+<p>解释：
+根据表 orders 中的订单 ‘3’ 和 ‘4’ ，容易看出只有 ‘John’ 和 ‘Pam’ 两个销售员曾经向公司 ‘RED’ 销售过。
+所以我们需要输出表 salesperson 中所有其他人的名字。</p>
+
+<ul>
+  <li>提交解答:</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">按照公司和订单找出相关的销售员</span><span class="n">ID</span>
+<span class="o">#</span> <span class="err">最后使用</span><span class="k">not</span> <span class="k">in</span> <span class="err">排除即可</span>
+
+<span class="k">SELECT</span> <span class="n">name</span> <span class="k">FROM</span> <span class="n">SalesPerson</span> <span class="k">WHERE</span> <span class="n">sales_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+<span class="k">SELECT</span> <span class="k">DISTINCT</span><span class="p">(</span><span class="n">sales_id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">sales_id</span> 
+    <span class="k">FROM</span>  <span class="n">Orders</span> 
+    <span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">Company</span> <span class="k">ON</span> <span class="n">Orders</span><span class="p">.</span><span class="n">com_id</span> <span class="o">=</span>  <span class="n">Company</span><span class="p">.</span><span class="n">com_id</span> 
+<span class="k">WHERE</span> <span class="n">Company</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="nv">"RED"</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="o">#</span> <span class="err">代码更加简洁，取消了左连接</span>
+<span class="k">SELECT</span>
+    <span class="n">name</span>
+<span class="k">FROM</span> <span class="n">SalesPerson</span> 
+<span class="k">WHERE</span> <span class="n">sales_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">sales_id</span>
+    <span class="k">FROM</span> <span class="n">Orders</span>
+    <span class="k">WHERE</span> <span class="n">com_id</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="k">SELECT</span> <span class="n">com_id</span> 
+        <span class="k">FROM</span> <span class="n">Company</span> 
+        <span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">'RED'</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">s</span><span class="p">.</span><span class="n">name</span>
+<span class="k">FROM</span>
+    <span class="n">salesperson</span> <span class="n">s</span>
+<span class="k">WHERE</span>
+    <span class="n">s</span><span class="p">.</span><span class="n">sales_id</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span>
+            <span class="n">o</span><span class="p">.</span><span class="n">sales_id</span>
+        <span class="k">FROM</span>
+            <span class="n">orders</span> <span class="n">o</span>
+                <span class="k">LEFT</span> <span class="k">JOIN</span>
+            <span class="n">company</span> <span class="k">c</span> <span class="k">ON</span> <span class="n">o</span><span class="p">.</span><span class="n">com_id</span> <span class="o">=</span> <span class="k">c</span><span class="p">.</span><span class="n">com_id</span>
+        <span class="k">WHERE</span>
+            <span class="k">c</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">'RED'</span><span class="p">)</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：力扣官方题解</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">sales</span><span class="o">-</span><span class="n">person</span><span class="o">/</span><span class="n">solutions</span><span class="o">/</span><span class="mi">2366337</span><span class="o">/</span><span class="n">xiao</span><span class="o">-</span><span class="n">shou</span><span class="o">-</span><span class="n">yuan</span><span class="o">-</span><span class="k">by</span><span class="o">-</span><span class="n">leetcode</span><span class="o">-</span><span class="n">solution</span><span class="o">-</span><span class="n">wg7i</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="601体育馆的人流量"><a href="https://leetcode.cn/problems/human-traffic-of-stadium/description/">601.体育馆的人流量</a></h3>
+
+<p>表：Stadium</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| id            | int     |
+| visit_date    | date    |
+| people        | int     |
++---------------+---------+
+</code></pre></div></div>
+<p>visit_date 是该表中具有唯一值的列。
+每日人流量信息被记录在这三列信息中：序号 (id)、日期 (visit_date)、 人流量 (people)
+每天只有一行记录，日期随着 id 的增加而增加</p>
+
+<p>编写解决方案找出每行的人数大于或等于 100 且 id 连续的三行或更多行记录。</p>
+
+<p>返回按 visit_date 升序排列 的结果表。</p>
+
+<p>查询结果格式如下所示。</p>
+
+<p>示例 1:</p>
+
+<p>输入：
+Stadium 表:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 1    | 2017-01-01 | 10        |
+| 2    | 2017-01-02 | 109       |
+| 3    | 2017-01-03 | 150       |
+| 4    | 2017-01-04 | 99        |
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-09 | 188       |
++------+------------+-----------+
+</code></pre></div></div>
+<p>输出：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-09 | 188       |
++------+------------+-----------+
+</code></pre></div></div>
+<p>解释：
+id 为 5、6、7、8 的四行 id 连续，并且每行都有 &gt;= 100 的人数记录。
+请注意，即使第 7 行和第 8 行的 visit_date 不是连续的，输出也应当包含第 8 行，因为我们只需要考虑 id 连续的记录。
+不输出 id 为 2 和 3 的行，因为至少需要三条 id 连续的记录。</p>
+
+<ul>
+  <li>提交解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">直接使用连表查询</span>
+<span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">l1</span><span class="p">.</span><span class="o">*</span>
+<span class="k">FROM</span>
+    <span class="n">Stadium</span> <span class="n">l1</span><span class="p">,</span>
+    <span class="n">Stadium</span> <span class="n">l2</span><span class="p">,</span>
+    <span class="n">Stadium</span> <span class="n">l3</span>
+<span class="k">WHERE</span>
+    <span class="n">l1</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span>
+    <span class="k">AND</span> <span class="n">l2</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span>
+    <span class="k">AND</span> <span class="n">l3</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span>
+    <span class="k">AND</span> <span class="p">(</span>
+        <span class="p">(</span> <span class="n">l1</span><span class="p">.</span><span class="n">id</span><span class="o">+</span><span class="mi">1</span> <span class="o">=</span> <span class="n">l2</span><span class="p">.</span><span class="n">id</span> <span class="k">AND</span> <span class="n">l3</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">l1</span><span class="p">.</span><span class="n">id</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">)</span> 
+        <span class="k">OR</span> <span class="p">(</span> <span class="n">l1</span><span class="p">.</span><span class="n">id</span><span class="o">+</span><span class="mi">1</span> <span class="o">=</span> <span class="n">l2</span><span class="p">.</span><span class="n">id</span> <span class="k">AND</span> <span class="n">l3</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">l1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">)</span> 
+        <span class="k">OR</span> <span class="p">(</span> <span class="n">l1</span><span class="p">.</span><span class="n">id</span><span class="o">-</span><span class="mi">1</span> <span class="o">=</span> <span class="n">l2</span><span class="p">.</span><span class="n">id</span> <span class="k">AND</span> <span class="n">l3</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">l1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="p">)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">visit_date</span><span class="p">;</span>
+
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="k">Write</span> <span class="n">your</span> <span class="n">MySQL</span> <span class="n">query</span> <span class="k">statement</span> <span class="n">below</span>
+<span class="o">#</span> <span class="err">使用了</span><span class="k">group</span> <span class="k">by</span> <span class="err">直接进行了去重</span>
+<span class="k">select</span> <span class="n">s1</span><span class="p">.</span><span class="o">*</span>
+<span class="k">from</span> <span class="n">stadium</span> <span class="n">s1</span><span class="p">,</span> <span class="n">stadium</span> <span class="n">s2</span><span class="p">,</span> <span class="n">stadium</span> <span class="n">s3</span>
+<span class="k">where</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">s1</span><span class="p">.</span><span class="n">id</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">=</span> <span class="n">s2</span><span class="p">.</span><span class="n">id</span> <span class="k">and</span> <span class="n">s1</span><span class="p">.</span><span class="n">id</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">=</span> <span class="n">s3</span><span class="p">.</span><span class="n">id</span><span class="p">)</span> <span class="k">or</span>
+    <span class="p">(</span><span class="n">s1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">=</span> <span class="n">s2</span><span class="p">.</span><span class="n">id</span> <span class="k">and</span> <span class="n">s1</span><span class="p">.</span><span class="n">id</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">=</span> <span class="n">s3</span><span class="p">.</span><span class="n">id</span><span class="p">)</span> <span class="k">or</span>
+    <span class="p">(</span><span class="n">s1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">=</span> <span class="n">s2</span><span class="p">.</span><span class="n">id</span> <span class="k">and</span> <span class="n">s1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">=</span> <span class="n">s3</span><span class="p">.</span><span class="n">id</span><span class="p">))</span> <span class="k">and</span> 
+    <span class="n">s1</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span> <span class="k">and</span> <span class="n">s2</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span> <span class="k">and</span> <span class="n">s3</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span>
+<span class="k">group</span> <span class="k">by</span> <span class="n">s1</span><span class="p">.</span><span class="n">id</span>
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="k">distinct</span> <span class="n">t1</span><span class="p">.</span><span class="o">*</span>
+<span class="k">from</span> <span class="n">stadium</span> <span class="n">t1</span><span class="p">,</span> <span class="n">stadium</span> <span class="n">t2</span><span class="p">,</span> <span class="n">stadium</span> <span class="n">t3</span>
+<span class="k">where</span> <span class="n">t1</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span> <span class="k">and</span> <span class="n">t2</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span> <span class="k">and</span> <span class="n">t3</span><span class="p">.</span><span class="n">people</span> <span class="o">&gt;=</span> <span class="mi">100</span>
+<span class="k">and</span>
+<span class="p">(</span>
+	  <span class="p">(</span><span class="n">t1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t2</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">and</span> <span class="n">t1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t3</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">and</span> <span class="n">t2</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t3</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1">-- t1, t2, t3</span>
+    <span class="k">or</span>
+    <span class="p">(</span><span class="n">t2</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t1</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">and</span> <span class="n">t2</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t3</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">and</span> <span class="n">t1</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t3</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1">-- t2, t1, t3</span>
+    <span class="k">or</span>
+    <span class="p">(</span><span class="n">t3</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t2</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">and</span> <span class="n">t2</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t1</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span><span class="mi">1</span> <span class="k">and</span> <span class="n">t3</span><span class="p">.</span><span class="n">id</span> <span class="o">-</span> <span class="n">t1</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="c1">-- t3, t2, t1</span>
+<span class="p">)</span>
+<span class="k">order</span> <span class="k">by</span> <span class="n">t1</span><span class="p">.</span><span class="n">id</span>
+<span class="p">;</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">human</span><span class="o">-</span><span class="n">traffic</span><span class="o">-</span><span class="k">of</span><span class="o">-</span><span class="n">stadium</span><span class="o">/</span><span class="n">solutions</span><span class="o">/</span><span class="mi">50428</span><span class="o">/</span><span class="n">ti</span><span class="o">-</span><span class="n">yu</span><span class="o">-</span><span class="n">guan</span><span class="o">-</span><span class="n">de</span><span class="o">-</span><span class="n">ren</span><span class="o">-</span><span class="n">liu</span><span class="o">-</span><span class="n">liang</span><span class="o">-</span><span class="k">by</span><span class="o">-</span><span class="n">leetcode</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+
+<h3 id="608-树节点"><a href="https://leetcode.cn/problems/tree-node/description/">608. 树节点</a></h3>
+
+<ul>
+  <li><a href="https://blog.csdn.net/helloxiaozhe/article/details/78124138">MySQL 的CASE WHEN 语句使用说明</a></li>
+</ul>
+
+<p>表：Tree</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-------------+------+
+| Column Name | Type |
++-------------+------+
+| id          | int  |
+| p_id        | int  |
++-------------+------+
+</code></pre></div></div>
+
+<p>id 是该表中具有唯一值的列。
+该表的每行包含树中节点的 id 及其父节点的 id 信息。
+给定的结构总是一个有效的树。</p>
+
+<p>树中的每个节点可以是以下三种类型之一：</p>
+
+<p>“Leaf”：节点是叶子节点。
+“Root”：节点是树的根节点。
+“lnner”：节点既不是叶子节点也不是根节点。
+编写一个解决方案来报告树中每个节点的类型。</p>
+
+<p>以 任意顺序 返回结果表。</p>
+
+<p>结果格式如下所示。</p>
+
+<p>示例 1：</p>
+
+<p>输入：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Tree table:
++----+------+
+| id | p_id |
++----+------+
+| 1  | null |
+| 2  | 1    |
+| 3  | 1    |
+| 4  | 2    |
+| 5  | 2    |
++----+------+
+</code></pre></div></div>
+
+<p>输出：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+----+-------+
+| id | type  |
++----+-------+
+| 1  | Root  |
+| 2  | Inner |
+| 3  | Leaf  |
+| 4  | Leaf  |
+| 5  | Leaf  |
++----+-------+
+</code></pre></div></div>
+
+<p>解释：
+节点 1 是根节点，因为它的父节点为空，并且它有子节点 2 和 3。
+节点 2 是一个内部节点，因为它有父节点 1 和子节点 4 和 5。
+节点 3、4 和 5 是叶子节点，因为它们有父节点而没有子节点。
+示例 2：</p>
+
+<p>输入：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Tree table:
++----+------+
+| id | p_id |
++----+------+
+| 1  | null |
++----+------+
+</code></pre></div></div>
+
+<p>输出：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+----+-------+
+| id | type  |
++----+-------+
+| 1  | Root  |
++----+-------+
+</code></pre></div></div>
+
+<p>解释：如果树中只有一个节点，则只需要输出其根属性。</p>
+
+<ul>
+  <li>提交解答</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="err">主要思路</span>
+<span class="o">#</span> <span class="err">统计节点所有的子节点数目，与父节点数目</span>
+<span class="k">SELECT</span> <span class="n">A</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">IF</span><span class="p">(</span><span class="n">A</span><span class="p">.</span><span class="n">p_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nv">"Root"</span><span class="p">,</span><span class="n">IF</span><span class="p">(</span><span class="n">s_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span><span class="nv">"Inner"</span><span class="p">,</span><span class="nv">"Leaf"</span><span class="p">)</span> <span class="p">)</span> <span class="k">AS</span>  <span class="k">type</span>  
+<span class="k">FROM</span> 
+<span class="p">(</span>
+ <span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">p_count</span>  <span class="k">FROM</span> <span class="n">TREE</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">id</span>
+<span class="p">)</span> <span class="n">A</span> <span class="k">LEFT</span> <span class="k">JOIN</span> 
+<span class="p">(</span>
+    <span class="k">SELECT</span> <span class="n">p_id</span>  <span class="k">AS</span> <span class="n">id</span><span class="p">,</span> <span class="k">COUNT</span><span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">s_count</span> <span class="k">FROM</span> <span class="n">TREE</span> <span class="k">WHERE</span> <span class="n">p_id</span> <span class="o">&gt;=</span><span class="mi">0</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">p_id</span>
+<span class="p">)</span> <span class="n">B</span> <span class="k">ON</span> <span class="n">A</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">B</span><span class="p">.</span><span class="n">id</span><span class="p">;</span>
+
+</code></pre></div></div>
+
+<ul>
+  <li>优质解答：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="n">id</span><span class="p">,</span><span class="k">case</span> <span class="k">when</span> <span class="n">p_id</span> <span class="k">is</span> <span class="k">null</span> <span class="k">then</span> <span class="s1">'Root'</span> 
+<span class="k">when</span> <span class="n">id</span> <span class="k">not</span> <span class="k">in</span> <span class="p">(</span><span class="k">select</span> <span class="k">distinct</span> <span class="n">p_id</span> <span class="k">from</span> <span class="n">Tree</span> <span class="k">where</span> <span class="n">p_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span><span class="p">)</span> <span class="k">then</span> <span class="s1">'Leaf'</span>
+<span class="k">else</span> <span class="s1">'Inner'</span> <span class="k">end</span> <span class="k">type</span>
+<span class="k">from</span> <span class="n">Tree</span> 
+
+
+</code></pre></div></div>
+
+<ul>
+  <li>官方题解：</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">atree</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="n">IF</span><span class="p">(</span><span class="k">ISNULL</span><span class="p">(</span><span class="n">atree</span><span class="p">.</span><span class="n">p_id</span><span class="p">),</span>
+        <span class="s1">'Root'</span><span class="p">,</span>
+        <span class="n">IF</span><span class="p">(</span><span class="n">atree</span><span class="p">.</span><span class="n">id</span> <span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">p_id</span> <span class="k">FROM</span> <span class="n">tree</span><span class="p">),</span> <span class="s1">'Inner'</span><span class="p">,</span><span class="s1">'Leaf'</span><span class="p">))</span> <span class="k">Type</span>
+<span class="k">FROM</span>
+    <span class="n">tree</span> <span class="n">atree</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">atree</span><span class="p">.</span><span class="n">id</span>
+
+<span class="o">#</span><span class="err">作者：</span><span class="n">LeetCode</span>
+<span class="o">#</span><span class="err">链接：</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">leetcode</span><span class="p">.</span><span class="n">cn</span><span class="o">/</span><span class="n">problems</span><span class="o">/</span><span class="n">tree</span><span class="o">-</span><span class="n">node</span><span class="o">/</span><span class="n">solutions</span><span class="o">/</span><span class="mi">23160</span><span class="o">/</span><span class="n">shu</span><span class="o">-</span><span class="n">jie</span><span class="o">-</span><span class="n">dian</span><span class="o">-</span><span class="k">by</span><span class="o">-</span><span class="n">leetcode</span><span class="o">/</span>
+<span class="o">#</span><span class="err">来源：力扣（</span><span class="n">LeetCode</span><span class="err">）</span>
+<span class="o">#</span><span class="err">著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</code></pre></div></div>
+:ET

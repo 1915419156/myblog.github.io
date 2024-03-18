@@ -1,0 +1,2 @@
+I"�<p>b是&lt;!JEKYLL@4800@28&gt;从位置&lt;!JEKYLL@4800@29&gt;开始m个字符符拷贝。s只能包含字符&lt;!JEKYLL@4800@30&gt;或&lt;!JEKYLL@4800@31&gt;;如果s包含任何其它字符，构造函数会抛出&lt;!JEKYLL@4800@32&gt;异常。字符在b中分别保存为&lt;!JEKYLL@4800@33&gt;和&lt;!JEKYLL@4800@34&gt;。pos默认为0，m默认为string::npos,zero 默认为&lt;!JEKYLL@4800@35&gt;,&lt;!JEKYLL@4800@36&gt;默认为&lt;!JEKYLL@4800@37&gt;</p>
+:ET

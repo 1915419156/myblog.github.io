@@ -1,0 +1,2 @@
+I"�<p>返回<code class="language-plaintext highlighter-rouge">p</code>中保存的指针，要小心使用；若智能指针释放了其对象，返回的指针所指向的对象也就消失了</p>
+:ET

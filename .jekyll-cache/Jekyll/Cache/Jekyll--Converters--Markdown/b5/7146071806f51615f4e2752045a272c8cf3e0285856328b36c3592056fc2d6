@@ -1,0 +1,2 @@
+I"<p>返回一个<code class="language-plaintext highlighter-rouge">shared_ptr</code>,指向一个动态分配的类型为<code class="language-plaintext highlighter-rouge">T</code>的对象。使用<code class="language-plaintext highlighter-rouge">args</code>初始化此对象</p>
+:ET

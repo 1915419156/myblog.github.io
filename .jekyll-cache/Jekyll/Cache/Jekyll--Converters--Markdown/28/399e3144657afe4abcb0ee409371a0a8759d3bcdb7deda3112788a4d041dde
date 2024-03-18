@@ -1,0 +1,2 @@
+I"-<p>若还传递了参数<code class="language-plaintext highlighter-rouge">d</code>,将会调用<code class="language-plaintext highlighter-rouge">d</code>而不是<code class="language-plaintext highlighter-rouge">delete</code>来释放<code class="language-plaintext highlighter-rouge">q</code></p>
+:ET

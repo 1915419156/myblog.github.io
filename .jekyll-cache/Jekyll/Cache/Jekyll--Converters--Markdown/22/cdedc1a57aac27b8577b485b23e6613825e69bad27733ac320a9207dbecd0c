@@ -1,0 +1,15 @@
+I"�<blockquote>
+  <p>2020-05-22 19:40:58</p>
+</blockquote>
+
+<p><em>参考链接：</em></p>
+<ul>
+  <li><a href="https://www.matools.com/api/java8">Java中文手册</a></li>
+</ul>
+
+<h1 id="第-7-章-异常断言和日志">第 7 章 异常、断言和日志</h1>
+
+<h1 id="第-8-章-java泛型">第 8 章 Java泛型</h1>
+
+<p>Java泛型只在编译阶段有效。<strong>泛型类型在逻辑上看以看成是多个不同的类型，实际上都是相同的基本类型。</strong></p>
+:ET

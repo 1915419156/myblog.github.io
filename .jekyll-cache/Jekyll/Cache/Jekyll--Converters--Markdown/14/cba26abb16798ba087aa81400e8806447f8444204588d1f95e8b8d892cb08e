@@ -1,0 +1,2 @@
+I"<p>与<code class="language-plaintext highlighter-rouge">shared_ptr sp</code>指向相同对象的<code class="language-plaintext highlighter-rouge">weak_ptr</code>，T必须可以指向类型为<code class="language-plaintext highlighter-rouge">sp</code>的对象</p>
+:ET

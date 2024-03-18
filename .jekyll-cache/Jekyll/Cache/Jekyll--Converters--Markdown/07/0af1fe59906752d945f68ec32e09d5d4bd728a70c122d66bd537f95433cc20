@@ -1,0 +1,2 @@
+I"�<p>p可以是一个<code class="language-plaintext highlighter-rouge">shared_ptr</code>或者一个<code class="language-plaintext highlighter-rouge">weak_ptr</code>。赋值后w与p共享对象</p>
+:ET

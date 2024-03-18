@@ -1,0 +1,9 @@
+I"�<p>请求成功.成功的意义根据请求所使用的方法不同而不同.</p>
+<ul>
+<li>GET: 资源已被提取,并作为响应体传回客户端.</li>
+<li>HEAD: <span><span>实体</span><span>头</span><span>已作为响应头传回客户端</span></span>
+</li>
+<li>POST: 经过服务器处理客户端传来的数据,适合的资源作为响应体传回客户端.</li>
+<li>TRACE: <span><span>服务器</span><span>收到</span><span>请求消息</span></span>作为响应体传回客户端.</li>
+</ul>
+:ET

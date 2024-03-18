@@ -1,0 +1,2 @@
+I"-<p>在字符序列<code class="language-plaintext highlighter-rouge">seq</code>中查找<code class="language-plaintext highlighter-rouge">regex</code>对象r中的正则表达式。seq可以是一个string、表示范围的一对迭代器以及一个指向空字符皆为的字符数组的指针</p>
+:ET

@@ -1,0 +1,2 @@
+I"�<p>将r1中的正则表达式替换为<code class="language-plaintext highlighter-rouge">re</code>。<code class="language-plaintext highlighter-rouge">re</code>表示一个正则表达式，它可以是另外一个<code class="language-plaintext highlighter-rouge">regex</code>对象、一个<code class="language-plaintext highlighter-rouge">string</code>、一个指向空字符结尾的字符串数组的指针或是一个花括号保卫的字符串列表</p>
+:ET

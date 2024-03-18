@@ -1,0 +1,2 @@
+I"<p>Specify the directory of the output file. This option is intended for letting the dependency generation step (see <code class="language-plaintext highlighter-rouge">--generate-dependencies</code>) generate a rule that defines the target object file in the proper directory.</p>
+:ET

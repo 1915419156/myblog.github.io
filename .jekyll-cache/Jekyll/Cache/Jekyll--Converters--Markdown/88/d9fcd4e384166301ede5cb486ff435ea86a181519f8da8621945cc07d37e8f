@@ -1,0 +1,2 @@
+I"Î<p>Specify the type of CUDA runtime library to be used: no CUDA runtime library, shared/dynamic CUDA runtime library, or static CUDA runtime library. Allowed values for this option: <code class="language-plaintext highlighter-rouge">none</code>, <code class="language-plaintext highlighter-rouge">shared</code>, <code class="language-plaintext highlighter-rouge">static</code>. Default value: <code class="language-plaintext highlighter-rouge">static</code></p>
+:ET

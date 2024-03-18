@@ -1,0 +1,2 @@
+I"Y<p>template&lt; class U &gt; struct rebind { typedef allocator<u> other; };</u></p>
+:ET

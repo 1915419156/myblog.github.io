@@ -1,0 +1,2 @@
+I"e<p>空unique_ptr，可以指向类型为T的对象，u1会使用delete来释放它的指针</p>
+:ET

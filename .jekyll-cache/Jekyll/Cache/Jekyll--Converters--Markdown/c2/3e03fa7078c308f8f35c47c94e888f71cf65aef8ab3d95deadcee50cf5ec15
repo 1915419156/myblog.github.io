@@ -1,0 +1,44 @@
+I"e<blockquote>
+  <p>2020-07-11 19:20:58</p>
+</blockquote>
+
+<h1 id="阿里实习java日常笔记">阿里实习Java日常笔记</h1>
+
+<h2 id="2020-07-11">2020-07-11</h2>
+
+<ol>
+  <li>参数校验方法:在Manager层中使用参数校验时；可以使用Google Guava中Preconditions方法使得参数校验变得优雅，可靠:
+    <ol>
+      <li>参考链接:
+        <ol>
+          <li><a href="http://www.linuxcoming.com/blog/2019/08/29/gavua_preconditions.html">Preconditions优雅的参数校验</a></li>
+          <li></li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+  <li>Java8 Optional:</li>
+  <li>Mockito :
+    <ul>
+      <li>参考链接:
+        <ul>
+          <li><a href="http://www.testclass.net/mockito">Java Mockito</a></li>
+          <li><a href="http://site.mockito.org/">官方网站</a></li>
+          <li><a href="https://github.com/hehonghui/mockito-doc-zh">mockito中文文档</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>SpringBoot中使用在Controller层中对参数进行校验
+    <ul>
+      <li>参考链接:
+        <ul>
+          <li><a href="https://juejin.im/post/5d3fbeb46fb9a06b317b3c48">这么写参数校验(validator)就不会被劝退了</a></li>
+          <li><a href="https://blog.csdn.net/lzhcoder/article/details/98870852">@RequestBody配合@Valid 校验入参参数</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>使用<code class="language-plaintext highlighter-rouge">ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);</code>重载toString可以让所有子类都可以实现字符串化。避免每个类都实现toString方法。</li>
+</ol>
+:ET

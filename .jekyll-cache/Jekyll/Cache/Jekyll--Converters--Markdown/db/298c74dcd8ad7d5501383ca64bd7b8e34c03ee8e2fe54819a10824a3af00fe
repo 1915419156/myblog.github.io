@@ -1,0 +1,2 @@
+I"|<p>判断spin lock是否是locked，如果其他的thread已经获取了该lock，那么返回非零值，否则返回0</p>
+:ET

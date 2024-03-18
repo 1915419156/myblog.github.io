@@ -1,0 +1,179 @@
+I"�B<h1 id="实验室服务器使用说明">实验室服务器使用说明</h1>
+
+<blockquote>
+  <p>2020-04-21 15:30:29</p>
+</blockquote>
+
+<h2 id="1-在线服务器参数列表">1. 在线服务器参数列表</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">名称</th>
+      <th style="text-align: center">位置</th>
+      <th style="text-align: center">局域网IP</th>
+      <th style="text-align: center">CPU</th>
+      <th style="text-align: center">显卡</th>
+      <th style="text-align: center">基本环境</th>
+      <th style="text-align: center">登录账号</th>
+      <th style="text-align: center">登录密码</th>
+      <th style="text-align: center">frp映射端口</th>
+      <th style="text-align: center">共享目录</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">node00-ubuntu</td>
+      <td style="text-align: center">12F</td>
+      <td style="text-align: center">192.168.58.194</td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">Intel(R) Core(TM) i7-9700 CPU @ 3.00GHz</code></td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">RTX2080</code></td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">NVIDIA-SMI 430.50;CUDA 10.1.243;cudnn 7.6.3;python3-pytorch1.3.1;horovod 0.18.2;openmpi 4.0.2</code></td>
+      <td style="text-align: center">node</td>
+      <td style="text-align: center">root</td>
+      <td style="text-align: center">6002</td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">/home/node/DataShare</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: center">node01-ubuntu</td>
+      <td style="text-align: center">12E</td>
+      <td style="text-align: center">192.168.58.58</td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz</code></td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">GTX1070</code></td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">NVIDIA-SMI 430.50;CUDA 10.1.243;cudnn 7.6.3;python3-pytorch1.3.1;horovod 0.18.2;openmpi 4.0.2</code></td>
+      <td style="text-align: center">node</td>
+      <td style="text-align: center">root</td>
+      <td style="text-align: center">6003</td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">/home/node/DataShare</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: center">node02-ubuntu</td>
+      <td style="text-align: center">10E</td>
+      <td style="text-align: center">192.168.58.220</td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz</code></td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">GTX1070</code></td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">NVIDIA-SMI 430.50;CUDA 10.1.243;cudnn 7.6.3;python3-pytorch1.3.1;horovod 0.18.2;openmpi 4.0.2</code></td>
+      <td style="text-align: center">node</td>
+      <td style="text-align: center">root</td>
+      <td style="text-align: center">6004</td>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">/home/node/DataShare</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="https://wangpengcheng.github.io/img/20200421180747.jpg" alt="座位图片" /></p>
+
+<h2 id="2-ssh-远程登录方式">2. ssh 远程登录方式</h2>
+<p>使用ssh 公网服务器地址与对应frp端口号登录。公网服务器地址稍后公开;使用示例如下:</p>
+<div class="language-ssh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">ssh</span> node@192.168.58.194 -p <span class="m">6002</span> 
+</code></pre></div></div>
+
+<h2 id="3-挂载共享文件夹">3. 挂载共享文件夹</h2>
+
+<p>文件夹存放在node00节点中，其它节点可以使用如下的命令进行挂载，并直接访问node用户下的DataShare文件夹</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>mount <span class="nt">-t</span> nfs node00-ubuntu:/home/node/DataShare /mnt/DataShare
+</code></pre></div></div>
+
+<h2 id="4-horovod-分布式训练使用">4. horovod 分布式训练使用</h2>
+
+<h2 id="41-horovod使用参考">4.1 horovod使用参考</h2>
+
+<p>horovod使用参考分布式训练环境已经搭建完毕；具体使用可以参考官方文档和介绍：</p>
+<ul>
+  <li><a href="https://github.com/horovod/horovod">官方链接</a></li>
+</ul>
+
+<h2 id="42-测试">4.2 测试</h2>
+
+<ul>
+  <li>以node用户登入node00节点</li>
+  <li>运行测试脚本
+    <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node@node00-ubuntu:~<span class="nv">$ </span>~/DataShare/horovod_test.sh
+</code></pre></div>    </div>
+  </li>
+  <li>输入如下结果，表示运行正确
+    <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Tue Apr 21 18:22:52 2020[0]&lt;stdout&gt;:cuda is available:1
+Tue Apr 21 18:22:52 2020[0]&lt;stdout&gt;:args.cuda is available:1
+Tue Apr 21 18:22:53 2020[2]&lt;stdout&gt;:cuda is available:1
+Tue Apr 21 18:22:53 2020[2]&lt;stdout&gt;:args.cuda is available:1
+Tue Apr 21 18:22:53 2020[1]&lt;stdout&gt;:cuda is available:1
+Tue Apr 21 18:22:53 2020[1]&lt;stdout&gt;:args.cuda is available:1
+Tue Apr 21 18:22:53 2020[1]&lt;stdout&gt;:is Use nccl:0
+Tue Apr 21 18:22:53 2020[2]&lt;stdout&gt;:is Use nccl:0
+Tue Apr 21 18:22:53 2020[0]&lt;stdout&gt;:is Use nccl:0
+Tue Apr 21 18:22:57 2020[2]&lt;stderr&gt;:/home/node/DataShare/pytorch_mnist.py:88: UserWarning: Implicit dimension choice <span class="k">for </span>log_softmax has been deprecated. Change the call to include <span class="nv">dim</span><span class="o">=</span>X as an argument.
+Tue Apr 21 18:22:57 2020[2]&lt;stderr&gt;:  <span class="k">return </span>F.log_softmax<span class="o">(</span>x<span class="o">)</span>
+Tue Apr 21 18:22:57 2020[1]&lt;stderr&gt;:/home/node/DataShare/pytorch_mnist.py:88: UserWarning: Implicit dimension choice <span class="k">for </span>log_softmax has been deprecated. Change the call to include <span class="nv">dim</span><span class="o">=</span>X as an argument.
+Tue Apr 21 18:22:57 2020[1]&lt;stderr&gt;:  <span class="k">return </span>F.log_softmax<span class="o">(</span>x<span class="o">)</span>
+Tue Apr 21 18:22:57 2020[0]&lt;stderr&gt;:/home/node/DataShare/pytorch_mnist.py:88: UserWarning: Implicit dimension choice <span class="k">for </span>log_softmax has been deprecated. Change the call to include <span class="nv">dim</span><span class="o">=</span>X as an argument.
+Tue Apr 21 18:22:57 2020[0]&lt;stderr&gt;:  <span class="k">return </span>F.log_softmax<span class="o">(</span>x<span class="o">)</span>
+Tue Apr 21 18:22:57 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>0/20000 <span class="o">(</span>0%<span class="o">)]</span>       Loss: 2.315418
+Tue Apr 21 18:22:57 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>0/20000 <span class="o">(</span>0%<span class="o">)]</span>       Loss: 2.344431
+Tue Apr 21 18:22:57 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>0/20000 <span class="o">(</span>0%<span class="o">)]</span>       Loss: 2.331809
+Tue Apr 21 18:22:57 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>640/20000 <span class="o">(</span>3%<span class="o">)]</span>     Loss: 2.322608
+Tue Apr 21 18:22:57 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>640/20000 <span class="o">(</span>3%<span class="o">)]</span>     Loss: 2.287621
+Tue Apr 21 18:22:57 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>640/20000 <span class="o">(</span>3%<span class="o">)]</span>     Loss: 2.296363
+Tue Apr 21 18:22:57 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>1280/20000 <span class="o">(</span>6%<span class="o">)]</span>    Loss: 2.292358
+Tue Apr 21 18:22:57 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>1280/20000 <span class="o">(</span>6%<span class="o">)]</span>    Loss: 2.301269
+Tue Apr 21 18:22:57 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>1280/20000 <span class="o">(</span>6%<span class="o">)]</span>    Loss: 2.297354
+Tue Apr 21 18:22:57 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>1920/20000 <span class="o">(</span>10%<span class="o">)]</span>   Loss: 2.271436
+Tue Apr 21 18:22:57 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>1920/20000 <span class="o">(</span>10%<span class="o">)]</span>   Loss: 2.261778
+Tue Apr 21 18:22:57 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>1920/20000 <span class="o">(</span>10%<span class="o">)]</span>   Loss: 2.236528
+Tue Apr 21 18:22:57 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>2560/20000 <span class="o">(</span>13%<span class="o">)]</span>   Loss: 2.232875
+Tue Apr 21 18:22:57 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>2560/20000 <span class="o">(</span>13%<span class="o">)]</span>   Loss: 2.186383
+Tue Apr 21 18:22:57 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>2560/20000 <span class="o">(</span>13%<span class="o">)]</span>   Loss: 2.130816
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>3200/20000 <span class="o">(</span>16%<span class="o">)]</span>   Loss: 2.072108
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>3200/20000 <span class="o">(</span>16%<span class="o">)]</span>   Loss: 2.014250
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>3200/20000 <span class="o">(</span>16%<span class="o">)]</span>   Loss: 1.965220
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>3840/20000 <span class="o">(</span>19%<span class="o">)]</span>   Loss: 1.791345
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>3840/20000 <span class="o">(</span>19%<span class="o">)]</span>   Loss: 1.755321
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>3840/20000 <span class="o">(</span>19%<span class="o">)]</span>   Loss: 1.719203
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>4480/20000 <span class="o">(</span>22%<span class="o">)]</span>   Loss: 1.493969
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>4480/20000 <span class="o">(</span>22%<span class="o">)]</span>   Loss: 1.564214
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>4480/20000 <span class="o">(</span>22%<span class="o">)]</span>   Loss: 1.565062
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>5120/20000 <span class="o">(</span>26%<span class="o">)]</span>   Loss: 1.336752
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>5120/20000 <span class="o">(</span>26%<span class="o">)]</span>   Loss: 1.180155
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>5120/20000 <span class="o">(</span>26%<span class="o">)]</span>   Loss: 1.159705
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>5760/20000 <span class="o">(</span>29%<span class="o">)]</span>   Loss: 1.084617
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>5760/20000 <span class="o">(</span>29%<span class="o">)]</span>   Loss: 1.155716
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>5760/20000 <span class="o">(</span>29%<span class="o">)]</span>   Loss: 0.975106
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>6400/20000 <span class="o">(</span>32%<span class="o">)]</span>   Loss: 1.125397
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>6400/20000 <span class="o">(</span>32%<span class="o">)]</span>   Loss: 0.980524
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>6400/20000 <span class="o">(</span>32%<span class="o">)]</span>   Loss: 0.896509
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>7040/20000 <span class="o">(</span>35%<span class="o">)]</span>   Loss: 0.889235
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>7040/20000 <span class="o">(</span>35%<span class="o">)]</span>   Loss: 0.900998
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>7040/20000 <span class="o">(</span>35%<span class="o">)]</span>   Loss: 1.070345
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>7680/20000 <span class="o">(</span>38%<span class="o">)]</span>   Loss: 0.791290
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>7680/20000 <span class="o">(</span>38%<span class="o">)]</span>   Loss: 0.765100
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>7680/20000 <span class="o">(</span>38%<span class="o">)]</span>   Loss: 0.771025
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>8320/20000 <span class="o">(</span>42%<span class="o">)]</span>   Loss: 0.607366
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>8320/20000 <span class="o">(</span>42%<span class="o">)]</span>   Loss: 0.812178
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>8320/20000 <span class="o">(</span>42%<span class="o">)]</span>   Loss: 0.910085
+Tue Apr 21 18:22:58 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>8960/20000 <span class="o">(</span>45%<span class="o">)]</span>   Loss: 0.503765
+Tue Apr 21 18:22:58 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>8960/20000 <span class="o">(</span>45%<span class="o">)]</span>   Loss: 0.662145
+Tue Apr 21 18:22:58 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>8960/20000 <span class="o">(</span>45%<span class="o">)]</span>   Loss: 0.585488
+Tue Apr 21 18:22:59 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>9600/20000 <span class="o">(</span>48%<span class="o">)]</span>   Loss: 0.877532
+Tue Apr 21 18:22:59 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>9600/20000 <span class="o">(</span>48%<span class="o">)]</span>   Loss: 0.920247
+Tue Apr 21 18:22:59 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>9600/20000 <span class="o">(</span>48%<span class="o">)]</span>   Loss: 0.769557
+Tue Apr 21 18:22:59 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>10240/20000 <span class="o">(</span>51%<span class="o">)]</span>  Loss: 0.723089
+Tue Apr 21 18:22:59 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>10240/20000 <span class="o">(</span>51%<span class="o">)]</span>  Loss: 0.557535
+Tue Apr 21 18:22:59 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>10240/20000 <span class="o">(</span>51%<span class="o">)]</span>  Loss: 0.753275
+Tue Apr 21 18:22:59 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>10880/20000 <span class="o">(</span>54%<span class="o">)]</span>  Loss: 0.616381
+Tue Apr 21 18:22:59 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>10880/20000 <span class="o">(</span>54%<span class="o">)]</span>  Loss: 0.519525
+Tue Apr 21 18:22:59 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>10880/20000 <span class="o">(</span>54%<span class="o">)]</span>  Loss: 0.488052
+Tue Apr 21 18:22:59 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>11520/20000 <span class="o">(</span>58%<span class="o">)]</span>  Loss: 0.664815
+Tue Apr 21 18:22:59 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>11520/20000 <span class="o">(</span>58%<span class="o">)]</span>  Loss: 0.539390
+Tue Apr 21 18:22:59 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>11520/20000 <span class="o">(</span>58%<span class="o">)]</span>  Loss: 0.860400
+Tue Apr 21 18:22:59 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>12160/20000 <span class="o">(</span>61%<span class="o">)]</span>  Loss: 0.939230
+Tue Apr 21 18:22:59 2020[1]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>12160/20000 <span class="o">(</span>61%<span class="o">)]</span>  Loss: 0.628644
+Tue Apr 21 18:22:59 2020[2]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>12160/20000 <span class="o">(</span>61%<span class="o">)]</span>  Loss: 0.589586
+Tue Apr 21 18:22:59 2020[0]&lt;stdout&gt;:Train Epoch: 1 <span class="o">[</span>12800/20000 <span class="o">(</span>64%<span class="o">)]</span>  Loss: 0.512697
+Tue Apr 21 18:22:59 2020[2]&lt;stdout&gt;:Train Epoch: 1
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h2 id="5-jupyter远程操作">5. jupyter远程操作</h2>
+<p>建设中</p>
+:ET

@@ -1,0 +1,135 @@
+I"�<h1 id="武海拾遗录二">武海拾遗录(二)</h1>
+
+<blockquote>
+  <p>2021-11-29 00:45:58</p>
+</blockquote>
+
+<p><em>参考链接:</em></p>
+<ul>
+  <li><a href="https://wangpengcheng.github.io/2020/03/12/http_interview/">http面试总结</a></li>
+</ul>
+
+<h2 id="1-sql注入xss和csrf常见安全漏洞">1. sql注入、XSS和CSRF常见安全漏洞</h2>
+<ul>
+  <li><a href="https://zhuanlan.zhihu.com/p/371414280">安全漏洞XSS、CSRF、SQL注入以及DDOS攻击</a></li>
+  <li><a href="https://www.cnblogs.com/rinack/p/11549410.html">安全漏洞XSS、CSRF、SQL注入以及DDOS攻击</a></li>
+</ul>
+
+<h2 id="2-sessioncookie">2. session/cookie</h2>
+
+<h3 id="21-sessioncookie的差别和联系是什么">2.1 session/cookie的差别和联系是什么</h3>
+<p>详见:</p>
+<ul>
+  <li><a href="https://wangpengcheng.github.io/2020/03/12/http_interview/#13-cookie%E4%B8%8Esession%E5%8C%BA%E5%88%AB">cookie与session区别</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/63061864">彻底理解cookie，session，token</a></li>
+</ul>
+
+<h3 id="22-为何以及如何进行session进行集中存储">2.2 为何以及如何进行session进行集中存储</h3>
+<ul>
+  <li><a href="https://zhuanlan.zhihu.com/p/26781989">Session存储方式</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/415701372">一篇文章弄懂session的两种存储方式</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/91255268">Session+Redis实现Session共享</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/31404516">sessionStorage和session cookie</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/161613562">4种分布式一致性Session实现方式</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/281414244">cookie、session、token、jwt、单点登录</a></li>
+</ul>
+
+<h2 id="3--sso">3.  SSO</h2>
+<ul>
+  <li><a href="https://wangpengcheng.github.io/2019/12/17/baidu_interview_prepare/#546-%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E4%BA%86%E8%A7%A3%E5%90%97">SSO相关</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/66037342">SSO</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/38942172">JWT替代session管理（上）：全面了解Token,JWT,OAuth,SAML,SSO</a>
+    <h3 id="31-sso解决了什么问题">3.1 SSO解决了什么问题</h3>
+  </li>
+</ul>
+
+<h3 id="32-sso-如何进行设计与实现">3.2 SSO 如何进行设计与实现</h3>
+<ul>
+  <li><a href="https://www.zhihu.com/search?type=content&amp;q=SSO%20%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0">SSO 设计与实现</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/122852128">OAuth2 实现单点登录 SSO</a></li>
+  <li><a href="https://blog.csdn.net/noaman_wgs/article/details/103483349">接口鉴权功能的实现</a></li>
+  <li><a href="https://blog.51cto.com/u_14785218/2878553">4种常见的鉴权方式及说明</a></li>
+</ul>
+
+<h2 id="4-http">4. HTTP</h2>
+<h3 id="41-http-常见的返回码">4.1 HTTP 常见的返回码</h3>
+<p>详见:
+<a href="https://wangpengcheng.github.io/2020/03/12/http_interview/#71-%E4%B8%89%E8%87%B3%E4%B8%83%E7%A7%8D%E6%9C%80%E5%9F%BA%E6%9C%AC%E7%9A%84%E5%93%8D%E5%BA%94%E4%BB%A3%E7%A0%81">HTTP常见状态码</a></p>
+<h3 id="42-http-常见的header">4.2 HTTP 常见的header</h3>
+<ul>
+  <li><a href="https://wangpengcheng.github.io/2020/03/12/http_interview/#%E5%B8%B8%E8%A7%81%E7%9A%84%E9%A6%96%E9%83%A8">常见首部</a></li>
+</ul>
+
+<h3 id="43-https握手过程">4.3 HTTPS握手过程</h3>
+
+<p>详见：<a href="https://wangpengcheng.github.io/2020/03/12/http_interview/#8-https%E7%9A%84%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B">HTTPS握手过程</a></p>
+
+<h2 id="5-cdn架构与详解">5. CDN架构与详解</h2>
+<ul>
+  <li><a href="https://www.cnblogs.com/vincenshen/articles/6837333.html">SDN</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/364535948">小白基础-SDN详解</a></li>
+</ul>
+
+<p>SDN即软件定义网络（software Defined Netwark），是一种Emulex网络得一种新型网络架构，致力于改变传统网络得弊端，是网络虚拟化的一种实现方式。</p>
+
+<p>OpenFlow通过将网络设备的控制权和数据面分离，由集中的控制器管理，无需依赖底层的网络设备（路由器，交换机，防火墙），屏蔽了底层网络得差异性，而控制权完全由胡勇决定。
+传统网络的弊端：扩展能力差，如果业务需求有变化，需要重新相应网络设备，这是件非常繁琐的事情。</p>
+
+<p>SDN的优势：自定义划，开放性，可拓展，配置简单。</p>
+
+<p>意义:正是因为这种业务逻辑的开放性，使得网络作为“管道”的发展空间变为无限可能。如果未来云计算的业务应用模型可以简化为“云—管—端”，那么SDN就是 “管”这一环的重要技术支撑。</p>
+<h2 id="6-dns-解析过程">6. DNS 解析过程</h2>
+<ul>
+  <li><a href="https://wangpengcheng.github.io/2019/12/17/baidu_interview_prepare/#529-dnsdomain-name-system-%E6%98%AF%E5%B9%B2%E4%BB%80%E4%B9%88%E7%9A%84">DNS</a></li>
+</ul>
+
+<h2 id="7-微服务">7. 微服务</h2>
+
+<ul>
+  <li><a href="https://zh.wikipedia.org/wiki/%E5%BE%AE%E6%9C%8D%E5%8B%99">微服务定义</a></li>
+  <li><a href="https://www.redhat.com/zh/topics/microservices/what-are-microservices">什么是微服务</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/381847108">什么是微服务–知乎</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/25843782">重新理解微服务</a></li>
+  <li><a href="https://www.zhihu.com/question/307537564/answer/583653317">Docker，K8S，KVM，Hypervisor和微服务有什么区别联系吗</a></li>
+  <li><a href="https://www.zhihu.com/question/65502802">微服务架构</a></li>
+  <li><a href="http://oopsguy.com/books/microservices/index.html">微服务从设计到部署</a></li>
+  <li><a href="https://gudaoxuri.gitbook.io/microservices-architecture/wei-fu-wu-hua-zhi-ji-shu-jia-gou/api-protocol-select">微服务架构架构设计</a></li>
+</ul>
+
+<h3 id="71-为什么要用微服务">7.1 为什么要用微服务</h3>
+<ul>
+  <li><a href="https://www.redhat.com/zh/topics/microservices/what-are-microservices">优势</a></li>
+</ul>
+
+<h3 id="72-微服务的发现负载均衡过载保护限流目的是什么如何实现">7.2 微服务的发现、负载均衡、过载保护、限流目的是什么，如何实现</h3>
+
+<h4 id="721-微服务的发现">7.2.1 微服务的发现</h4>
+
+<h4 id="722-微服务负载均衡">7.2.2 微服务负载均衡</h4>
+
+<h4 id="723-微服务负载均衡">7.2.3 微服务负载均衡</h4>
+
+<h4 id="724-过载保护">7.2.4 过载保护</h4>
+
+<h4 id="725-限流目的">7.2.5 限流目的</h4>
+
+<h2 id="8-字符集">8. 字符集</h2>
+<ul>
+  <li><a href="https://blog.csdn.net/softwarenb/article/details/51994943?spm=1001.2101.3001.6650.1&amp;utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-1.essearch_pc_relevant&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-1.essearch_pc_relevant">深入理解-字符编码ASCII,GB2312,GBK,Unicode,UTF-8</a></li>
+  <li><a href="https://blog.csdn.net/qq_39390545/article/details/106946166">MySQL中的 utf8 并不是真正的UTF-8编码 ! !</a></li>
+</ul>
+
+<h3 id="81-字符集合是什么">8.1 字符集合是什么</h3>
+
+<h3 id="82-那些地方会涉及到字符集">8.2 那些地方会涉及到字符集</h3>
+<ul>
+  <li>mysql</li>
+  <li>编码存储</li>
+  <li>跨平台</li>
+</ul>
+
+<h3 id="83-如何正确选择字符集">8.3 如何正确选择字符集</h3>
+
+<h3 id="84-怎么做一个多语言支持的web系统">8.4 怎么做一个多语言支持的Web系统</h3>
+
+:ET

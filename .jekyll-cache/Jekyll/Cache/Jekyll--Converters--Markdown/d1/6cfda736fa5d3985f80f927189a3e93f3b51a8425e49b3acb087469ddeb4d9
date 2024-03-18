@@ -1,0 +1,2 @@
+I"<p>与上一个构造函数相同，但从<code class="language-plaintext highlighter-rouge">cp</code>指向的字符串数组中拷贝字符，如果m未提供，则cp必须指向一个c风格字符串，如果提供了m,则从cp开始必须至少有m个zero或one字符</p>
+:ET

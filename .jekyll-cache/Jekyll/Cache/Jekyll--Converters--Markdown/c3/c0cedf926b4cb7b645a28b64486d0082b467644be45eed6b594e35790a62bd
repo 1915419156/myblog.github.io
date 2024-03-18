@@ -1,0 +1,2 @@
+I"�<p>p必须是一个类型为<code class="language-plaintext highlighter-rouge">T*</code>的指针，指向一块原始内存；arg被传递给类型为T的构造函数，用来在p指向的内存中构造一个对象</p>
+:ET

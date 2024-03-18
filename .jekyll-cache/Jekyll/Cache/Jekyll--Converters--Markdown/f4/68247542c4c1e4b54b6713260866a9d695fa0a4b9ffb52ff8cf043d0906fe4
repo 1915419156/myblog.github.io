@@ -1,0 +1,2 @@
+I"�<p>如果<code class="language-plaintext highlighter-rouge">expired</code>为<code class="language-plaintext highlighter-rouge">true</code>，返回一个空<code class="language-plaintext highlighter-rouge">shared_ptr</code>；否则返回一个指向<code class="language-plaintext highlighter-rouge">w</code>的对象的<code class="language-plaintext highlighter-rouge">shared_ptr</code></p>
+:ET

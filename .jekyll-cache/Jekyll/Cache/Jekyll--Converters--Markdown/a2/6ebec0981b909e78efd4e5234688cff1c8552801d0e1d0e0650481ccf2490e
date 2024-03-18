@@ -1,0 +1,2 @@
+I"|<p>打开名为s的文件，并将文件与fstrm绑定，默认的文件mode依赖于fstream的类型，返回void</p>
+:ET

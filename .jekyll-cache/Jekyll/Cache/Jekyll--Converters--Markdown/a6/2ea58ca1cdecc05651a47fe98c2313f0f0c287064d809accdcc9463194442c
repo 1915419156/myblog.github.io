@@ -1,0 +1,2 @@
+I"U<p>p是<code class="language-plaintext highlighter-rouge">shared_ptr q</code>的拷贝；此操作会递增<code class="language-plaintext highlighter-rouge">q</code>中的计数器。<code class="language-plaintext highlighter-rouge">q</code>中的智能指针必须转化为<code class="language-plaintext highlighter-rouge">*T</code></p>
+:ET

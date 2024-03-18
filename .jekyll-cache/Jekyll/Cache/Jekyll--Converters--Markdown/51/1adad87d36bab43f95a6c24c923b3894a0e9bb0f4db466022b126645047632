@@ -1,0 +1,2 @@
+I"�<p>一个类模板，可以通过一个tuple类型来初始化。它有一个名为value的public constecpr static 数据成员，类型为size_t,表示给定tuple类型中成员的数量。</p>
+:ET

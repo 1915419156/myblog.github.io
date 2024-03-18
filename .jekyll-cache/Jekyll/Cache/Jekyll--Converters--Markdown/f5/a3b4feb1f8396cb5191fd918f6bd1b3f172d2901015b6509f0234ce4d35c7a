@@ -1,0 +1,132 @@
+I"�L<h1 id="gpu-高性能编程cuda实战">GPU 高性能编程CUDA实战</h1>
+
+<p><em>参考链接:</em></p>
+<ul>
+  <li><a href="https://docs.nvidia.com/cuda/archive/9.2/cuda-c-programming-guide/index.html">CUDA C Programming Guide</a></li>
+  <li><a href="https://www.cnblogs.com/timlly/p/11471507.html">深入GPU硬件架构及运行机制</a></li>
+</ul>
+
+<blockquote>
+  <p>2020-10-20 15:38:58</p>
+</blockquote>
+
+<h2 id="第三章-cuda-c简介">第三章 CUDA C简介</h2>
+
+<h3 id="33-查询设备">3.3 查询设备</h3>
+<p>cuda中可以使用cudaGetDeviceProperties进行设备查询；其函数对应接口如下:</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cudaError_t</span> <span class="n">CUDARTAPI</span> <span class="nf">cudaGetDeviceProperties</span><span class="p">(</span><span class="k">struct</span> <span class="nc">cudaDeviceProp</span> <span class="o">*</span><span class="n">prop</span><span class="p">,</span> <span class="kt">int</span> <span class="n">device</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>其中<code class="language-plaintext highlighter-rouge">cudaDeviceProp</code>关键属性如下:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * CUDA device properties
+ */</span>
+<span class="k">struct</span> <span class="nc">__device_builtin__</span> <span class="n">cudaDeviceProp</span>
+<span class="p">{</span>
+    <span class="kt">char</span>   <span class="n">name</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>                  <span class="cm">/**&lt; ASCII string identifying device */</span>
+    <span class="kt">size_t</span> <span class="n">totalGlobalMem</span><span class="p">;</span>             <span class="cm">/**&lt; Global memory available on device in bytes */</span>
+    <span class="kt">size_t</span> <span class="n">sharedMemPerBlock</span><span class="p">;</span>          <span class="cm">/**&lt; Shared memory available per block in bytes */</span>
+    <span class="kt">int</span>    <span class="n">regsPerBlock</span><span class="p">;</span>               <span class="cm">/**&lt; 32-bit registers available per block */</span>
+    <span class="kt">int</span>    <span class="n">warpSize</span><span class="p">;</span>                   <span class="cm">/**&lt; Warp size in threads */</span>
+    <span class="kt">size_t</span> <span class="n">memPitch</span><span class="p">;</span>                   <span class="cm">/**&lt; Maximum pitch in bytes allowed by memory copies */</span>
+    <span class="kt">int</span>    <span class="n">maxThreadsPerBlock</span><span class="p">;</span>         <span class="cm">/**&lt; Maximum number of threads per block */</span>
+    <span class="kt">int</span>    <span class="n">maxThreadsDim</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>           <span class="cm">/**&lt; Maximum size of each dimension of a block */</span>
+    <span class="kt">int</span>    <span class="n">maxGridSize</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>             <span class="cm">/**&lt; Maximum size of each dimension of a grid */</span>
+    <span class="kt">int</span>    <span class="n">clockRate</span><span class="p">;</span>                  <span class="cm">/**&lt; Clock frequency in kilohertz */</span>
+    <span class="kt">size_t</span> <span class="n">totalConstMem</span><span class="p">;</span>              <span class="cm">/**&lt; Constant memory available on device in bytes */</span>
+    <span class="kt">int</span>    <span class="n">major</span><span class="p">;</span>                      <span class="cm">/**&lt; Major compute capability */</span>
+    <span class="kt">int</span>    <span class="n">minor</span><span class="p">;</span>                      <span class="cm">/**&lt; Minor compute capability */</span>
+    <span class="kt">size_t</span> <span class="n">textureAlignment</span><span class="p">;</span>           <span class="cm">/**&lt; Alignment requirement for textures */</span>
+    <span class="kt">size_t</span> <span class="n">texturePitchAlignment</span><span class="p">;</span>      <span class="cm">/**&lt; Pitch alignment requirement for texture references bound to pitched memory */</span>
+    <span class="kt">int</span>    <span class="n">deviceOverlap</span><span class="p">;</span>              <span class="cm">/**&lt; Device can concurrently copy memory and execute a kernel. Deprecated. Use instead asyncEngineCount. */</span>
+    <span class="kt">int</span>    <span class="n">multiProcessorCount</span><span class="p">;</span>        <span class="cm">/**&lt; Number of multiprocessors on device */</span>
+    <span class="kt">int</span>    <span class="n">kernelExecTimeoutEnabled</span><span class="p">;</span>   <span class="cm">/**&lt; Specified whether there is a run time limit on kernels */</span>
+    <span class="kt">int</span>    <span class="n">integrated</span><span class="p">;</span>                 <span class="cm">/**&lt; Device is integrated as opposed to discrete */</span>
+    <span class="kt">int</span>    <span class="n">canMapHostMemory</span><span class="p">;</span>           <span class="cm">/**&lt; Device can map host memory with cudaHostAlloc/cudaHostGetDevicePointer */</span>
+    <span class="kt">int</span>    <span class="n">computeMode</span><span class="p">;</span>                <span class="cm">/**&lt; Compute mode (See ::cudaComputeMode) */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture1D</span><span class="p">;</span>               <span class="cm">/**&lt; Maximum 1D texture size */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture1DMipmap</span><span class="p">;</span>         <span class="cm">/**&lt; Maximum 1D mipmapped texture size */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture1DLinear</span><span class="p">;</span>         <span class="cm">/**&lt; Maximum size for 1D textures bound to linear memory */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture2D</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>            <span class="cm">/**&lt; Maximum 2D texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture2DMipmap</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>      <span class="cm">/**&lt; Maximum 2D mipmapped texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture2DLinear</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>      <span class="cm">/**&lt; Maximum dimensions (width, height, pitch) for 2D textures bound to pitched memory */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture2DGather</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>      <span class="cm">/**&lt; Maximum 2D texture dimensions if texture gather operations have to be performed */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture3D</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>            <span class="cm">/**&lt; Maximum 3D texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture3DAlt</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>         <span class="cm">/**&lt; Maximum alternate 3D texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxTextureCubemap</span><span class="p">;</span>          <span class="cm">/**&lt; Maximum Cubemap texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture1DLayered</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>     <span class="cm">/**&lt; Maximum 1D layered texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxTexture2DLayered</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>     <span class="cm">/**&lt; Maximum 2D layered texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxTextureCubemapLayered</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span><span class="cm">/**&lt; Maximum Cubemap layered texture dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxSurface1D</span><span class="p">;</span>               <span class="cm">/**&lt; Maximum 1D surface size */</span>
+    <span class="kt">int</span>    <span class="n">maxSurface2D</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>            <span class="cm">/**&lt; Maximum 2D surface dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxSurface3D</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>            <span class="cm">/**&lt; Maximum 3D surface dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxSurface1DLayered</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>     <span class="cm">/**&lt; Maximum 1D layered surface dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxSurface2DLayered</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>     <span class="cm">/**&lt; Maximum 2D layered surface dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxSurfaceCubemap</span><span class="p">;</span>          <span class="cm">/**&lt; Maximum Cubemap surface dimensions */</span>
+    <span class="kt">int</span>    <span class="n">maxSurfaceCubemapLayered</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span><span class="cm">/**&lt; Maximum Cubemap layered surface dimensions */</span>
+    <span class="kt">size_t</span> <span class="n">surfaceAlignment</span><span class="p">;</span>           <span class="cm">/**&lt; Alignment requirements for surfaces */</span>
+    <span class="kt">int</span>    <span class="n">concurrentKernels</span><span class="p">;</span>          <span class="cm">/**&lt; Device can possibly execute multiple kernels concurrently */</span>
+    <span class="kt">int</span>    <span class="n">ECCEnabled</span><span class="p">;</span>                 <span class="cm">/**&lt; Device has ECC support enabled */</span>
+    <span class="kt">int</span>    <span class="n">pciBusID</span><span class="p">;</span>                   <span class="cm">/**&lt; PCI bus ID of the device */</span>
+    <span class="kt">int</span>    <span class="n">pciDeviceID</span><span class="p">;</span>                <span class="cm">/**&lt; PCI device ID of the device */</span>
+    <span class="kt">int</span>    <span class="n">pciDomainID</span><span class="p">;</span>                <span class="cm">/**&lt; PCI domain ID of the device */</span>
+    <span class="kt">int</span>    <span class="n">tccDriver</span><span class="p">;</span>                  <span class="cm">/**&lt; 1 if device is a Tesla device using TCC driver, 0 otherwise */</span>
+    <span class="kt">int</span>    <span class="n">asyncEngineCount</span><span class="p">;</span>           <span class="cm">/**&lt; Number of asynchronous engines */</span>
+    <span class="kt">int</span>    <span class="n">unifiedAddressing</span><span class="p">;</span>          <span class="cm">/**&lt; Device shares a unified address space with the host */</span>
+    <span class="kt">int</span>    <span class="n">memoryClockRate</span><span class="p">;</span>            <span class="cm">/**&lt; Peak memory clock frequency in kilohertz */</span>
+    <span class="kt">int</span>    <span class="n">memoryBusWidth</span><span class="p">;</span>             <span class="cm">/**&lt; Global memory bus width in bits */</span>
+    <span class="kt">int</span>    <span class="n">l2CacheSize</span><span class="p">;</span>                <span class="cm">/**&lt; Size of L2 cache in bytes */</span>
+    <span class="kt">int</span>    <span class="n">maxThreadsPerMultiProcessor</span><span class="p">;</span><span class="cm">/**&lt; Maximum resident threads per multiprocessor */</span>
+    <span class="kt">int</span>    <span class="n">streamPrioritiesSupported</span><span class="p">;</span>  <span class="cm">/**&lt; Device supports stream priorities */</span>
+    <span class="kt">int</span>    <span class="n">globalL1CacheSupported</span><span class="p">;</span>     <span class="cm">/**&lt; Device supports caching globals in L1 */</span>
+    <span class="kt">int</span>    <span class="n">localL1CacheSupported</span><span class="p">;</span>      <span class="cm">/**&lt; Device supports caching locals in L1 */</span>
+    <span class="kt">size_t</span> <span class="n">sharedMemPerMultiprocessor</span><span class="p">;</span> <span class="cm">/**&lt; Shared memory available per multiprocessor in bytes */</span>
+    <span class="kt">int</span>    <span class="n">regsPerMultiprocessor</span><span class="p">;</span>      <span class="cm">/**&lt; 32-bit registers available per multiprocessor */</span>
+    <span class="kt">int</span>    <span class="n">managedMemory</span><span class="p">;</span>              <span class="cm">/**&lt; Device supports allocating managed memory on this system */</span>
+    <span class="kt">int</span>    <span class="n">isMultiGpuBoard</span><span class="p">;</span>            <span class="cm">/**&lt; Device is on a multi-GPU board */</span>
+    <span class="kt">int</span>    <span class="n">multiGpuBoardGroupID</span><span class="p">;</span>       <span class="cm">/**&lt; Unique identifier for a group of devices on the same multi-GPU board */</span>
+    <span class="kt">int</span>    <span class="n">hostNativeAtomicSupported</span><span class="p">;</span>  <span class="cm">/**&lt; Link between the device and the host supports native atomic operations */</span>
+    <span class="kt">int</span>    <span class="n">singleToDoublePrecisionPerfRatio</span><span class="p">;</span> <span class="cm">/**&lt; Ratio of single precision performance (in floating-point operations per second) to double precision performance */</span>
+    <span class="kt">int</span>    <span class="n">pageableMemoryAccess</span><span class="p">;</span>       <span class="cm">/**&lt; Device supports coherently accessing pageable memory without calling cudaHostRegister on it */</span>
+    <span class="kt">int</span>    <span class="n">concurrentManagedAccess</span><span class="p">;</span>    <span class="cm">/**&lt; Device can coherently access managed memory concurrently with the CPU */</span>
+    <span class="kt">int</span>    <span class="n">computePreemptionSupported</span><span class="p">;</span> <span class="cm">/**&lt; Device supports Compute Preemption */</span>
+    <span class="kt">int</span>    <span class="n">canUseHostPointerForRegisteredMem</span><span class="p">;</span> <span class="cm">/**&lt; Device can access host registered memory at the same virtual address as the CPU */</span>
+    <span class="kt">int</span>    <span class="n">cooperativeLaunch</span><span class="p">;</span>          <span class="cm">/**&lt; Device supports launching cooperative kernels via ::cudaLaunchCooperativeKernel */</span>
+    <span class="kt">int</span>    <span class="n">cooperativeMultiDeviceLaunch</span><span class="p">;</span> <span class="cm">/**&lt; Device can participate in cooperative kernels launched via ::cudaLaunchCooperativeKernelMultiDevice */</span>
+    <span class="kt">size_t</span> <span class="n">sharedMemPerBlockOptin</span><span class="p">;</span>     <span class="cm">/**&lt; Per device maximum shared memory per block usable by special opt in */</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>关键使用和查询代码如下:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">dev</span><span class="p">,</span> <span class="n">driverVersion</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">runtimeVersion</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">cudaSetDevice</span><span class="p">(</span><span class="n">dev</span><span class="p">);</span>
+<span class="n">cudaDeviceProp</span> <span class="n">deviceProp</span><span class="p">;</span>
+<span class="n">cudaGetDeviceProperties</span><span class="p">(</span><span class="o">&amp;</span><span class="n">deviceProp</span><span class="p">,</span> <span class="n">dev</span><span class="p">);</span>
+<span class="n">cudaDriverGetVersion</span><span class="p">(</span><span class="o">&amp;</span><span class="n">driverVersion</span><span class="p">);</span>
+<span class="n">cudaRuntimeGetVersion</span><span class="p">(</span><span class="o">&amp;</span><span class="n">runtimeVersion</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"  CUDA Driver Version / Runtime Version          %d.%d / %d.%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">driverVersion</span><span class="o">/</span><span class="mi">1000</span><span class="p">,</span> <span class="p">(</span><span class="n">driverVersion</span><span class="o">%</span><span class="mi">100</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">runtimeVersion</span><span class="o">/</span><span class="mi">1000</span><span class="p">,</span> <span class="p">(</span><span class="n">runtimeVersion</span><span class="o">%</span><span class="mi">100</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"  CUDA Capability Major/Minor version number:    %d.%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">deviceProp</span><span class="p">.</span><span class="n">major</span><span class="p">,</span> <span class="n">deviceProp</span><span class="p">.</span><span class="n">minor</span><span class="p">);</span>
+
+<span class="cm">/* 输出对应属性--略*/</span>
+
+</code></pre></div></div>
+<p>详细代码见:</p>
+
+<h4 id="co-issue">co-issue</h4>
+
+<p>co-issue是为了解决SIMD运算单元无法充分利用的问题。例如下图，由于float数量的不同，ALU利用率从100%依次下降为75%、50%、25%。</p>
+
+<p><img src="https://img2018.cnblogs.com/blog/1617944/201909/1617944-20190906001418746-831705203.png" alt="" /></p>
+
+<p>为了解决着色器在低维向量的利用率低的问题，可以通过合并1D与3D或2D与2D的指令。例如下图，DP3指令用了3D数据，ADD指令只有1D数据，co-issue会自动将它们合并，在同一个ALU只需一个指令周期即可执行完。</p>
+
+<p><img src="https://img2018.cnblogs.com/blog/1617944/201909/1617944-20190906001427705-915501113.png" alt="" /></p>
+
+<p>但是，对于向量运算单元（Vector ALU），如果其中一个变量既是操作数又是存储数的情况，无法启用co-issue技术：</p>
+
+<p><img src="https://img2018.cnblogs.com/blog/1617944/201909/1617944-20190906001436218-1727443284.png" alt="" /></p>
+
+<p>于是标量指令着色器（Scalar Instruction Shader）应运而生，它可以有效地组合任何向量，开启co-issue技术，充分发挥SIMD的优势。</p>
+:ET

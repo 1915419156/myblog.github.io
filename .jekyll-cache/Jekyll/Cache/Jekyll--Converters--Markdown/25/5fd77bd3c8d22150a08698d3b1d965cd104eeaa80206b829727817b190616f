@@ -1,0 +1,2 @@
+I"T<p>b是<code class="language-plaintext highlighter-rouge">unsigned long long</code>值u的低n位的拷贝。如果n大于<code class="language-plaintext highlighter-rouge">unsigned long long </code>的大小，则b中超出的高位被置为0.此构造函数是一个<code class="language-plaintext highlighter-rouge">constexpr</code></p>
+:ET

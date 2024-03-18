@@ -1,0 +1,2 @@
+I"c<p>一个类模板，可以通过一个整形常量和一个tuple类型来初始化。它有一个名为<code class="language-plaintext highlighter-rouge">type</code>的<code class="language-plaintext highlighter-rouge">public</code>成员，表示给定<code class="language-plaintext highlighter-rouge">tuple</code>类型中指定成员的类型。</p>
+:ET

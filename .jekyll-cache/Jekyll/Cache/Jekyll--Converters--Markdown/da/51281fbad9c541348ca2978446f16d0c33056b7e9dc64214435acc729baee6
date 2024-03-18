@@ -1,0 +1,2 @@
+I"z<p><code class="language-plaintext highlighter-rouge">out</code>和<code class="language-plaintext highlighter-rouge">val</code>必须类型兼容。用运算符<code class="language-plaintext highlighter-rouge">&lt;&lt;</code>将<code class="language-plaintext highlighter-rouge">val</code>写入到<code class="language-plaintext highlighter-rouge">out</code>输出流中</p>
+:ET

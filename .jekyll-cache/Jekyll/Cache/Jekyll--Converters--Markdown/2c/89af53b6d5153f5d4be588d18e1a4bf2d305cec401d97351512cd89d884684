@@ -1,0 +1,1138 @@
+I"� <blockquote>
+  <p>2019-08-11 16:04:58</p>
+</blockquote>
+
+<h1 id="跟我一起写makefile">跟我一起写makefile</h1>
+
+<p><em>参考链接：</em> <a href="http://www.gnu.org/software/make/manual/make.html">GNU make</a>; <a href="https://www.cnblogs.com/itech/archive/2009/09/15/1567001.html">GUN Make指南</a></p>
+<h2 id="1-概述">1 概述</h2>
+<p>make工具：</p>
+
+<ul>
+  <li>Delphi-make</li>
+  <li>Visual C++ nmake</li>
+  <li>GNU make</li>
+</ul>
+
+<p>文章主要针对GNU的make</p>
+
+<h2 id="1-make-的使用">1 make 的使用</h2>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>用法：make <span class="o">[</span>选项] <span class="o">[</span>目标] ...
+选项：
+  <span class="nt">-b</span>, <span class="nt">-m</span>                      忽略兼容性。
+  <span class="nt">-B</span>, <span class="nt">--always-make</span>           无条件 make 所有目标。
+  <span class="nt">-C</span> DIRECTORY, <span class="nt">--directory</span><span class="o">=</span>DIRECTORY
+                              在执行前先切换到 DIRECTORY 目录。
+  <span class="nt">-d</span>                          打印大量调试信息。
+  <span class="nt">--debug</span><span class="o">[=</span>FLAGS]             打印各种调试信息。
+  <span class="nt">-e</span>, <span class="nt">--environment-overrides</span>
+                              环境变量覆盖 makefile 中的变量。
+  <span class="nt">--eval</span><span class="o">=</span>STRING               Evaluate STRING as a makefile statement.
+  <span class="nt">-f</span> FILE, <span class="nt">--file</span><span class="o">=</span>FILE, <span class="nt">--makefile</span><span class="o">=</span>FILE
+                              从 FILE 中读入 makefile。
+  <span class="nt">-h</span>, <span class="nt">--help</span>                  打印该消息并退出。
+  <span class="nt">-i</span>, <span class="nt">--ignore-errors</span>         Ignore errors from recipes.
+  <span class="nt">-I</span> DIRECTORY, <span class="nt">--include-dir</span><span class="o">=</span>DIRECTORY
+                              在 DIRECTORY 中搜索被包含的 makefile。
+  <span class="nt">-j</span> <span class="o">[</span>N], <span class="nt">--jobs</span><span class="o">[=</span>N]          同时允许 N 个任务；无参数表明允许无限个任务。
+  <span class="nt">-k</span>, <span class="nt">--keep-going</span>            当某些目标无法创建时仍然继续。
+  <span class="nt">-l</span> <span class="o">[</span>N], <span class="nt">--load-average</span><span class="o">[=</span>N], <span class="nt">--max-load</span><span class="o">[=</span>N]
+                              在系统负载高于 N 时不启动多任务。
+  <span class="nt">-L</span>, <span class="nt">--check-symlink-times</span>   使用软链接及软链接目标中修改时间较晚的一个。
+  <span class="nt">-n</span>, <span class="nt">--just-print</span>, <span class="nt">--dry-run</span>, <span class="nt">--recon</span>
+                              Don not actually run any recipe<span class="p">;</span> just print them.
+  <span class="nt">-o</span> FILE, <span class="nt">--old-file</span><span class="o">=</span>FILE, <span class="nt">--assume-old</span><span class="o">=</span>FILE
+                              将 FILE 当做很旧，不必重新生成。
+  <span class="nt">-O</span><span class="o">[</span>TYPE], <span class="nt">--output-sync</span><span class="o">[=</span>TYPE]
+                              Synchronize output of parallel <span class="nb">jobs </span>by TYPE.
+  <span class="nt">-p</span>, <span class="nt">--print-data-base</span>       打印 make 的内部数据库。
+  <span class="nt">-q</span>, <span class="nt">--question</span>              Run no recipe<span class="p">;</span> <span class="nb">exit </span>status says <span class="k">if </span>up to date.
+  <span class="nt">-r</span>, <span class="nt">--no-builtin-rules</span>      禁用内置隐含规则。
+  <span class="nt">-R</span>, <span class="nt">--no-builtin-variables</span>   禁用内置变量设置。
+  <span class="nt">-s</span>, <span class="nt">--silent</span>, <span class="nt">--quiet</span>       Don not <span class="nb">echo </span>recipes.
+  <span class="nt">-S</span>, <span class="nt">--no-keep-going</span>, <span class="nt">--stop</span>
+                              关闭 <span class="nt">-k</span>。
+  <span class="nt">-t</span>, <span class="nt">--touch</span>                 <span class="nb">touch </span>目标而不是重新创建它们。
+  <span class="nt">--trace</span>                     Print tracing information.
+  <span class="nt">-v</span>, <span class="nt">--version</span>               打印 make 的版本号并退出。
+  <span class="nt">-w</span>, <span class="nt">--print-directory</span>       打印当前目录。
+  <span class="nt">--no-print-directory</span>        关闭 <span class="nt">-w</span>，即使 <span class="nt">-w</span> 默认开启。
+  <span class="nt">-W</span> FILE, <span class="nt">--what-if</span><span class="o">=</span>FILE, <span class="nt">--new-file</span><span class="o">=</span>FILE, <span class="nt">--assume-new</span><span class="o">=</span>FILE
+                              将 FILE 当做最新。
+  <span class="nt">--warn-undefined-variables</span>  当引用未定义变量的时候发出警告。
+
+该程序为 x86_64-pc-linux-gnu 编译
+报告错误到 &lt;bug-make@gnu.org&gt;
+
+</code></pre></div></div>
+
+<h2 id="2-关于程序的编译与链接">2 关于程序的编译与链接</h2>
+
+<p>具体的过程可以参照:<a href="https://wangpengcheng.github.io/2019/05/12/c_peator_problem/">C/C++ 的一个符号操作问题</a></p>
+
+<p>编译时(.c-&gt;.o)：编译器需要的是语法正确，函数与变量的声明的正确。
+链接时(.o-&gt;exe):主要是链接函数和全局变量。</p>
+
+<h2 id="3-makefile介绍">3 Makefile介绍</h2>
+
+<p>为了方便使用gcc等编译器进行编译和链接，对复杂项目使用Makefile文件来，记录编译指令的顺序，相当于另外的针对gcc等编译器的shell脚本。使用make命令来执行相关的命令。</p>
+
+<h3 id="31-makefile的规则">3.1 Makefile的规则</h3>
+
+<p>基本指令格式：</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">target... </span><span class="o">:</span> <span class="nf">prerequisites ...</span>
+    <span class="err">command</span>
+    <span class="err">...</span>
+    <span class="err">...</span>
+
+<span class="c">#或者
+</span>
+<span class="nl">targets </span><span class="o">:</span> <span class="nf">prerequisites ; command</span>
+    <span class="err">command</span>
+<span class="err">...</span>
+</code></pre></div></div>
+
+<ul>
+  <li>target:编译目标文件；可以使用ObjectFile、label或者可执行文件</li>
+  <li>prerequisites 生成所需要的文件或者目标</li>
+  <li>command 就是make需要执行的命令(任意的shell命令)</li>
+</ul>
+
+<p>注意这里的<code class="language-plaintext highlighter-rouge">command</code>如果不是和target在同一行，则必须以[Tab]开头。命令行可以使用`&gt; 2019-08-11 16:04:58</p>
+
+<h1 id="跟我一起写makefile-1">跟我一起写makefile</h1>
+
+<p><em>参考链接：</em> <a href="http://www.gnu.org/software/make/manual/make.html">GNU make</a>; <a href="https://www.cnblogs.com/itech/archive/2009/09/15/1567001.html">GUN Make指南</a></p>
+<h2 id="1-概述-1">1 概述</h2>
+<p>make工具：</p>
+
+<ul>
+  <li>Delphi-make</li>
+  <li>Visual C++ nmake</li>
+  <li>GNU make</li>
+</ul>
+
+<p>文章主要针对GNU的make</p>
+
+<h2 id="1-make-的使用-1">1 make 的使用</h2>
+
+<p>&lt;!JEKYLL@4800@0&gt;</p>
+
+<h2 id="2-关于程序的编译与链接-1">2 关于程序的编译与链接</h2>
+
+<p>具体的过程可以参照:<a href="https://wangpengcheng.github.io/2019/05/12/c_peator_problem/">C/C++ 的一个符号操作问题</a></p>
+
+<p>编译时(.c-&gt;.o)：编译器需要的是语法正确，函数与变量的声明的正确。
+链接时(.o-&gt;exe):主要是链接函数和全局变量。</p>
+
+<h2 id="3-makefile介绍-1">3 Makefile介绍</h2>
+
+<p>为了方便使用gcc等编译器进行编译和链接，对复杂项目使用Makefile文件来，记录编译指令的顺序，相当于另外的针对gcc等编译器的shell脚本。使用make命令来执行相关的命令。</p>
+
+<h3 id="31-makefile的规则-1">3.1 Makefile的规则</h3>
+
+<p>基本指令格式：</p>
+
+<p>&lt;!JEKYLL@4800@1&gt;</p>
+
+<ul>
+  <li>target:编译目标文件；可以使用ObjectFile、label或者可执行文件</li>
+  <li>prerequisites 生成所需要的文件或者目标</li>
+  <li>command 就是make需要执行的命令(任意的shell命令)</li>
+</ul>
+
+<p>注意这里的&lt;!JEKYLL@4800@2&gt;如果不是和target在同一行，则必须以[Tab]开头。命令行可以使用作为续行符。</p>
+
+<p>简单示例：</p>
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">edit </span><span class="o">:</span> <span class="nf">main.o kbd.o command.o display.o </span>\
+<span class="nf">    insert.o search.o files.o utils.o</span>
+    <span class="err">cc</span> <span class="err">-o</span> <span class="err">edit</span> <span class="err">main.o</span> <span class="err">kbd.o</span> <span class="err">command.o</span> <span class="err">display.o</span> <span class="err">\</span>
+    <span class="err">insert.o</span> <span class="err">search.o</span> <span class="err">files.o</span> <span class="err">utils.o</span>
+<span class="nl">main.o </span><span class="o">:</span> <span class="nf">main.c defs.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">main.c</span>
+<span class="nl">kbd.o </span><span class="o">:</span> <span class="nf">kbd.c defs.h command.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">kbd.c</span>
+<span class="nl">command.o </span><span class="o">:</span> <span class="nf">command.c defs.h command.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">command.c</span>
+<span class="nl">display.o </span><span class="o">:</span> <span class="nf">display.c defs.h buffer.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">display.c</span>
+<span class="nl">insert.o </span><span class="o">:</span> <span class="nf">insert.c defs.h buffer.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">insert.c</span>
+<span class="nl">search.o </span><span class="o">:</span> <span class="nf">search.c defs.h buffer.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">search.c</span>
+<span class="nl">files.o </span><span class="o">:</span> <span class="nf">files.c defs.h buffer.h command.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">files.c</span>
+<span class="nl">utils.o </span><span class="o">:</span> <span class="nf">utils.c defs.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">utils.c</span>
+<span class="nl">clean </span><span class="o">:</span>
+    <span class="err">rm</span> <span class="err">edit</span> <span class="err">main.o</span> <span class="err">kbd.o</span> <span class="err">command.o</span> <span class="err">display.o</span> <span class="err">\</span>
+    <span class="err">insert.o</span> <span class="err">search.o</span> <span class="err">files.o</span> <span class="err">utils.o</span>
+
+</code></pre></div></div>
+<p>注意这里的clean是一个label相当于一个记录动作的变量</p>
+
+<h3 id="33-make工作流程">3.3 make工作流程</h3>
+
+<ul>
+  <li>查找当前目录下的“Makefile”或者“makefile”文件。</li>
+  <li>找到文件，查找文件中的第一个目标文件(target)。并将其设置为最终的目标文件</li>
+  <li>如果文件不存在，或者相关依赖需要其它的动作生成，或者依赖文件的文件修改时间要比edit这个文件新，则执行后面的命令生成相关目标文件。</li>
+  <li>一层层的查找相关依赖，进行递归，执行程序。</li>
+</ul>
+
+<h3 id="34-makefile中使用变量">3.4 makefile中使用变量</h3>
+
+<p>可以直接使用<code class="language-plaintext highlighter-rouge">=</code>来进行变量赋值。如下：</p>
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">objects</span> <span class="o">=</span> main.o kbd.o command.o display.o <span class="se">\</span>
+    insert.o search.o files.o utils.o
+<span class="nl">edit </span><span class="o">:</span> <span class="nf">$(objects)</span>
+    <span class="err">cc</span> <span class="err">-o</span> <span class="err">edit</span> <span class="err">$(objects)</span>
+<span class="nl">main.o </span><span class="o">:</span> <span class="nf">main.c defs.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">main.c</span>
+<span class="nl">kbd.o </span><span class="o">:</span> <span class="nf">kbd.c defs.h command.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">kbd.c</span>
+<span class="nl">command.o </span><span class="o">:</span> <span class="nf">command.c defs.h command.h</span>
+
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">command.c</span>
+<span class="nl">display.o </span><span class="o">:</span> <span class="nf">display.c defs.h buffer.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">display.c</span>
+<span class="nl">insert.o </span><span class="o">:</span> <span class="nf">insert.c defs.h buffer.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">insert.c</span>
+<span class="nl">search.o </span><span class="o">:</span> <span class="nf">search.c defs.h buffer.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">search.c</span>
+<span class="nl">files.o </span><span class="o">:</span> <span class="nf">files.c defs.h buffer.h command.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">files.c</span>
+<span class="nl">utils.o </span><span class="o">:</span> <span class="nf">utils.c defs.h</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">utils.c</span>
+<span class="nl">clean </span><span class="o">:</span>
+    <span class="err">rm</span> <span class="err">edit</span> <span class="err">$(objects)</span>
+</code></pre></div></div>
+<p>可以使用<code class="language-plaintext highlighter-rouge">$(变量名)</code>来对变量进行使用。</p>
+
+<h3 id="35-makefile-的自动推导">3.5 makefile 的自动推导</h3>
+
+<p>makefile可以自动推导文件，以及文件依赖关系后面的命令，可以使用makefile中的自动推导(看到xxx.o就会将xxx.c文件添加在依赖关系中)。</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nv">objects</span> <span class="o">=</span> main.o kbd.o command.o display.o <span class="se">\</span>
+    insert.o search.o files.o utils.o
+<span class="nl">edit </span><span class="o">:</span> <span class="nf">$(objects)</span>
+    <span class="err">cc</span> <span class="err">-o</span> <span class="err">edit</span> <span class="err">$(objects)</span>
+<span class="nl">main.o </span><span class="o">:</span> <span class="nf">defs.h</span>
+<span class="nl">kbd.o </span><span class="o">:</span> <span class="nf">defs.h command.h</span>
+<span class="nl">command.o </span><span class="o">:</span> <span class="nf">defs.h command.h</span>
+<span class="nl">display.o </span><span class="o">:</span> <span class="nf">defs.h buffer.h</span>
+<span class="nl">insert.o </span><span class="o">:</span> <span class="nf">defs.h buffer.h</span>
+<span class="nl">search.o </span><span class="o">:</span> <span class="nf">defs.h buffer.h</span>
+<span class="nl">files.o </span><span class="o">:</span> <span class="nf">defs.h buffer.h command.h</span>
+<span class="nl">utils.o </span><span class="o">:</span> <span class="nf">defs.h</span>
+<span class="c">#别名
+</span><span class="nl">.PHONY </span><span class="o">:</span> <span class="nf">clean</span>
+<span class="nl">clean </span><span class="o">:</span>
+    <span class="err">rm</span> <span class="err">edit</span> <span class="err">$(objects)</span>
+
+<span class="c">#也可以这样写
+</span>
+<span class="nv">objects</span> <span class="o">=</span> main.o kbd.o command.o display.o <span class="se">\</span>
+    insert.o search.o files.o utils.o
+<span class="nl">edit </span><span class="o">:</span> <span class="nf">$(objects)</span>
+    <span class="err">cc</span> <span class="err">-o</span> <span class="err">edit</span> <span class="err">$(objects)</span>
+<span class="nl">$(objects) </span><span class="o">:</span> <span class="nf">defs.h</span>
+  <span class="nl">kbd.o command.o files.o </span><span class="o">:</span> <span class="nf">command.h</span>
+  <span class="nl">display.o insert.o search.o files.o </span><span class="o">:</span> <span class="nf">buffer.h</span>
+
+<span class="nl">.PHONY </span><span class="o">:</span> <span class="nf">clean</span>
+
+<span class="nl">clean </span><span class="o">:</span>
+    <span class="err">rm</span> <span class="err">edit</span> <span class="err">$(objects)</span>
+</code></pre></div></div>
+
+<h2 id="4-makefile总述">4 Makefile总述</h2>
+
+<p>Makefile主要包括内容</p>
+
+<ul>
+  <li>显式规则:直接明文书写的规则</li>
+  <li>隐式规则：自动推导出来的隐晦规则</li>
+  <li>变量的定义:一系列字符串变量的定义</li>
+  <li>文件指示：根据条件的外部makefile的引用导入</li>
+  <li>注释：脚本注释文件</li>
+</ul>
+
+<p>make查找当前目录下的文件顺序是：</p>
+
+<ul>
+  <li>GNUmakefile</li>
+  <li>makefile</li>
+  <li>Makefile
+推荐使用Makefile，最好不要使用GNUMakefile因为这个只能被GNU的make识别。
+可以使用<code class="language-plaintext highlighter-rouge">make -f file_name</code>来指定makefile文件，例如<code class="language-plaintext highlighter-rouge">make -f Make.Linux</code>。</li>
+</ul>
+
+<p>makefile中可以使用<code class="language-plaintext highlighter-rouge">include</code>引入其它makefile文件
+注意：include前不能加入[Tab]键，可以使用空格</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">bar</span><span class="o">=</span>a.mk b.mk c.mk e.mk 
+
+<span class="k">include</span><span class="sx"> foo.make *.mk $(bar)</span>
+
+</code></pre></div></div>
+<p>include的查找路径如下：</p>
+
+<ul>
+  <li>存在<code class="language-plaintext highlighter-rouge">-I</code>或者<code class="language-plaintext highlighter-rouge">--include-dir</code>参数会在这个参数指定的目录下继续寻找</li>
+  <li>存在<code class="language-plaintext highlighter-rouge">&lt;prefix&gt;/include</code>存在，make也会去寻找。</li>
+</ul>
+
+<p>注意：当没有找到时，make会生成一条警告，并在最终时再次尝试寻找，如果还是没找到就是error。可以使用<code class="language-plaintext highlighter-rouge">-include</code>告诉make <strong>忽略这个的读取错误</strong>，直接继续执行。当然不建议这样做。</p>
+
+<p><strong>环境变量</strong></p>
+
+<p>在当前的环境变量中定义了，那么所有的make都会使用，因此建议不要使用。</p>
+
+<p><strong>make的工作方式</strong></p>
+
+<ol>
+  <li>读入所有的 Makefile 。</li>
+  <li>读入被 include 的其它 Makefile 。</li>
+  <li>初始化文件中的变量。</li>
+  <li>推导隐晦规则,并分析所有规则。</li>
+  <li>为所有的目标文件创建依赖关系链。</li>
+  <li>根据依赖关系,决定哪些目标要重新生成。</li>
+  <li>执行生成命令</li>
+</ol>
+
+<h3 id="53-在规则中使用通配符">5.3 在规则中使用通配符</h3>
+
+<p>make与shell相同支持三种通配符号：</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">*</code>:通用匹配符号，真实的’*‘可以使用<code class="language-plaintext highlighter-rouge">\*</code>来表示</li>
+  <li><code class="language-plaintext highlighter-rouge">?</code>:判断符号:</li>
+  <li><code class="language-plaintext highlighter-rouge">[...]</code>:</li>
+  <li><code class="language-plaintext highlighter-rouge">$@</code>:表示规则中的目标文件集。
+    <ul>
+      <li>在模式规则中，如果有多个目标，那么，”$@”就是匹配于目标中模式定义的集合。</li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">$%</code>:仅当目标是函数库文件中，表示规则中的目标成员名。
+    <ul>
+      <li>例如，如果一个目标是”foo.a (bar.o)”，那么，”$%”就是”bar.o”，”$@”就是”foo.a”。如果目标不是函数库文件（Unix下是[.a]，Windows下是 [.lib]），那么，其值为空。</li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">$&lt;</code>:依赖目标中的第一个目标名字。
+    <ul>
+      <li>如果依赖目标是以模式（即”%”）定义的，那么”$&lt;”将是符合模式的一系列的文件集。注意，其是一个一个取出来的。</li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">$?</code>:所有比目标新的依赖目标的集合。以空格分隔。</li>
+  <li><code class="language-plaintext highlighter-rouge">$^</code>:所有的依赖目标的集合。以空格分隔。
+    <ul>
+      <li>如果在依赖目标中有多个重复的，那个这个变量会去除重复的依赖目标，只保留一份。</li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">$+</code>:这个变量很像”$^”，也是所有依赖目标的集合。只是它不去除重复的依赖目标。</li>
+  <li><code class="language-plaintext highlighter-rouge">$*</code>:这个变量表示目标模式中”%”及其之前的部分。
+    <ul>
+      <li>如果目标是”dir/a.foo.b”，并且目标的模式是”a.%.b”，那么，”$<em>“的值就是”dir /a.foo”。这个变量对于构造有关联的文件名是比较有较。如果目标中没有模式的定义，那么”$</em>“也就不能被推导出，但是，如果目标文件的后缀是 make所识别的，那么”$<em>“就是除了后缀的那一部分。例如：如果目标是”foo.c”，因为”.c”是make所能识别的后缀名，所以，”$</em>“的值 就是”foo”。这个特性是GNU make的，很有可能不兼容于其它版本的make，所以，你应该尽量避免使用”$<em>“，除非是在隐含规则或是静态模式中。如果目标中的后缀是make所不 能识别的，那么”$</em>“就是空值。
+例如：</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nl">print</span><span class="o">:</span><span class="nf">*.c</span>
+    <span class="err">lpr</span> <span class="err">-p</span> <span class="err">$?</span>
+    <span class="err">touch</span> <span class="err">print</span>
+</code></pre></div></div>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">$(@D)</code>:表示<code class="language-plaintext highlighter-rouge">$@</code>的目录部分，如果 “$@” 值是 “dir/foo.o” ,那么 “$(@D)” 就是 “dir” ,而如果 “$@” 中没有包含斜杠的话,其值就是 “.” (当前目录)。</li>
+  <li><code class="language-plaintext highlighter-rouge">$(@F)</code>:表示<code class="language-plaintext highlighter-rouge">$@</code>的文件部分。
+剩下的$(操作符D)和$(操作符F)功能一次类推。</li>
+</ul>
+
+<h3 id="54文件查询">5.4文件查询</h3>
+
+<p>makefile中可以使用VPATH来指定文件查找目录。使用方法如下：</p>
+
+<ul>
+  <li>1.vpath <pattern> <directories>:为符合模式<pattern>的文件指定搜索目录<directories>。</directories></pattern></directories></pattern></li>
+  <li>2.vpath <pattern> ：清除符合模式<pattern>的文件的搜索目录。</pattern></pattern></li>
+  <li>vpath:清除所有已经被设置好了的文件搜索目录</li>
+</ul>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#指定文件搜索在../headers和当前目录下，查找所有以`.h`结尾的文件
+</span>
+<span class="err">vpath</span> <span class="err">%.h</span> <span class="err">../headers</span>
+<span class="c">#这里是先在foo中搜索，然后在blish,最后是bar
+</span>
+<span class="nl">vpath %.c foo</span><span class="o">:</span><span class="nf">bar</span>
+<span class="err">vpath</span> <span class="err">%</span> <span class="err">blish</span>
+</code></pre></div></div>
+
+<h3 id="55-伪目标">5.5 伪目标</h3>
+
+<p>makefile中可以使用<code class="language-plaintext highlighter-rouge">.PHONY:xxx</code>的方式来设置伪目标，类似于shell中的<code class="language-plaintext highlighter-rouge">alias</code>操作别名
+伪目标一般没有依赖文件，主要是相关操作。也可以使用依赖来化简操作。</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">all</span><span class="o">:</span><span class="nf">prog1 prog2 prog3</span>
+<span class="nl">.PHONY</span><span class="o">:</span><span class="nf">all</span>
+
+<span class="nl">prog1</span><span class="o">:</span><span class="nf">prog1.o utils.o</span>
+        <span class="err">cc</span> <span class="err">-o</span> <span class="err">prog1</span> <span class="err">prog1.o</span> <span class="err">utils.o</span>
+<span class="nl">prog2</span><span class="o">:</span><span class="nf">...</span>
+
+<span class="c">#也可以使用伪目标作为依赖，实现操作如下
+</span><span class="nl">cleanall </span><span class="o">:</span> <span class="nf">cleanobj cleandiff</span>
+    <span class="err">rm</span> <span class="err">program</span>
+<span class="nl">cleanobj</span><span class="o">:</span>
+    <span class="err">rm</span> <span class="err">*.o</span>
+<span class="nl">cleandiff</span><span class="o">:</span>
+    <span class="err">rm</span> <span class="err">*.diff</span>
+
+</code></pre></div></div>
+<p>因为makefile会将第一个目标作为默认目标，因此可以使用伪目标依赖，来实现makefile的多目标依赖。</p>
+
+<h3 id="57-静态模式">5.7 静态模式</h3>
+
+<p>使用静态模式可以更加容易地定义多目标的规则。使用语法如下</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">&lt;targets ...&gt;</span><span class="o">:</span> <span class="nf">&lt;target-pattern&gt;: &lt;prereq-patterns ...&gt;</span>
+    <span class="err">&lt;commands&gt;</span>
+    <span class="err">...</span>
+
+</code></pre></div></div>
+<p>target:定义了一系列目标，可以有通配符，是目标的集合
+target-pattern:指明了target的模式，也是目标集模式
+prereq-patterns:是目标依赖模式对target-pattern的再次依赖定义</p>
+
+<p>使用示例：</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+    <span class="nv">objects</span> <span class="o">=</span> foo.o bar.o
+    <span class="nl">all</span><span class="o">:</span> <span class="nf">$(objects)</span>
+
+<span class="c">#将后缀中的.o变为.c
+</span>
+<span class="nl">$(objects)</span><span class="o">:</span> <span class="nf">%.o: %.c</span>
+    <span class="err">$(CC)</span> <span class="err">-c</span> <span class="err">$(CFLAGS)</span> <span class="err">$&lt;</span> <span class="err">-o</span> <span class="err">$@</span>
+    <span class="c"># $(CC) -c $(CFLAGS) foo.c bar.c -o foo.o bar.o
+</span>
+</code></pre></div></div>
+
+<h3 id="58-自动生成依赖性">5.8 自动生成依赖性</h3>
+
+<p>gcc中可以使用-M编译选项开启自动依赖查找。</p>
+
+<h2 id="6-书写命令">6 书写命令</h2>
+<p>使用<code class="language-plaintext highlighter-rouge">@</code>在命令前，这个命令将不会被make显示出来。例如:</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">@echo</span> <span class="err">正在编译XXX模块</span>
+<span class="c">#输出：正在编译XXX模块
+</span>
+<span class="err">echo</span> <span class="err">正在编译XXX模块</span>
+<span class="c">#输出：
+</span>
+<span class="c">#    echo 正在编译XXX模块
+</span>
+<span class="c">#   正在编译XXX模块
+</span>
+</code></pre></div></div>
+
+<p>可以在make后面带入参数<code class="language-plaintext highlighter-rouge">-n</code>或者<code class="language-plaintext highlighter-rouge">--just-print</code>，只执行显示命令，但是不会执行命令。方便对Makefile进行调试。</p>
+
+<p>使用<code class="language-plaintext highlighter-rouge">-s</code>或者<code class="language-plaintext highlighter-rouge">--slient</code>则是全面禁止命令的显示。</p>
+
+<h3 id="62-命令执行">6.2 命令执行</h3>
+
+<p>makefile中的命令会，一条一条的执行其后面的的命令，当需要上一命令结果应用在下一命令时，应该使用分号，分割相关命令。当命令相关联时，应该写在一行上。</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nl">exec</span><span class="o">:</span>
+    <span class="err">cd</span> <span class="err">/home/</span>
+    <span class="err">pwd</span>
+<span class="c"># 打印执行文件夹路径，cd无作用。
+</span>
+<span class="nl">exec</span><span class="o">:</span>
+    <span class="err">cd</span> <span class="err">/home/;pwd</span>
+<span class="c"># 打印 /home/ cd 有作用
+</span></code></pre></div></div>
+
+<h3 id="63-命令错误">6.3 命令错误</h3>
+<p>make中命令错误会立即停止执行，因此需要，使用make clean进行重新的make; 可以在命令前使用<code class="language-plaintext highlighter-rouge">-</code>或者添加make的<code class="language-plaintext highlighter-rouge">-i/ignore-errors</code>参数实现忽略错误。可以使用<code class="language-plaintext highlighter-rouge">-k/--keep-going</code>保证make行为不停止。</p>
+
+<h3 id="64-make的嵌套执行">6.4 make的嵌套执行</h3>
+
+<p>可以使用shell的脚本访问，执行子目录中的make，对与方便第三方依赖的单独编译。</p>
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">subsystem</span><span class="o">:</span>
+    <span class="err">cd</span> <span class="err">subdir</span> <span class="err">&amp;&amp;</span> <span class="err">$(MAKE)</span>
+<span class="c">#等价于
+</span>
+<span class="nl">subsystem</span><span class="o">:</span>
+    <span class="err">$(MAKE)</span> <span class="err">-C</span> <span class="err">subdir</span>
+</code></pre></div></div>
+<p>使用export 和unexport来进行变量的下级传递和使用。</p>
+
+<p>注意：</p>
+<ul>
+  <li>SHELL和MAKEFLAGS是一定会传递到下一层Makefile中的。</li>
+  <li>可以使用<code class="language-plaintext highlighter-rouge">-w/--print-directory</code>；输出信息，让你看到当前的工作目录。</li>
+</ul>
+
+<h3 id="65-定义命令包">6.5 定义命令包</h3>
+
+<p>Makefile中可以使用相同命令序列来定义一个变量。以<code class="language-plaintext highlighter-rouge">define</code>开始,<code class="language-plaintext highlighter-rouge">endef</code>结束。例如:</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">define</span> <span class="err">run-yacc</span>
+<span class="err">yacc</span> <span class="err">$(firstword</span> <span class="err">$^)</span>
+<span class="err">mv</span> <span class="err">y.tab.c</span> <span class="err">$@</span>
+<span class="err">endef</span>
+</code></pre></div></div>
+
+<h2 id="7-使用变量">7 使用变量</h2>
+
+<p>makefile中的变量，可以是数字开头，但不应该含有<code class="language-plaintext highlighter-rouge">:</code>、<code class="language-plaintext highlighter-rouge">#</code>、<code class="language-plaintext highlighter-rouge">=</code>或是空字符(空格、回车等)。并且变量的大小写敏感。</p>
+
+<h3 id="71-变量基础">7.1 变量基础</h3>
+
+<p>可以定义变量，并用<code class="language-plaintext highlighter-rouge">${变量名}/$(变量名)</code>来使用变量，可以精确使用和展开，字符串之间的链接等。</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">foo</span><span class="o">=</span>c
+<span class="nl">prog.o</span><span class="o">:</span><span class="nf">prog.$(foo)</span>
+    <span class="err">$(foo)$(foo)</span> <span class="err">-$(foo)</span> <span class="err">prog.$(foo)</span>
+
+<span class="c">#翻译结果
+</span>
+<span class="nl">prog.o </span><span class="o">:</span> <span class="nf">prog.c</span>
+    <span class="err">cc</span> <span class="err">-c</span> <span class="err">prog.c</span>
+</code></pre></div></div>
+
+<h3 id="72-变量中的变量">7.2 变量中的变量</h3>
+
+<p>makefile中的变量，不像c++需要预先声明，可以直接使用，只要make能在后面找到就行了，但是很容易引起嵌套的循环使用。</p>
+
+<p>变量的赋值</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">操作</th>
+      <th style="text-align: left">含义</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">=</code></td>
+      <td style="text-align: left">变量的直接赋值,可以使用后面定义的变量</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">:=</code></td>
+      <td style="text-align: left">赋值操作，前面的变量不能使用后面的变量，只能使用前面已经定义好了的变量</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">?=</code></td>
+      <td style="text-align: left">如百年来那个没有被定义过，则进行赋值，如果事先被定义过，就什么都不做</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">+=</code></td>
+      <td style="text-align: left">追加变量，给变量<code class="language-plaintext highlighter-rouge">+=</code>操作，可以追加新的变量</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>注意：谨慎使用<code class="language-plaintext highlighter-rouge">#</code>注释，在行后直接注释无<code class="language-plaintext highlighter-rouge">\n</code>换行符时，会引起变量中存在多余的空格；例如<code class="language-plaintext highlighter-rouge">dir := /foo/bar # directory to put the frobs in</code>中dir会多4个空格。</p>
+
+<h3 id="73-变量的高级用法">7.3 变量的高级用法</h3>
+
+<ul>
+  <li>变量的替换：替换变量中的共有的部分，格式是<code class="language-plaintext highlighter-rouge">$(var:a=b)</code>或者<code class="language-plaintext highlighter-rouge">${var:a=b}</code>把变量<code class="language-plaintext highlighter-rouge">var</code>中所有以子没有<code class="language-plaintext highlighter-rouge">a</code>结尾(空格或者结束符)的<code class="language-plaintext highlighter-rouge">a</code>换成<code class="language-plaintext highlighter-rouge">b</code>。这样就可以执行简单的变量替换。</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>foo:=a.o b.o c.o
+bar:=$(foo:.o=.c)
+
+#bar是a.c b.c c.c
+</code></pre></div></div>
+<p>也可以使用静态模式进行替换。</p>
+
+<ul>
+  <li>将变量值作为变量：将变量结果作为字符串使用，获取新变量的名称。</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x=y
+y=z
+a:=$($(x))
+#最终a的结果是z
+
+</code></pre></div></div>
+
+<p>也可以进行多层次的嵌套。</p>
+
+<h3 id="75-override-指示符号">7.5 override 指示符号</h3>
+
+<p>如果变量是通过make的命令行参数进行设置的，那么Makefile中对这个变量的赋值将会被忽略。可以使用<code class="language-plaintext highlighter-rouge">override</code>指示符，在Makefile中设置这类参数的值，进行重载</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>override &lt;variable&gt;=&lt;value&gt;
+override &lt;variable&gt;:=&lt;value&gt;
+override &lt;variable&gt;+=&lt;value&gt;
+</code></pre></div></div>
+
+<h3 id="76-多行变量">7.6 多行变量</h3>
+
+<p>使用define关键字设置变量的值可以换行，只要define没有使用[Tab]开头，那么make就不会把其认为是命令</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>define two-lines
+echo foo
+echo ${bar}
+endef
+</code></pre></div></div>
+
+<h3 id="77-环境变量">7.7 环境变量</h3>
+
+<p>make运行时，系统环境变量可被载入到Makefile文件中，但是如果Makefile已经定义，则会被覆盖，可以使用<code class="language-plaintext highlighter-rouge">-e</code>参数方式系统环境变量被覆盖。</p>
+
+<p>嵌套调用时，上层变量会以系统环境变量的方式传递到下层Makefile。默认情况只有通过命令行设置的变量会被传递。定义在文件中的变量，需要使用export关键字来声明。</p>
+
+<h3 id="78-目标变量">7.8 目标变量</h3>
+
+<p>可以通过伪目标标签，设置目标局部变量，这个变量可以额全局变量同名，因为它的作用范围只在这条规则以及连带规则中。语法如下：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;target ...&gt;:&lt;variable-assignment&gt;
+&lt;target ...&gt;:overide &lt;variable-assignment&gt;
+</code></pre></div></div>
+
+<p>使用示例：</p>
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">all</span><span class="o">:</span> <span class="nf">tran test test2</span>
+<span class="nv">my_test</span><span class="o">:=</span>/usr/binb
+<span class="nv">my_test</span><span class="o">:=</span><span class="nv">${my_test:inb=a}</span> /usr/include/boost 
+<span class="nl">tran</span><span class="o">:</span>
+    <span class="err">@echo</span> <span class="s2">"hello word"</span>
+<span class="nl">test2</span><span class="o">:</span><span class="nf">my_test=test2</span>
+<span class="nl">test2</span><span class="o">:</span>
+    <span class="err">echo</span> <span class="err">${my_test}</span>
+<span class="nl">test</span><span class="o">:</span>
+    <span class="err">echo</span> <span class="s2">"test"</span><span class="err">;echo</span> <span class="err">$(SHELL)</span> <span class="err">;echo</span> <span class="err">$(MAKEFLAGS)</span> <span class="err">echo</span> <span class="err">${my_test}</span>
+
+<span class="c">#result
+</span><span class="err">hello</span> <span class="err">word</span>
+<span class="err">echo</span> <span class="s2">"test"</span><span class="err">;echo</span> <span class="err">/bin/sh</span> <span class="err">;echo</span>  <span class="err">echo</span> <span class="err">/usr/ba</span> <span class="err">/usr/include/boost</span> 
+<span class="err">test</span>
+<span class="err">/bin/sh</span>
+<span class="err">echo</span> <span class="err">/usr/ba</span> <span class="err">/usr/include/boost</span>
+<span class="err">echo</span> <span class="err">test2</span>
+<span class="err">test2</span>
+
+</code></pre></div></div>
+
+<h3 id="79-模式变量">7.9 模式变量</h3>
+
+<p>在GNU的make中还支持模式变量，使用一种模式，在模式中定义变量，使得变量可以根据模式进行判断赋值。使用格式和目标变量相同，例如：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>%.o:CFLAGS = -O
+</code></pre></div></div>
+
+<h2 id="8-使用条件判断">8 使用条件判断</h2>
+
+<p>使用条件判断根据不同的分枝情况选择执行分支。</p>
+
+<p>下面是根据编译器选择相关编译参数</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">libs_for_gcc</span><span class="o">=</span><span class="nt">-lgnu</span>
+<span class="nv">normal_libs</span><span class="o">=</span>
+<span class="nl">foo</span><span class="o">:</span><span class="nf">$(objects)</span>
+<span class="c">#判断编译器类型
+</span>
+<span class="err">ifeq($(CC),gcc)</span>
+    <span class="err">$(CC)</span> <span class="err">-o</span> <span class="err">foo</span> <span class="err">$(objects)</span> <span class="err">$(libs_for_gcc)</span>
+<span class="k">else</span>
+    <span class="err">$(CC)</span> <span class="err">-o</span> <span class="err">foo</span> <span class="err">$(object)</span> <span class="err">$(normal_libs)</span>
+<span class="k">endif</span>
+</code></pre></div></div>
+
+<p>判断语句的基本语法是：</p>
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&lt;conditional-directive&gt;</span>
+<span class="err">&lt;text-if-true&gt;</span>
+<span class="k">endif</span>
+<span class="c">#或者
+</span>
+<span class="err">&lt;conditional-directive&gt;</span>
+<span class="err">&lt;text-if-true&gt;</span>
+<span class="k">else</span>
+<span class="err">&lt;text-if-false&gt;</span>
+<span class="k">endif</span>
+
+</code></pre></div></div>
+<p>条件判断是ifeq或者ifneq、ifdef和ifndef</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ifeq(&lt;arg1&gt;,&lt;arg2&gt;)
+ifeq '&lt;arg1&gt;' '&lt;arg2&gt;'
+ifeq "&lt;arg1&gt;" "&lt;arg2&gt;"
+ifeq "&lt;arg1&gt;" '&lt;arg2&gt;'
+ifeq '&lt;arg1&gt;' "&lt;arg2&gt;"
+#还可以这样判断
+
+ifeq ($(strip $(foo)),)
+&lt;text-if-empty&gt;
+endif
+</code></pre></div></div>
+
+<p>ifneq:</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">ifneq</span> <span class="nv">(&lt;arg1&gt;, &lt;arg2&gt;)</span>
+<span class="k">ifneq</span> <span class="nv">'&lt;arg1&gt;' '&lt;arg2&gt;'</span>
+<span class="k">ifneq</span> <span class="nv">"&lt;arg1&gt;" "&lt;arg2&gt;"</span>
+<span class="k">ifneq</span> <span class="nv">"&lt;arg1&gt;" '&lt;arg2&gt;'</span>
+<span class="k">ifneq</span> <span class="nv">'&lt;arg1&gt;' "&lt;arg2&gt;"</span>
+</code></pre></div></div>
+
+<p>ifdef和ifndef</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ifdef &lt;variable-name&gt;
+endif
+
+ifndef &lt;variable-name&gt;
+endif
+</code></pre></div></div>
+
+<h2 id="9-使用函数">9 使用函数</h2>
+
+<p>Makefile可以使用函数来处理变量，变量以<code class="language-plaintext highlighter-rouge">$</code>进行标识，其基本语法如下：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(&lt;function&gt; &lt;arguments&gt;)
+#或者
+
+${&lt;function&gt; &lt;arguments&gt;}
+
+</code></pre></div></div>
+
+<p>中间参数以<code class="language-plaintext highlighter-rouge">,</code>进行分割。
+为了风格统一，建议都使用<code class="language-plaintext highlighter-rouge">()</code>的方式；如：<code class="language-plaintext highlighter-rouge">$(subst a,b,$(x))</code></p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">comma</span><span class="o">:=</span>,
+<span class="nv">empty</span><span class="o">:=</span>
+<span class="nv">space</span><span class="o">:=</span><span class="nv">$(empty)</span> <span class="nv">$(empty)</span>
+<span class="nv">foo</span><span class="o">:=</span>a b c
+<span class="nv">bar</span><span class="o">:=</span><span class="nf">$(</span><span class="nb">subst</span> <span class="nv">$(space)</span>,<span class="nv">$(comma)</span>,<span class="nv">$(foo)</span><span class="nf">)</span>
+</code></pre></div></div>
+<p>上面的函数是指，将$(foo)中的$(space)全部替换成为$(comma)。
+最终$(bar)的结果是”a,b,c”。</p>
+
+<h3 id="92-字符串处理函数">9.2 字符串处理函数</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">函数名称</th>
+      <th style="text-align: left">函数</th>
+      <th style="text-align: left">功能</th>
+      <th style="text-align: left">返回</th>
+      <th style="text-align: left">示例</th>
+      <th style="text-align: left">注意</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">subst</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(subst &lt;from&gt;,&lt;to&gt;,&lt;text&gt;)</code></td>
+      <td style="text-align: left">把字串 <text> 中的 <from> 字符串替换成 <to></to></from></text></td>
+      <td style="text-align: left">函数返回被替换过后的字符串</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(subst ee,EE,feet on the street)</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">patsubst</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(patsubst &lt;pattern&gt;,&lt;replacement&gt;,&lt;text&gt;)</code></td>
+      <td style="text-align: left">查找其中的匹配字符串并替换</td>
+      <td style="text-align: left">替换过后的字符串</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(patsubst %.c,%.o,x.c.c bar.c)</code></td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">strip</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(strip &lt;string&gt;)</code></td>
+      <td style="text-align: left">去掉<string>字符串中开头和结尾的空字符串</string></td>
+      <td style="text-align: left">返回去除的值</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(strip a b c )</code></td>
+      <td style="text-align: left">示例中去除了结尾的一个空格</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">findstring</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(findstring &lt;find&gt;,&lt;in&gt;)</code></td>
+      <td style="text-align: left">在字串 <in> 中查找 <find> 字串。</find></in></td>
+      <td style="text-align: left">如果找到,那么返回 <find> ,否则返回空字符串。</find></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(findstring a,a b c)</code></td>
+      <td style="text-align: left">示例返回”a”字符串</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">filter</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(filter &lt;pattern...&gt;,&lt;text&gt;)</code></td>
+      <td style="text-align: left">以 <pattern> 模式过滤 <text> 字符串中的单词,保留符合模式 <pattern> 的单词。可以有多个模式。</pattern></text></pattern></td>
+      <td style="text-align: left">返回符合模式 <pattern> 的字串。</pattern></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(filter %.c %.s,foo.c bar.c baz.s ugh.h)</code></td>
+      <td style="text-align: left">示例返回值是<code class="language-plaintext highlighter-rouge">foo.c bar.c baz.s</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">filter-out</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(filter-out &lt;pattern...&gt;,&lt;text&gt;)</code></td>
+      <td style="text-align: left">以 <pattern> 模式过滤 <text> 字符串中的单词,去除符合模式 <pattern> 的单词。可以有多个模式。</pattern></text></pattern></td>
+      <td style="text-align: left">返回不符合模式 <pattern> 的字串。</pattern></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(filter-out main1.o main2.o,main1.o foo.o main2.o bar.o)</code></td>
+      <td style="text-align: left">返回值是<code class="language-plaintext highlighter-rouge">foo.o bar.o</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">sort</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(sort &lt;list&gt;)</code></td>
+      <td style="text-align: left">给字符串 <list> 中的单词排序(升序)。</list></td>
+      <td style="text-align: left">返回排序后的字符串。</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(sort foo bar lose)</code>返回<code class="language-plaintext highlighter-rouge">bar foo lose</code></td>
+      <td style="text-align: left">sort 函数会去掉 <list> 中相同的单词。</list></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">word</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(word &lt;n&gt;,&lt;text&gt;)</code></td>
+      <td style="text-align: left">取字符串 <text> 中第 <n> 个单词。(从一开始)</n></text></td>
+      <td style="text-align: left">返回字符串 <text> 中第 <n> 个单词。如果 <n> 比 <text> 中的单词数要大,那么返回空字符串。</text></n></n></text></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(word 2, foo bar baz)</code></td>
+      <td style="text-align: left">示例返回值是”bar”</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">wordlist</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(wordlist &lt;s&gt;,&lt;e&gt;,&lt;text&gt;)</code></td>
+      <td style="text-align: left">字符串 <text> 中取从 <s> 开始到 <e> 的单词串。 <s> 和 <e> 是一个数字</e></s></e></s></text></td>
+      <td style="text-align: left">返回字符串 <text> 中从 <s> 到 <e> 的单词字串。如果 <s> 比 <text> 中的单词数要大,那么返回空字符串。如果 <e> 大于 <text> 的单词数,那么返回从 <s> 开始,到 <text> 结束的单词串</text></s></text></e></text></s></e></s></text></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(wordlist 2, 3, foo bar baz)</code></td>
+      <td style="text-align: left">返回值是<code class="language-plaintext highlighter-rouge">bar baz</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">words</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(words &lt;text&gt;)</code></td>
+      <td style="text-align: left">统计 <text> 中字符串中的单词个数。</text></td>
+      <td style="text-align: left">返回 <text> 中的单词数</text></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(words, foo bar baz)</code>返回值为”3”</td>
+      <td style="text-align: left">如果我们要取 <text> 中最后的一个单词,我们可以这样: $(word $(words <text>),<text>) 。</text></text></text></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">firstword</code></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(firstword &lt;text&gt;)</code></td>
+      <td style="text-align: left">取字符串 <text> 中的第一个单词。</text></td>
+      <td style="text-align: left">返回字符串 <text> 的第一个单词</text></td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">$(firstword foo bar)</code>返回”foo”</td>
+      <td style="text-align: left"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="93-文件名操作函数">9.3 文件名操作函数</h3>
+
+<ul>
+  <li>dir: <code class="language-plaintext highlighter-rouge">$(dir &lt;name...&gt;)</code>
+    <ul>
+      <li>功能:从文件序列<names>中取出目录部分(最后一个“/”之前的部分)。</names></li>
+      <li>返回：返回文件名序列 <names> 的目录部分。</names></li>
+      <li>示例：<code class="language-plaintext highlighter-rouge">$(dir src/foo.c hacks)</code>返回值是<code class="language-plaintext highlighter-rouge">src/ ./</code></li>
+    </ul>
+  </li>
+  <li>notdir:<code class="language-plaintext highlighter-rouge">$(notdir &lt;names...&gt;)</code>
+    <ul>
+      <li>功能：从文件名序列 <names> 中取出非目录部分。非目录部分是指最后一个反斜杠(“ / ”)之后的部分。</names></li>
+      <li>返回：返回文件名序列 <names> 的非目录部分。</names></li>
+      <li>示例：<code class="language-plaintext highlighter-rouge">$(notdir src/foo.c hacks)</code>，返回值是”foo.c hacks”。</li>
+    </ul>
+  </li>
+  <li>suffix:<code class="language-plaintext highlighter-rouge">$(suffix &lt;names...&gt;)</code>
+    <ul>
+      <li>功能：从文件名序列 <names> 中取出各个文件名的后缀。</names></li>
+      <li>返回：返回文件名序列 <names> 的后缀序列,如果文件没有后缀,则返回空字串。</names></li>
+      <li>示例：<code class="language-plaintext highlighter-rouge">$(suffix src/foo.c src-1.0/bar.c hacks)</code>；返回值是”.c .c”。</li>
+    </ul>
+  </li>
+  <li>basename:<code class="language-plaintext highlighter-rouge">$(basename &lt;names...&gt;)</code>
+    <ul>
+      <li>功能：从文件名序列 <names> 中取出各个文件名的前缀部分。</names></li>
+      <li>返回：返回文件名序列 <names> 的前缀序列,如果文件没有前缀,则返回空字串。</names></li>
+      <li>示例：<code class="language-plaintext highlighter-rouge">$(basename src/foo.c src-1.0/bar.c hacks)</code>；返回值是”src/foo src-1.0/bar hacks”。</li>
+    </ul>
+  </li>
+  <li>addsuffix：<code class="language-plaintext highlighter-rouge">$(addsuffix &lt;suffix&gt;,&lt;names...&gt;)</code>
+    <ul>
+      <li>功能：把后缀 <suffix> 加到 <names> 中的每个单词后面。</names></suffix></li>
+      <li>返回：返回加过后缀的文件名序列。</li>
+      <li><code class="language-plaintext highlighter-rouge">$(addsuffix .c,foo bar)</code>,返回值是”foo.c bar.c”。</li>
+    </ul>
+  </li>
+  <li>addprefix：<code class="language-plaintext highlighter-rouge">$(addprefix &lt;prefix&gt;,&lt;names...&gt;)</code>
+    <ul>
+      <li>功能：把前缀 <prefix> 加到 <names> 中的每个单词后面。</names></prefix></li>
+      <li>返回：返回加过前缀的文件名序列。</li>
+      <li>示例：<code class="language-plaintext highlighter-rouge">$(addprefix src/,foo bar)</code>；返回值是”src/foo src/bar”</li>
+    </ul>
+  </li>
+  <li>join:<code class="language-plaintext highlighter-rouge">$(join &lt;list1&gt;,&lt;list2&gt;)</code>
+    <ul>
+      <li>功能：把 <list2> 中的单词对应地加到 <list1> 的单词后面。如果 <list1> 的单词个数要比 <list2> 的多,那么,<list1> 中的多出来的单词将保持原样。如果 <list2> 的单词个数要比 <list1> 多,那么, <list2> 多出来的单词将被复制到 <list2> 中。</list2></list2></list1></list2></list1></list2></list1></list1></list2></li>
+      <li>返回：返回连接过后的字符串。</li>
+      <li>示例：<code class="language-plaintext highlighter-rouge">$(join aaa bbb , 111 222 333)</code>；返回值是<code class="language-plaintext highlighter-rouge">aaa111 bbb222 333</code></li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="94-foreach函数">9.4 foreach函数</h3>
+
+<ul>
+  <li>语法：<code class="language-plaintext highlighter-rouge">$(foreach &lt;var&gt;,&lt;list&gt;,&lt;text&gt;)</code></li>
+  <li>功能：将list中的单词逐一去除，放到var指定的变量中，然后再执行<text>所包含表达式。</text></li>
+  <li>示例：</li>
+</ul>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">names</span><span class="o">:=</span>a b c d
+<span class="nv">files</span><span class="o">:=</span><span class="nf">$(</span><span class="nb">foreach</span> n,<span class="nv">$(names)</span>,<span class="nv">$(n)</span>.o<span class="nf">)</span>
+
+<span class="c">#files返回值是 a.o b.o c.o d.o
+</span>
+</code></pre></div></div>
+<h3 id="96-call函数">9.6 call函数</h3>
+
+<p>call函数是唯一一个可以用来创建新的参数化的函数，可以使用call向一个复杂函数中传递参数。其语法是：
+<code class="language-plaintext highlighter-rouge">$(call &lt;expression&gt;,&lt;parm1&gt;,&lt;parm2&gt;,&lt;parm3&gt;...)</code></p>
+
+<p>执行时，后面的参数将函数中的变量进行取代。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reverse=$(1) $(2)
+
+foo=$(call reverse,a,b)
+#最后foo的结果是“a b”
+
+</code></pre></div></div>
+
+<h3 id="97-origin-函数">9.7 origin 函数</h3>
+
+<p>这个函数返回变量的来源；语法：<code class="language-plaintext highlighter-rouge">$(origin &lt;variable&gt;)</code>;来源类型如下：</p>
+<ul>
+  <li>undefined：从来就没有定义过</li>
+  <li>default:默认定义变量，如CC</li>
+  <li>environment:环境变量(注意make 没有“-e”参数)</li>
+  <li>file: 这个变量定义在Makefile中</li>
+  <li>command line :这个变量是被命令行定义的。</li>
+  <li>override :是被override重新定义的。</li>
+  <li>automatic: 是命令中定义的自动化变量。</li>
+</ul>
+
+<h3 id="98-shell函数">9.8 shell函数</h3>
+
+<p>执行shell命令，它和”`“是一样的功能。将执行操作系统命令后的输出作为函数返回。使用示例：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>contents:=$(shell cat foo)
+files:=$(shell echo *.c)
+</code></pre></div></div>
+<p>注意这个函数会新生成一个shell程序来执行命令。不应该被大量使用。</p>
+
+<h3 id="99-控制make的函数">9.9 控制make的函数</h3>
+
+<p>$(error <text...>):输出错误，并退出
+$(warning <text...>)：输出一段警告信息，而make继续执行。</text...></text...></p>
+
+<h2 id="10-make的运行">10 make的运行</h2>
+
+<h3 id="101-make的退出码">10.1 make的退出码</h3>
+
+<ul>
+  <li>0：表示成功执行</li>
+  <li>1：运行时产生错误，返回1。</li>
+  <li>2：如果使用了“-q”参数，并且make使得一些目标不需要更新，那么返回2。</li>
+</ul>
+
+<p>使用<code class="language-plaintext highlighter-rouge">-f</code>可以指定make file文件，也可以在make后面添加指定的伪目标。</p>
+
+<p>一般伪目标函数</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">all</code>：这个伪目标是所有目标的目标,其功能一般是编译所有的目标。</li>
+  <li><code class="language-plaintext highlighter-rouge">clean</code>：这个伪目标功能是删除所有被 make 创建的文件。</li>
+  <li><code class="language-plaintext highlighter-rouge">install</code>：这个伪目标功能是安装已编译好的程序,其实就是把目标执行文件拷贝到指定的目标中去。</li>
+  <li><code class="language-plaintext highlighter-rouge">print</code>：这个伪目标的功能是例出改变过的源文件。</li>
+  <li><code class="language-plaintext highlighter-rouge">tar</code>：这个伪目标功能是把源程序打包备份。也就是一个 tar 文件。</li>
+  <li><code class="language-plaintext highlighter-rouge">dist</code>：这个伪目标功能是创建一个压缩文件,一般是把 tar 文件压成 Z 文件。或是 gz 文件。</li>
+  <li><code class="language-plaintext highlighter-rouge">TAGS</code>：这个伪目标功能是更新所有的目标,以备完整地重编译使用。</li>
+  <li><code class="language-plaintext highlighter-rouge">check</code>：check ” 和 “test”这两个伪目标一般用来测试 makefile 的流程。</li>
+</ul>
+
+<h3 id="104-检查规则">10.4 检查规则</h3>
+
+<p>我们不想makefile中的规则执行起来，只想检查一下命令，可以使用一下相关参数：</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">- n</code></li>
+  <li><code class="language-plaintext highlighter-rouge">--just-print</code></li>
+  <li><code class="language-plaintext highlighter-rouge">--dry-run</code></li>
+  <li><code class="language-plaintext highlighter-rouge">--recon</code>：不执行参数,这些参数只是打印命令,不管目标是否更新,把规则和连带规则下的命令打印出来,但
+不执行,这些参数对于我们调试 makefile 很有用处。</li>
+  <li><code class="language-plaintext highlighter-rouge">- t</code> <code class="language-plaintext highlighter-rouge">--touch</code>:这个参数的意思就是把目标文件的时间更新,但不更改目标文件。也就是说, make 假装编译目标,但不是真正的编译目标,只是把目标变成已编译过的状态。</li>
+  <li><code class="language-plaintext highlighter-rouge">- q</code> <code class="language-plaintext highlighter-rouge">--question</code>这个参数的行为是找目标的意思,也就是说,如果目标存在,那么其什么也不会输出,当然也不会执行编译,如果目标不存在,其会打印出一条出错信息。</li>
+  <li><code class="language-plaintext highlighter-rouge">-W &lt;file&gt;</code></li>
+  <li><code class="language-plaintext highlighter-rouge">--what-if=&lt;file&gt;</code>`</li>
+  <li><code class="language-plaintext highlighter-rouge">--assume-new=&lt;file&gt;</code></li>
+  <li><code class="language-plaintext highlighter-rouge">--new-file=&lt;file&gt;</code>
+这个参数需要指定一个文件。一般是是源文件(或依赖文件), Make 会根据规则推导来运行依赖于这
+个文件的命令,一般来说,可以和“ -n ”参数一同使用,来查看这个依赖文件所发生的规则命令。
+另外一个很有意思的用法是结合“ -p ”和“ -v ”来输出 makefile 被执行时的信息(这个将在后面讲述)。</li>
+</ul>
+
+<h3 id="105-make参数请查看相关文档">10.5 make参数请查看相关文档。</h3>
+
+<h2 id="11-隐含规则">11 隐含规则</h2>
+
+<p>隐含规则主要是make的自动推导。
+会为.o自动配置生成依赖生成项。
+注意</p>
+<ul>
+  <li>因为隐藏规则的存在，当执行混合编译的时候，可能存在隐藏规则先后性的问题，例如<code class="language-plaintext highlighter-rouge">foo:foo.p</code>如果文件夹下存在<code class="language-plaintext highlighter-rouge">foo.c</code>隐含规则就会找到foo.c执行过后就不再向下找了。</li>
+  <li>可以使用<code class="language-plaintext highlighter-rouge">-r/--no-builtin-rules</code>取消所有隐含参数设置。</li>
+  <li>编译c时，<n>.o会自动添加目标依赖推导<n>.c，并生成指令`$(CC) –c $(CPPFLAGS) $(CFLAGS)`</n></n></li>
+  <li>编译c++时，会自动推导为<n>.cc或者<n>.C,生成命令`$(CXX) $(CPPFLAGS) $(CFLAGS)`</n></n></li>
+  <li>编译Pascal时，自动推导为<n>.p,生成指令为`$(PC) –c $(PFLAGS)`;</n></li>
+  <li>编译Fortran/Ratfor时,自动推导为 “<n>.r” 或 “<n>.F” 或 “<n>.f”,其生成命令是:
+</n></n></n>    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>".f" "$(FC) –c $(FFLAGS)"
+".F" "$(FC) –c $(FFLAGS) $(CPPFLAGS)"
+".f" "$(FC) –c $(FFLAGS) $(RFLAGS)"
+</code></pre></div>    </div>
+  </li>
+  <li>汇编和汇编预处理：自动推导为<n>.s默认使用编译器“as”，生成命令：`$(AS) $(ASFLAGS)`。</n></li>
+  <li>链接Object文件：运行C的编译器来运行链接程序(一般是“ld”),生成命令：<code class="language-plaintext highlighter-rouge">$(CC) $(LDFLAGS) &lt;n&gt;.o $(LOADLIBES) $(LDLIBS)</code></li>
+</ul>
+
+<h3 id="113-隐含规则使用的变量">11.3 隐含规则使用的变量</h3>
+<p>make中会预先定义一些执行的变量</p>
+
+<ul>
+  <li>AR:函数库打包程序。默认命令是“ ar ”</li>
+  <li>AS:汇编语言编译程序。默认命令是“ as ”。</li>
+  <li>CC:C语言编译程序，默认命令是“cc”。</li>
+  <li>CXX:C++ 语言编译程序。默认命令是“ g++ ”。</li>
+  <li>CO:从 RCS 文件中扩展文件程序。默认命令是“ co ”。</li>
+  <li>CPP：C 程序的预处理器(输出是标准输出设备)。默认命令是“ $(CC) – E ”。</li>
+  <li>FC:Fortran 和 Ratfor 的编译器和预处理程序。默认命令是“ f77 ”。</li>
+  <li>GET：从 SCCS 文件中扩展文件的程序。默认命令是“ get ”。</li>
+  <li>LEX：Lex 方法分析器程序(针对于 C 或 Ratfor )。默认命令是“ lex ”。</li>
+  <li>PC：Pascal 语言编译程序。默认命令是“ pc ”。</li>
+  <li>YACC：Yacc 文法分析器(针对于 C 程序)。默认命令是“ yacc ”。</li>
+  <li>YACCR:Yacc 文法分析器(针对于 Ratfor 程序)。默认命令是“ yacc – r ”。</li>
+  <li>MAKEINFO:转换 Texinfo 源文件( .texi )到 Info 文件程序。默认命令是“ makeinfo ”。</li>
+  <li>TEX:从 TeX 源文件创建 TeX DVI 文件的程序。默认命令是“ tex ”。</li>
+  <li>TEXI2DVI:从 Texinfo 源文件创建军 TeX DVI 文件的程序。默认命令是“ texi2dvi ”。</li>
+  <li>WEAVE:转换 Web 到 TeX 的程序。默认命令是“ weave ”。</li>
+  <li>CWEAVE:转换 C Web 到 TeX 的程序。默认命令是“ cweave ”。</li>
+  <li>TANGLE:转换 Web 到 Pascal 语言的程序。默认命令是“ tangle ”。</li>
+  <li>CTANGLE:转换 C Web 到 C 。默认命令是“ ctangle ”。</li>
+  <li>RM:删除文件命令。默认命令是“ rm – f ”。</li>
+</ul>
+
+<p>对应编译器参数变量：
+基本都是编译器名+FLAGS；如：CXXFLAGS</p>
+
+<p>注意隐含规则链：</p>
+<ul>
+  <li>当存在编译器的相互准话你，例如一个.o文件的生成，可能是先将.y文件生成.c再由C的编译器生成。make会进自己最大的努力进行编译转换和推导。为了安全起见，需要使用伪目标“.INTERMEDIATE”来强制声明中间件。</li>
+  <li>禁止同一个目标出现两次或者以上。防止自动推导时出现无限递归的情况。</li>
+  <li>make会对简单的中间产物进行优化，可能不会产生中间文件。</li>
+</ul>
+
+<h3 id="115-定义模式规则">11.5 定义模式规则</h3>
+<p>模式规则中一般包含“%”,主要代表任意性的推导。例如</p>
+
+<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">%.o </span><span class="o">:</span> <span class="nf">%.c</span>
+    <span class="err">$(CC)</span> <span class="err">-c</span> <span class="err">$(CFLAGS)</span> <span class="err">$(CPPFLAGS)</span> <span class="err">$&lt;</span> <span class="err">-o</span> <span class="err">$@</span>
+<span class="c">#将所有.c文件编译成为.o文件
+# $&lt;表示了所有依赖目标的挨个值，$@表示所有的目标的挨个值
+</span>
+<span class="nl">%.tab.c %.tab.h</span><span class="o">:</span> <span class="nf">%.y</span>
+    <span class="err">bison</span> <span class="err">-d</span> <span class="err">$&lt;</span>
+
+<span class="c"># 将所有的[.y]文件都以bison -d $&lt;执行。生成对应的&lt;n&gt;.tab.c和&lt;n&gt;.tab.h文件
+</span>
+</code></pre></div></div>
+
+<h4 id="1153-自动化变量">11.5.3 自动化变量</h4>
+
+<p>5.3节中已有描述，不再赘述。</p>
+
+<p>可以通过在隐含规则和后面不添加命令，来覆盖隐含规则。或者添加命令，重建隐含规则。</p>
+
+<p>make注意使用后缀来进行推导，因此可以更改<code class="language-plaintext highlighter-rouge">.SUFFIXES</code>来进行默认后缀的更改。make 的参数 “-r” 或 “-no-builtin-rules” 也会使用得默认的后缀列表为空。</p>
+
+<h3 id="117-隐含规则搜索算法">11.7 隐含规则搜索算法</h3>
+
+<p>对于目标T的搜索算法如下所示：</p>
+
+<ul>
+  <li>把 T 的目录部分分离出来。叫 D ,而剩余部分叫 N 。(如:如果 T 是 “src/foo.o” ,那么, D 就是 “src/” ,N 就是 “foo.o” )</li>
+  <li>创建所有匹配于 T 或是 N 的模式规则列表。</li>
+  <li>如果在模式规则列表中有匹配所有文件的模式,如 “%” ,那么从列表中移除其它的模式。</li>
+  <li>移除列表中没有命令的规则。</li>
+  <li>对于第一个在列表中的模式规则：
+    <ul>
+      <li>推导其 “ 茎 “S , S 应该是 T 或是 N 匹配于模式中 “%” 非空的部分。</li>
+      <li>计算依赖文件。把依赖文件中的 “%” 都替换成 “ 茎 “S 。如果目标模式中没有包含斜框字符,而把 D 加在第一个依赖文件的开头。</li>
+      <li>测试是否所有的依赖文件都存在或是理当存在。(如果有一个文件被定义成另外一个规则的目标文件,或者是一个显式规则的依赖文件,那么这个文件就叫 “ 理当存在 “ )</li>
+      <li>如果所有的依赖文件存在或是理当存在,或是就没有依赖文件。那么这条规则将被采用,退出该算法。</li>
+    </ul>
+  </li>
+  <li>如果经过第 5 步,没有模式规则被找到,那么就做更进一步的搜索。对于存在于列表中的第一个模式规则：
+    <ul>
+      <li>如果规则是终止规则,那就忽略它,继续下一条模式规则。</li>
+      <li>计算依赖文件。(同第 5 步)</li>
+      <li>测试所有的依赖文件是否存在或是理当存在。</li>
+      <li>对于不存在的依赖文件,递归调用这个算法查找他是否可以被隐含规则找到。</li>
+      <li>如果所有的依赖文件存在或是理当存在,或是就根本没有依赖文件。那么这条规则被采用,退出该算法。</li>
+    </ul>
+  </li>
+  <li>如果没有隐含规则可以使用,查看 “.DEFAULT” 规则,如果有,采用,把 “.DEFAULT” 的命令给 T
+使用。</li>
+</ul>
+
+<p>当规则被找到，就会执行其相当的命令，此时自动化变量才会生成。</p>
+
+<h2 id="12-使用-make-更新函数库文件">12 使用 make 更新函数库文件</h2>
+
+<p>函数库文件也就是对 Object 文件(程序编译的中间文件)的打包文件。在 Unix 下,一般是由命令 “ar”
+来完成打包工作。</p>
+
+<h3 id="121-函数库文件的成员">12.1 函数库文件的成员</h3>
+
+<p>一个函数库文件由多个文件组成。你可以以如下格式指定函数库文件及其组成:
+<code class="language-plaintext highlighter-rouge">archive(member)</code></p>
+
+<p>这个主要是对目标和依赖的定义。主要是为了“ar”来进行服务。如:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>foolib(hack.o) : hack.o
+    ar cr foolib hack.o
+
+</code></pre></div></div>
+
+<h3 id="122-函数库成员的隐含规则">12.2 函数库成员的隐含规则</h3>
+
+<p>当目标是”a(m)”，形式时，其会把目标转换为(m),例如”make foo.a(bar.o)”的形式调用Makefile时，隐含规则会去找”bar.o”的规则，如果没有定义相关规则，那么内建隐含规则生效。make会去找对应的文件来生成目标，找到则成功执行。</p>
+
+<p>注意： “$%”是专属函数库文件的自动化变量。</p>
+
+<h3 id="123-函数库文件的后缀规则">12.3 函数库文件的后缀规则</h3>
+
+<p>使用后缀规则和隐含规则来生成函数库打包文件，如：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>.c.a:
+    $(CC) $(CFLAGS) $(CPPFLAGS) -c $&lt; -o $*.o
+    $(AR) r $@ $*.o
+    $(RM) $*.o
+
+</code></pre></div></div>
+<p>等价于：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(%.o) : %.c
+    $(CC) $(CFLAGS) $(CPPFLAGS) -c $&lt; -o $*.o
+    $(AR) r $@ $*.o
+    $(RM) $*.o
+
+</code></pre></div></div>
+
+<p>注意：</p>
+
+<p>进行函数库打包文件生成时,请小心使用 make 的并行机制( “-j” 参数)。如果多个 ar 命令在同一时
+间运行在同一个函数库打包文件上,就很有可以损坏这个函数库文件。</p>
+:ET

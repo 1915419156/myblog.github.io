@@ -1,0 +1,2 @@
+I"�<p>p从unique_ptr u中接管了对象的所有权；将<code class="language-plaintext highlighter-rouge">u</code>置为空</p>
+:ET

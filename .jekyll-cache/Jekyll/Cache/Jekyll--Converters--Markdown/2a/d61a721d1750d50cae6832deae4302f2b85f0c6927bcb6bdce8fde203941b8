@@ -1,0 +1,2 @@
+I"<p>删除<code class="language-plaintext highlighter-rouge">range</code>范围内的字符，替换为<code class="language-plaintext highlighter-rouge">args</code>指定的字符，返回<code class="language-plaintext highlighter-rouge">s</code>的引用</p>
+:ET

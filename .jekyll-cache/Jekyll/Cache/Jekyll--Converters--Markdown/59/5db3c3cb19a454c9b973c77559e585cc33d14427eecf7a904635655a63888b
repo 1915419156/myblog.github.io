@@ -1,0 +1,2 @@
+I"\<p>保存本CPU当前的irq状态，disable本CPU中断并获取指定的spin lock</p>
+:ET

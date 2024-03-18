@@ -1,0 +1,738 @@
+I"j�<blockquote>
+  <p>2019-7-21 16:46:53</p>
+
+</blockquote>
+
+<h1 id="stl-源码剖析-侯捷">STL 源码剖析 –侯捷</h1>
+
+<h2 id="stl概论与版本简介">STL概论与版本简介</h2>
+
+<p>STL六大组件</p>
+
+<ul>
+  <li>容器(containers):vector.list.deque,set,map等数据存放的类。</li>
+  <li>算法(algorithms):各种排序算法;sort、search、copy、erase..等</li>
+  <li>迭代器(iterators)：扮演容器与算法之间的胶合剂，即泛型指针</li>
+  <li>功能函数(functors)：行为类似函数，可以视为算法的某种策略</li>
+  <li>配接器(adapters)：一种用来修饰容器(containers)或仿函数(functors)或迭代器(iterators)借口的东西</li>
+  <li>配置器(allocators):负责空间配置与管理</li>
+</ul>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-21-17-10-18.png" alt="STL六大组件之间的关系" /></p>
+
+<h2 id="第二章-空间配置器">第二章 空间配置器</h2>
+
+<p>allocator是空间配置器，定义于头文件<memory> std::allocator类模板是所有标准库容器所用的默认分配器 (Allocator)，若不提供用户指定的分配器。默认分配器无状态，即任何给定的 allocator实例可交换、比较相等，且能解分配同一`allocator`类型的任何其他实例所分配的内存。</memory></p>
+
+<p>成员类型</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">类型</th>
+      <th style="text-align: left">定义</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">value_type</td>
+      <td style="text-align: left">T</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">pointer (C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">T*</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">const_pointer (C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">const T*</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">reference (C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">T&amp;</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">const_reference (C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">const T&amp;</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">size_type</td>
+      <td style="text-align: left">std::size_t</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">difference_type</td>
+      <td style="text-align: left">std::ptrdiff_t</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">propagate_on_container_move_assignment(C++14)</td>
+      <td style="text-align: left">std::true_type</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">rebind (C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">template&lt; class U &gt; struct rebind { typedef allocator<u> other; };</u></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">is_always_equal(C++17)</td>
+      <td style="text-align: left">std::true_type</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>成员函数</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">函数</th>
+      <th style="text-align: left">定义</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">(构造函数)</td>
+      <td style="text-align: left">创建新的 allocator 实例(公开成员函数)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">(析构函数)</td>
+      <td style="text-align: left">析构 allocator 实例(公开成员函数)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">address(C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">获得对象的地址，即使重载了 operator&amp;(公开成员函数)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">allocate</td>
+      <td style="text-align: left">分配未初始化的存储(公开成员函数)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">deallocate</td>
+      <td style="text-align: left">解分配存储(公开成员函数)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">max_size(C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">返回最大的受支持分配大小(公开成员函数)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">construct(C++17 中弃用)(C++20 中移除)</td>
+      <td style="text-align: left">在分配的存储构造对象(公开成员函数)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">destroy</td>
+      <td style="text-align: left">(C++17 中弃用)(C++20 中移除)析构在已分配存储中的对象(公开成员函数)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>下面是一个<code class="language-plaintext highlighter-rouge">std::allocator</code>的简单实现
+注意这里的<code class="language-plaintext highlighter-rouge">size_t</code>与操作系统相关，32位是4字节，64位时8字节；<code class="language-plaintext highlighter-rouge">ptrdiff_t</code>是两个指针相减的结果类型，是一种有符号整数类型。减法运算的值为两个指针在内存中的距离。ptrdiff_t是signed类型，用于存放同一数组中两个指针之间的差距，它可以使负数，std::ptrdiff_t.同上，使用ptrdiff_t来得到独立于平台的地址差值.</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;new.h&gt;
+#include &lt;stddef.h&gt;
+#include &lt;limits.h&gt;
+#include &lt;iostream.h&gt;
+#include &lt;algobase.h&gt;
+</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="n">T</span><span class="o">*</span> <span class="nf">allocate</span><span class="p">(</span><span class="kt">ptrdiff_t</span> <span class="n">size</span><span class="p">,</span><span class="n">T</span><span class="o">*</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//设置新句柄</span>
+
+    <span class="n">set_new_handler</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">T</span><span class="o">*</span> <span class="n">tmp</span><span class="o">=</span><span class="p">(</span><span class="n">T</span><span class="o">*</span><span class="p">)(</span><span class="o">::</span><span class="k">operator</span> <span class="k">new</span><span class="p">((</span><span class="kt">size_t</span><span class="p">)(</span><span class="n">size</span><span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">))));</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">tmp</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">cerr</span><span class="o">&lt;&lt;</span><span class="s">"out of memory"</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">tmp</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="nf">void_deallocate</span><span class="p">(</span><span class="n">T</span><span class="o">*</span> <span class="n">buffer</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="o">::</span><span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T1</span><span class="p">,</span><span class="k">class</span> <span class="nc">T2</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="kt">void</span> <span class="nf">_construct</span><span class="p">(</span><span class="n">T1</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span><span class="k">const</span> <span class="n">T2</span><span class="o">&amp;</span> <span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">new</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="n">T1</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kr">inline</span> <span class="kt">void</span> <span class="nf">_destroy</span><span class="p">(</span><span class="n">T</span><span class="o">*</span> <span class="n">ptr</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">ptr</span><span class="o">-&gt;~</span><span class="n">T</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+<span class="c1">//allocator类的基本实现</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">allocator</span>
+<span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="k">typedef</span> <span class="n">T</span>  <span class="n">value_type</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="n">T</span><span class="o">*</span> <span class="n">pointer</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="k">const</span> <span class="n">T</span><span class="o">*</span> <span class="n">const_pointer</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="n">T</span><span class="o">&amp;</span>      <span class="n">reference</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">const_reference</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="kt">size_t</span> <span class="n">size_type</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="kt">ptrdiff_t</span> <span class="n">size_type</span><span class="p">;</span>
+    <span class="c1">//连接 allocator和U</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">rebind</span>
+    <span class="p">{</span>
+        <span class="k">typedef</span> <span class="n">allocator</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span> <span class="n">other</span><span class="p">;</span>
+    <span class="p">};</span>
+    <span class="c1">//获取左值指针</span>
+
+    <span class="n">pointer</span> <span class="n">allocate</span><span class="p">(</span><span class="n">size_type</span> <span class="n">n</span><span class="p">,</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">hint</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//分配内存并初始化为0</span>
+
+        <span class="k">return</span> <span class="n">_allocate</span><span class="p">((</span><span class="n">difference_type</span><span class="p">)</span><span class="n">n</span><span class="p">,(</span><span class="n">pointer</span><span class="p">)</span><span class="mi">0</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="kt">void</span> <span class="n">deallocate</span><span class="p">(</span><span class="n">pointer</span> <span class="n">p</span><span class="p">,</span><span class="n">size_type</span> <span class="n">n</span><span class="p">){</span><span class="n">_deallocate</span><span class="p">(</span><span class="n">p</span><span class="p">);}</span>
+
+    <span class="kt">void</span> <span class="n">address</span><span class="p">(</span><span class="n">reference</span> <span class="n">x</span><span class="p">){</span><span class="k">return</span> <span class="p">(</span><span class="n">pointer</span><span class="p">)</span><span class="o">&amp;</span><span class="n">x</span><span class="p">;}</span>
+
+    <span class="n">const_pointer</span> <span class="n">const_address</span><span class="p">(</span><span class="n">const_reference</span> <span class="n">x</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">const_pointer</span><span class="p">)</span><span class="o">&amp;</span><span class="n">x</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">size_type</span> <span class="n">max_size</span><span class="p">()</span> <span class="k">const</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">size_type</span><span class="p">(</span><span class="n">UINT_MAX</span><span class="o">/</span><span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">));</span>
+    <span class="p">}</span>
+
+
+<span class="p">};</span>
+</code></pre></div></div>
+<p>上面只是简单的allocator实现，真实情况比这个要复杂的多。
+SGI标准的空间配置器，是对::operator new和::operator delete做了一层薄薄的封装。</p>
+
+<p>STL allocator将两阶段操作区分开来。内存配置操作由alloc:allocate()负责；内存释放操作由alloc::deallocate()负责；对象构造操作由::construct()负责，对象析构操作由::destroy()负责。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-13-49-35.png" alt="合作关系图" /></p>
+
+<h4 id="223-构造和析构基本工具-construct和destory">2.2.3 构造和析构基本工具： <code class="language-plaintext highlighter-rouge">construct()</code>和<code class="language-plaintext highlighter-rouge">destory()</code></h4>
+
+<p>下面是c++1中 stl_construct.h的部分内容</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="cp">#ifndef _STL_CONSTRUCT_H
+#define _STL_CONSTRUCT_H 1
+</span>
+<span class="cp">#include &lt;new&gt;
+#include &lt;bits/move.h&gt;
+#include &lt;ext/alloc_traits.h&gt;
+</span>
+<span class="k">namespace</span> <span class="n">std</span> <span class="nf">_GLIBCXX_VISIBILITY</span><span class="p">(</span><span class="k">default</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="n">_GLIBCXX_BEGIN_NAMESPACE_VERSION</span>
+
+  <span class="cm">/**
+   * Constructs an object in existing memory by invoking an allocated
+   * object's constructor with an initializer.
+   */</span>
+<span class="c1">//c++11 新添加Construct函数 </span>
+
+<span class="cp">#if __cplusplus &gt;= 201103L
+</span>  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_T1</span><span class="p">,</span> <span class="k">typename</span><span class="o">...</span> <span class="nc">_Args</span><span class="p">&gt;</span>
+    <span class="kr">inline</span> <span class="kt">void</span>
+    <span class="n">_Construct</span><span class="p">(</span><span class="n">_T1</span><span class="o">*</span> <span class="n">__p</span><span class="p">,</span> <span class="n">_Args</span><span class="o">&amp;&amp;</span><span class="p">...</span> <span class="n">__args</span><span class="p">)</span>
+    <span class="p">{</span> <span class="o">::</span><span class="k">new</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">__p</span><span class="p">))</span> <span class="n">_T1</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">_Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">__args</span><span class="p">)...);</span> <span class="p">}</span>
+<span class="cp">#else
+</span>  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_T1</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">_T2</span><span class="p">&gt;</span>
+    <span class="kr">inline</span> <span class="kt">void</span>
+    <span class="n">_Construct</span><span class="p">(</span><span class="n">_T1</span><span class="o">*</span> <span class="n">__p</span><span class="p">,</span> <span class="k">const</span> <span class="n">_T2</span><span class="o">&amp;</span> <span class="n">__value</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="c1">// _GLIBCXX_RESOLVE_LIB_DEFECTS</span>
+      <span class="c1">// 402. wrong new expression in [some_]allocator::construct</span>
+      <span class="o">::</span><span class="k">new</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">__p</span><span class="p">))</span> <span class="n">_T1</span><span class="p">(</span><span class="n">__value</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="cp">#endif
+</span>
+  <span class="cm">/**
+   * Destroy the object pointed to by a pointer type.
+   */</span>
+    <span class="c1">//接受指针，并直接调用指针类的析构函数</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_Tp</span><span class="p">&gt;</span>
+    <span class="kr">inline</span> <span class="kt">void</span>
+    <span class="n">_Destroy</span><span class="p">(</span><span class="n">_Tp</span><span class="o">*</span> <span class="n">__pointer</span><span class="p">)</span>
+    <span class="p">{</span> <span class="n">__pointer</span><span class="o">-&gt;~</span><span class="n">_Tp</span><span class="p">();</span> <span class="p">}</span>
+<span class="c1">//模板函数</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">_Destroy_aux</span>
+    <span class="p">{</span>
+      <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_ForwardIterator</span><span class="p">&gt;</span>
+        <span class="k">static</span> <span class="kt">void</span>
+        <span class="n">__destroy</span><span class="p">(</span><span class="n">_ForwardIterator</span> <span class="n">__first</span><span class="p">,</span> <span class="n">_ForwardIterator</span> <span class="n">__last</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="k">for</span> <span class="p">(;</span> <span class="n">__first</span> <span class="o">!=</span> <span class="n">__last</span><span class="p">;</span> <span class="o">++</span><span class="n">__first</span><span class="p">)</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">_Destroy</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">__addressof</span><span class="p">(</span><span class="o">*</span><span class="n">__first</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="p">};</span>
+<span class="c1">//特例化函数判断对象是否含有默认构造函数，如果是则什么也不做，这样可以提高效率</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">_Destroy_aux</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span>
+    <span class="p">{</span>
+      <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_ForwardIterator</span><span class="p">&gt;</span>
+        <span class="k">static</span> <span class="kt">void</span>
+        <span class="n">__destroy</span><span class="p">(</span><span class="n">_ForwardIterator</span><span class="p">,</span> <span class="n">_ForwardIterator</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+    <span class="p">};</span>
+
+  <span class="cm">/**
+   * Destroy a range of objects.  If the value_type of the object has
+   * a trivial destructor, the compiler should optimize all of this
+   * away, otherwise the objects' destructors must be invoked.
+   */</span>
+
+    <span class="c1">//销毁一系列对象。如果对象的value_type是一个默认的析构函数，编译器应该优化所有这些，否则必须调用对象的析构函数。</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_ForwardIterator</span><span class="p">&gt;</span>
+    <span class="kr">inline</span> <span class="kt">void</span>
+    <span class="n">_Destroy</span><span class="p">(</span><span class="n">_ForwardIterator</span> <span class="n">__first</span><span class="p">,</span> <span class="n">_ForwardIterator</span> <span class="n">__last</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//迭代器别名</span>
+
+      <span class="k">typedef</span> <span class="k">typename</span> <span class="n">iterator_traits</span><span class="o">&lt;</span><span class="n">_ForwardIterator</span><span class="o">&gt;::</span><span class="n">value_type</span>
+                       <span class="n">_Value_type</span><span class="p">;</span>
+
+      <span class="n">std</span><span class="o">::</span><span class="n">_Destroy_aux</span><span class="o">&lt;</span><span class="n">__has_trivial_destructor</span><span class="p">(</span><span class="n">_Value_type</span><span class="p">)</span><span class="o">&gt;::</span>
+    <span class="n">__destroy</span><span class="p">(</span><span class="n">__first</span><span class="p">,</span> <span class="n">__last</span><span class="p">);</span>
+    <span class="p">}</span>
+
+  <span class="cm">/**
+   * Destroy a range of objects using the supplied allocator.  For
+   * nondefault allocators we do not optimize away invocation of 
+   * destroy() even if _Tp has a trivial destructor.
+   */</span>
+    <span class="c1">//使用支持的allocator销毁一系列对象，如果没有非默认的allocators不会进行销毁函数的初始化，即便，对象含有默认构造函数</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_ForwardIterator</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">_Allocator</span><span class="p">&gt;</span>
+    <span class="kt">void</span>
+    <span class="n">_Destroy</span><span class="p">(</span><span class="n">_ForwardIterator</span> <span class="n">__first</span><span class="p">,</span> <span class="n">_ForwardIterator</span> <span class="n">__last</span><span class="p">,</span>
+         <span class="n">_Allocator</span><span class="o">&amp;</span> <span class="n">__alloc</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="k">typedef</span> <span class="n">__gnu_cxx</span><span class="o">::</span><span class="n">__alloc_traits</span><span class="o">&lt;</span><span class="n">_Allocator</span><span class="o">&gt;</span> <span class="n">__traits</span><span class="p">;</span>
+      <span class="k">for</span> <span class="p">(;</span> <span class="n">__first</span> <span class="o">!=</span> <span class="n">__last</span><span class="p">;</span> <span class="o">++</span><span class="n">__first</span><span class="p">)</span>
+    <span class="n">__traits</span><span class="o">::</span><span class="n">destroy</span><span class="p">(</span><span class="n">__alloc</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">__addressof</span><span class="p">(</span><span class="o">*</span><span class="n">__first</span><span class="p">));</span>
+    <span class="p">}</span>
+
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">_ForwardIterator</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">_Tp</span><span class="p">&gt;</span>
+    <span class="kr">inline</span> <span class="kt">void</span>
+    <span class="n">_Destroy</span><span class="p">(</span><span class="n">_ForwardIterator</span> <span class="n">__first</span><span class="p">,</span> <span class="n">_ForwardIterator</span> <span class="n">__last</span><span class="p">,</span>
+         <span class="n">allocator</span><span class="o">&lt;</span><span class="n">_Tp</span><span class="o">&gt;&amp;</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="n">_Destroy</span><span class="p">(</span><span class="n">__first</span><span class="p">,</span> <span class="n">__last</span><span class="p">);</span>
+    <span class="p">}</span>
+
+<span class="n">_GLIBCXX_END_NAMESPACE_VERSION</span>
+<span class="p">}</span> <span class="c1">// namespace std</span>
+<span class="cp">#endif
+</span>
+</code></pre></div></div>
+
+<p>上述代码中<code class="language-plaintext highlighter-rouge">_Destroy_aux</code>主要是用来检测，对象是否有自定义的析构函数，如果有就进行迭代调用。如果没有(使用默认析构函数)直接跳过，避免资源浪费。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-14-45-38.png" alt="construct和destory示意" /></p>
+
+<h4 id="224-空间的配置与释放stdalloc">2.2.4 空间的配置与释放，std::alloc</h4>
+
+<p>构造空间的配置与释放，由<stl_alloc.h>负责；设计思路如下：</stl_alloc.h></p>
+
+<ul>
+  <li>向<code class="language-plaintext highlighter-rouge">system heap</code> 请求空间</li>
+  <li>考虑多线程状态</li>
+  <li>考虑内存不足时的应变措施</li>
+  <li>考虑过多“小行区块”可能造成的内存碎片(fragment)问题。</li>
+</ul>
+
+<p>考虑到小型区块可能造成的内存破碎问题，SGI设计了双层级配置器,第一级配置器直接使用<code class="language-plaintext highlighter-rouge">malloc()</code>和<code class="language-plaintext highlighter-rouge">free()</code>；第二级配置器则视情况采用不同的策略。当配置区块超过128byte时，视之为足够大，使用第一级配置器，当小于128byte时，视之为过小，采用复杂的memory pool整理方式。而不再求助于第一级适配器。使用哪一级适配器取决于<code class="language-plaintext highlighter-rouge">__USE_MALLOC</code>是否被定义。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-15-07-37.png" alt="第一与第二级适配器" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-15-10-16.png" alt="包装链接" /></p>
+
+<h4 id="225-一级适配器__malloc_alloc_template剖析">2.2.5 一级适配器__malloc_alloc_template剖析</h4>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//一级适配器</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="kt">int</span> <span class="n">inst</span><span class="p">&gt;</span>
+
+<span class="k">class</span> <span class="nc">__malloc_alloc_template</span>
+<span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="c1">//函数指针，所代表的函数将用来处理内存不足的情况</span>
+    <span class="c1">//oom: out of memory</span>
+
+    <span class="k">static</span> <span class="kt">void</span> <span class="o">*</span><span class="n">oom_malloc</span><span class="p">(</span><span class="kt">size_t</span><span class="p">);</span>
+    <span class="k">static</span> <span class="kt">void</span> <span class="o">*</span><span class="n">oom_realloc</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">,</span><span class="kt">size_t</span><span class="p">);</span>
+    <span class="k">static</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">__malloc_alloc_oom_handler</span><span class="p">)();</span>
+
+<span class="nl">public:</span>
+    <span class="k">static</span> <span class="kt">void</span> <span class="o">*</span><span class="n">allocate</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">n</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//一级配置器必须使用malloc()</span>
+
+        <span class="kt">void</span> <span class="o">*</span><span class="n">result</span><span class="o">=</span><span class="n">malloc</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+        <span class="c1">//当无法满足需求时，改用oom_malloc()</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="mi">0</span><span class="o">==</span><span class="n">result</span><span class="p">)</span> <span class="n">result</span><span class="o">=</span><span class="n">oom_malloc</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">static</span> <span class="kt">void</span> <span class="n">deallocate</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span><span class="kt">size_t</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//第一级配置器直接使用free()</span>
+
+        <span class="n">free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="c1">//输入旧size和新size</span>
+
+    <span class="k">static</span> <span class="kt">void</span><span class="o">*</span> <span class="n">reallocate</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span><span class="kt">size_t</span><span class="p">,</span><span class="kt">size_t</span> <span class="n">new_sz</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">void</span><span class="o">*</span> <span class="n">result</span><span class="o">=</span><span class="n">realloc</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">new_sz</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="mi">0</span><span class="o">==</span><span class="n">result</span><span class="p">)</span> <span class="n">result</span><span class="o">=</span><span class="n">oom_realloc</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">new_sz</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">;</span> 
+    <span class="p">}</span>
+    <span class="c1">//指定自己的out-of-memory handler</span>
+    
+    <span class="k">static</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span> <span class="n">set_malloc_handler</span><span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="p">)()))()</span>
+    <span class="p">{</span>
+        <span class="c1">//获取函数指针</span>
+
+        <span class="kt">void</span> <span class="p">(</span><span class="o">*</span> <span class="n">old</span><span class="p">)()</span><span class="o">=</span><span class="n">__malloc_alloc_oom_handler</span><span class="p">;</span>
+        <span class="n">__malloc_alloc_oom_handler</span><span class="o">=</span><span class="n">f</span><span class="p">;</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">old</span><span class="p">);</span> 
+    <span class="p">}</span>
+
+
+<span class="p">};</span>
+<span class="c1">//下面是用户提供的malloc_alloc函数</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="kt">int</span> <span class="n">inst</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">__malloc_alloc_template</span><span class="o">&lt;</span><span class="n">inst</span><span class="o">&gt;::</span><span class="n">__malloc_alloc_oom_handler</span><span class="p">)()</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="kt">int</span> <span class="n">inst</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="o">*</span><span class="n">__malloc_alloc_template</span><span class="o">&lt;</span><span class="n">inst</span><span class="o">&gt;::</span><span class="n">oom_malloc</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//获取内存分配句柄函数指针</span>
+
+    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">my_malloc_handler</span><span class="p">)();</span>
+    <span class="kt">void</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(;;)</span>
+    <span class="p">{</span>
+        <span class="c1">//指针指向分配函数</span>
+
+        <span class="n">my_malloc_handler</span><span class="o">=</span><span class="n">__malloc_alloc_oom_handler</span><span class="p">;</span>
+        <span class="c1">//分配失败抛出异常</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="mi">0</span><span class="o">==</span><span class="n">my_malloc_handler</span><span class="p">){</span><span class="n">__THROW_BAD_ALLOC</span><span class="p">;}</span>
+        <span class="c1">//调用处理例程，企图释放内存</span>
+
+        <span class="p">(</span><span class="o">*</span><span class="n">my_malloc_handler</span><span class="p">)();</span>
+        <span class="c1">//再次尝试分配内存</span>
+
+        <span class="n">result</span><span class="o">=</span><span class="n">malloc</span><span class="p">();</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="k">return</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//内存调用分配不成功时，进行二次调用</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="kt">int</span> <span class="n">inst</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="o">*</span> <span class="n">__malloc_alloc_template</span><span class="o">&lt;</span><span class="n">inst</span><span class="o">&gt;::</span><span class="n">oom_realloc</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span><span class="kt">size_t</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">my_malloc_handler</span><span class="p">)();</span>
+    <span class="kt">void</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(;;)</span>
+    <span class="p">{</span>
+        <span class="n">my_malloc_handler</span><span class="o">=</span><span class="n">__malloc_alloc_oom_handler</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="mi">0</span><span class="o">==</span><span class="n">my_malloc_handler</span><span class="p">){</span><span class="n">__THROW_BAD_ALLOC</span><span class="p">;}</span>
+        <span class="c1">//尝试调用处理例程</span>
+
+        <span class="p">(</span><span class="o">*</span><span class="n">my_malloc_handler</span><span class="p">)();</span>
+        <span class="c1">//尝试分配内存</span>
+
+        <span class="n">result</span><span class="o">=</span><span class="n">realloc</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">n</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="k">return</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//注意,以下参数直接将inst指定为0</span>
+
+<span class="k">typedef</span> <span class="n">__malloc_alloc_template</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span> <span class="n">malloc_alloc</span><span class="p">;</span>
+
+</code></pre></div></div>
+
+<h4 id="226-第二级适配器-__default_alloc_template-剖析">2.2.6 第二级适配器 __default_alloc_template 剖析</h4>
+
+<p>因为对于操作系统而言，需要块分配一定的内存来存储块的位置信息，因此当内存过小时，单独开辟块反而是得不偿失的。因此在此时，C++使用内存池机制来对数据进行管理。由配置器负责内存的管理和回收，通常SGI配置其会将小额区块的内存需求量上调至8的倍数(例如30B-32B),并唯独16个free-list,各自管理大小分别为8,16,24,3，,40,48,56,64…128 bytes的小额区块。结构如下：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">union</span> <span class="n">obj</span><span class="p">{</span>
+    <span class="k">union</span> <span class="n">obj</span><span class="o">*</span> <span class="n">free_list_link</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">client_data</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>因为使用了union因此第一个指针直接指向了内存地址(<a href="https://www.cnblogs.com/jeakeven/p/5113508.html">c++ –&gt; union介绍</a>)。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-16-47-51.png" alt="" /></p>
+
+<h3 id="227-空间配置函数allocate">2.2.7 空间配置函数allocate()</h3>
+
+<p>__default_alloc_template拥有配置器的标准接口函数allocate()。此函数首先判断区块大小，大于128bytes就调用第一级配置器，小于128bytes就检查对应的free list。如果有可用区块就直接拿来用，没有就将区块的大小上调至8倍数边界，然后调用<code class="language-plaintext highlighter-rouge">refill()</code>准备为<code class="language-plaintext highlighter-rouge">free list</code>重新填充空间。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-16-58-32.png" alt="free list调度" /></p>
+
+<h4 id="228-空间释放函数-deallocate">2.2.8 空间释放函数 deallocate()</h4>
+
+<p>对于deallocate()函数首先判断区块大小，大于128bytes就调用第一级配置器，小于128bytes就找出对应的free list，将区块回收。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-16-58-32.png" alt="区块回收" /></p>
+
+<h4 id="229-重新填充-free-list">2.2.9 重新填充 free-list</h4>
+
+<p>当内存池中没有可用区块的时候，就调用<code class="language-plaintext highlighter-rouge">refill()</code>准备为free-list重新分配空间。新的空间将取自内存池，缺省取得20个新节点(新区块)，但万一内存池空间不足，获得的节点数(区块数)可能小于20。</p>
+
+<h4 id="2210-内存池memory-pool">2.2.10 内存池(memory pool)</h4>
+<p><em>参考链接：</em> <a href="https://blog.csdn.net/u010183728/article/details/81531392">C++实现内存池</a>;</p>
+
+<p>上文中提及使用内存池中的内存，提供给free-list方便存取内存。内存池主要是和线程池类似，使用预先分配来实现内存的集中分配和同一管理</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-21-32-29.png" alt="内存池管理过程" /></p>
+
+<h3 id="23-内存基本处理工具">2.3 内存基本处理工具</h3>
+
+<p>STL中定义有5个全局函数，作用于未初始化空间之上。分别是<code class="language-plaintext highlighter-rouge">construct()</code>、<code class="language-plaintext highlighter-rouge">destroy()</code>、uninitailized_copy()、uninitailized_fill()、uninitialized_fill_n();分别对应于高层次函数copy()、fill()、fill_n();后面几个函数定义于<stl_uninitialized></stl_uninitialized></p>
+
+<ul>
+  <li>uninitialized_fill_n((_ForwardIterator __first, _Size __n, const _Tp&amp; __x))：它接受三个参数；并通过value_type来判断对象有没有构造函数，有就进行，没有直接跳过。
+    <ul>
+      <li>迭代器 frist指向初始化空间的起始处</li>
+      <li>n表示分配内存的数量</li>
+      <li>x表示进行内存分配时候的初值</li>
+    </ul>
+  </li>
+  <li>uninitialized_copy(_InputIterator __first, _InputIterator __last,_ForwardIterator __result);输入参数列表如下，它调用了<code class="language-plaintext highlighter-rouge">__uninitialized_copy()</code>函数，并且通过value_type来判断是否为POD(传统基本数据类型含有拷贝构造等函数)，是则直接使用<code class="language-plaintext highlighter-rouge">std::copy()</code>进行构造。不是就使用遍历并使用<code class="language-plaintext highlighter-rouge">td::_Construct</code>调用类的构造函数进行构造。
+    <ul>
+      <li>frist 迭代器</li>
+      <li>last 迭代器</li>
+      <li>表示最终结果</li>
+    </ul>
+  </li>
+  <li>uninitialized_fill(_ForwardIterator __first, _ForwardIterator __last,const _Tp&amp; __x)和上面一样也是需要判断POD来决定使用构造方式和类型。
+    <ul>
+      <li>frist 迭代器</li>
+      <li>last 迭代器</li>
+      <li>表示最终结果</li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-25-22-13-25.png" alt="三个内存基本版本" /></p>
+
+<p>这一章主要讲述了STL中的alloctor通过源码解析，我们发现其实STL的迭代器使用了struct来进行构造，内部还是使用了指针运算符，而所谓的value_type也是指针相关的别名，感觉编译器厂商偷懒了，不过标准库的泛用性得到了保证。而且关于内存池确实是很好的亮点。慎用STL;</p>
+
+<h2 id="第三章-迭代器iterators-概念与traits编程技法">第三章 迭代器(iterators) 概念与traits编程技法</h2>
+
+<p>迭代器是一種抽象設計的概念，實現程序語言中並沒有直接對應的概念的實物。使用的23種設計模式中的迭代器模式：提供一種方法可以依次訪問某個聚合物所含的各個容器的元素。STL的中心思想在於：將數據容器和算法分開來。而迭代器就是扮演着兩者之間的膠合劑角色。</p>
+
+<h3 id="32-迭代器是一種-smart-pointer">3.2 迭代器是一種 smart pointer</h3>
+
+<p>迭代器是一種行爲類似指針的對象，指针中最常见也最重要的行为便是间接引用(dereference)和成员访问(member access)，因此迭代器最重要的就是对operator*和operator-&gt;进行重载操作。c++STL中有一个auto_ptr（11中已经废弃），是用来包装一个原生指针(native pointer)的对象。可以解决各种内存漏洞。下面是auto_ptr的源码精要。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">auto_ptr</span>
+<span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="k">explicit</span> <span class="n">auto_ptr</span><span class="p">(</span><span class="n">T</span> <span class="o">*</span><span class="n">p</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">:</span><span class="n">pointer</span><span class="p">(</span><span class="n">p</span><span class="p">){}</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+    <span class="n">auto_ptr</span><span class="p">(</span><span class="n">auto_ptr</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;&amp;</span> <span class="n">rhs</span><span class="p">)</span><span class="o">:</span><span class="n">pointee</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">release</span><span class="p">()){}</span>
+    <span class="o">~</span><span class="n">auto_ptr</span><span class="p">(){</span><span class="k">delete</span> <span class="n">pointee</span><span class="p">;}</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+    <span class="n">auto_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">auto_ptr</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;&amp;</span> <span class="n">rhs</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="o">!=&amp;</span><span class="n">rhs</span><span class="p">)</span> <span class="n">reset</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">release</span><span class="p">());</span>
+        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">T</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="o">*</span><span class="n">pointee</span><span class="p">;}</span>
+    <span class="n">T</span><span class="o">*</span> <span class="k">operator</span><span class="o">-&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">pointee</span><span class="p">;}</span>
+    <span class="n">T</span><span class="o">*</span> <span class="n">get</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">pointee</span><span class="p">;}</span>  
+<span class="nl">private:</span>
+    <span class="n">T</span> <span class="o">*</span><span class="n">pointee</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>下面是一个简单迭代器</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Item</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">LisIter</span>
+ <span class="p">{</span>
+     <span class="n">Item</span><span class="o">*</span> <span class="n">ptr</span><span class="p">;</span>
+     <span class="n">ListIter</span><span class="p">(</span><span class="n">Item</span><span class="o">*</span> <span class="n">p</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">:</span><span class="n">ptr</span><span class="p">(</span><span class="n">p</span><span class="p">){}</span>
+     <span class="c1">//关键操作</span>
+
+     <span class="n">Item</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;}</span>
+     <span class="n">Item</span><span class="o">*</span> <span class="k">operator</span><span class="o">-&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">ptr</span><span class="p">;}</span>
+     <span class="n">ListIter</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">++</span><span class="p">()</span>
+     <span class="p">{</span>
+        <span class="n">ptr</span><span class="o">=</span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">();</span>
+        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+     <span class="p">}</span> 
+     <span class="n">ListIter</span> <span class="k">operator</span><span class="o">++</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span>
+     <span class="p">{</span>
+        <span class="n">ListIter</span> <span class="n">tmp</span><span class="o">=*</span><span class="k">this</span><span class="p">;</span>
+        <span class="o">++*</span><span class="k">this</span><span class="p">;</span>
+        <span class="n">retrun</span> <span class="n">tmp</span><span class="p">;</span>
+     <span class="p">}</span>
+     <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="k">const</span> <span class="n">ListIter</span><span class="o">&amp;</span> <span class="n">i</span><span class="p">)</span> <span class="k">const</span>
+     <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ptr</span><span class="o">!=</span><span class="n">i</span><span class="p">.</span><span class="n">ptr</span><span class="p">;</span>
+     <span class="p">}</span>
+ <span class="p">};</span> 
+</code></pre></div></div>
+
+<p>迭代器的另外一个非常重要的功能就是隐藏其中的细节；这一点标准库已经做的很好了。</p>
+
+<h3 id="33-迭代器相应型别associated-types">3.3 迭代器相应型别(associated types)</h3>
+
+<p>迭代器相应型别是一种类似的封装行为，并不只是“迭代器所指对象的型别”</p>
+
+<h3 id="34-traits编程技法stl源码门钥">3.4 Traits编程技法–STL源码门钥</h3>
+
+<p>迭代器所指的型别，称为该迭代器的 value type。value用于函数的传回值就无法正常工作了。使用内嵌类型可以很好的避免这种问题。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">MyIter</span>
+<span class="p">{</span>
+    <span class="c1">//内嵌类型声明</span>
+
+    <span class="k">typedef</span> <span class="n">T</span> <span class="n">value_type</span><span class="p">;</span>
+    <span class="n">T</span><span class="o">*</span> <span class="n">ptr</span><span class="p">;</span>
+    <span class="n">MyIter</span><span class="p">(</span><span class="n">T</span><span class="o">*</span> <span class="n">p</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">:</span><span class="n">ptr</span><span class="p">(</span><span class="n">p</span><span class="p">){}</span>
+    <span class="n">T</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;}</span> 
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">I</span><span class="p">&gt;</span>
+<span class="k">typename</span> <span class="n">I</span><span class="o">::</span><span class="n">value_type</span> <span class="nf">func</span><span class="p">(</span><span class="n">I</span> <span class="n">ite</span><span class="p">){</span><span class="k">return</span> <span class="o">*</span><span class="n">ite</span><span class="p">;}</span>
+
+<span class="n">MyIter</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">ite</span><span class="p">(</span><span class="k">new</span> <span class="nf">int</span><span class="p">(</span><span class="mi">8</span><span class="p">));</span>
+<span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">func</span><span class="p">(</span><span class="n">ite</span><span class="p">);</span>
+</code></pre></div></div>
+<p>上面可以实现对类的特例化别名，但是对于基本数据类型却不可以，因此我们需要使用特例化模板<code class="language-plaintext highlighter-rouge">template&lt;&gt;</code>来对基本的数据类型进行封装;STL中提供了traits特性来对数据进行封装和改进。</p>
+
+<p>traits意义在于，如果I定义有自己的value type,那么通过这个traits的作用，萃取出来的value_type就是I::value_type。这样traits就可以拥有特例化版本。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-27-16-01-10.png" alt="traits特性" /></p>
+
+<p>常用的迭代器类型有5种：</p>
+
+<ul>
+  <li>value_type: 迭代器所指对象的型别。</li>
+  <li>difference_type:两个迭代器之间的距离，因此也可以用来表示一个容器的最大容量。表示头尾之间的距离参数。其原型是<code class="language-plaintext highlighter-rouge">typedef ptrdiff_t difference_type</code>;使用时可以用<code class="language-plaintext highlighter-rouge">typename iterator_traits&lt;I&gt;::difference_type</code></li>
+  <li>reference_type: <code class="language-plaintext highlighter-rouge">typedef const T&amp; reference type</code>
+    <ul>
+      <li>迭代器分为两种<code class="language-plaintext highlighter-rouge">const</code>和非<code class="language-plaintext highlighter-rouge">const</code>；不允许/允许改变所指内容的对象。</li>
+    </ul>
+  </li>
+  <li>pointer type 主要还是对象的指针类型。</li>
+  <li>iterator_category: 主要用于大规模的迭代器</li>
+</ul>
+
+<p>根据移动特性与施行操作，迭代器被分为5类</p>
+
+<ul>
+  <li>input iterator:这种迭代器所指的对象，不允许外界改变。只读(read only)</li>
+  <li>output Iterator:唯写(write only)</li>
+  <li>Forward Iterator:允许“写入型”算法(如replace())在此种迭代器所形成的区间上进行读写操作。</li>
+  <li>Bidirectional Iterator:可以双向移动。某些算法需要逆向走访某个迭代器区间(例如逆向拷贝某范围内的元素)，可以使用Bidirectional Iterators。</li>
+  <li>Random Access Iterator: 前四中迭代器都只提供一部分指针算术能力，第五种则涵盖所有指针和算术能力，包括p+n,p-n,p[n],p1-p2,p1小于p2。</li>
+</ul>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-27-16-43-29.png" alt="迭代器的分类和从属关系" />;</p>
+
+<h3 id="35-stditerator的保证">3.5 std::iterator的保证</h3>
+
+<p>STL提供了一个iterator class 。每个新设计的迭代器都继承自它，可以保证STL所需之规范</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span> <span class="o">&lt;</span>
+      <span class="k">class</span> <span class="nc">Category</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">T</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">Distance</span><span class="o">=</span><span class="kt">ptrdiff_t</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">Pointer</span><span class="o">=</span><span class="n">T</span><span class="o">*</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">Reference</span><span class="o">=</span><span class="n">T</span><span class="o">&amp;</span>
+          <span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">iterator</span>
+<span class="p">{</span>
+  <span class="k">typedef</span> <span class="n">Category</span> <span class="n">iterator_category</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">T</span> <span class="n">value_type</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">Distance</span> <span class="n">difference_type</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">Pointer</span> <span class="n">pointer</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">Reference</span> <span class="n">reference</span><span class="p">;</span>
+  
+<span class="p">};</span>
+
+<span class="c1">//使用</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">iterator</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">forward_iterator_tag</span><span class="p">,</span><span class="n">Item</span><span class="o">&gt;</span> 
+</code></pre></div></div>
+<p>纯粹的接口类型类，因此没有额外的负担。</p>
+
+<p>总结：traits编程技法大量用于STL实现品中，利用“内嵌型别”的编程技巧与编译器的template参数推导功能,增强了c++的类型推导能力。</p>
+
+<h3 id="36-iterator源码完整重列">3.6 iterator源码完整重列</h3>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//源自 &lt;stl_iterator.h&gt;</span>
+
+<span class="k">struct</span> <span class="nc">input_iterator_tag</span><span class="p">{};</span>
+<span class="k">struct</span> <span class="nc">output_iterator_tag</span><span class="p">{};</span>
+<span class="k">struct</span> <span class="nc">forward_iterator_tag</span><span class="o">:</span><span class="k">public</span> <span class="n">input_iterator_tag</span><span class="p">{};</span>
+<span class="k">struct</span> <span class="nc">bidirectional_iterator_tag</span><span class="o">:</span><span class="k">public</span> <span class="n">forward_iterator_tag</span><span class="p">{};</span>
+<span class="k">struct</span> <span class="nc">random_access_iterator_tag</span><span class="o">:</span><span class="k">public</span> <span class="n">bidirectional_iterator_tag</span><span class="p">{};</span>
+<span class="c1">//迭代器封装类</span>
+
+<span class="k">template</span> <span class="o">&lt;</span>
+      <span class="k">class</span> <span class="nc">Category</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">T</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">Distance</span><span class="o">=</span><span class="kt">ptrdiff_t</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">Pointer</span><span class="o">=</span><span class="n">T</span><span class="o">*</span><span class="p">,</span>
+      <span class="k">class</span> <span class="nc">Reference</span><span class="o">=</span><span class="n">T</span><span class="o">&amp;</span>
+          <span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">iterator</span>
+<span class="p">{</span>
+  <span class="k">typedef</span> <span class="n">Category</span> <span class="n">iterator_category</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">T</span> <span class="n">value_type</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">Distance</span> <span class="n">difference_type</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">Pointer</span> <span class="n">pointer</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">Reference</span> <span class="n">reference</span><span class="p">;</span>
+  
+<span class="p">};</span>
+<span class="c1">//traits</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Iterator</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">iterator_traits</span><span class="p">{</span>
+  <span class="k">typedef</span> <span class="k">typename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">iterator_category</span> <span class="n">iterator_category</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="k">typename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">value_type</span> <span class="n">value_type</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="k">typename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">difference_type</span> <span class="n">difference_type</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="k">typename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">pointer</span> <span class="n">pointer</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="k">typename</span> <span class="n">Iterator</span><span class="o">::</span><span class="n">reference</span> <span class="n">reference</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">//为原生指针而设计的traits偏特化版</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">iteraror_traits</span><span class="o">&lt;</span><span class="n">T</span><span class="o">*&gt;</span>
+<span class="p">{</span>
+    <span class="k">typedef</span> <span class="n">random_access_iterator_tag</span> <span class="n">iterator_category</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="n">T</span> <span class="n">value_type</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="kt">ptrdiff_t</span> <span class="n">difference_type</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="n">T</span><span class="o">*</span> <span class="n">pointer</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">reference</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="p">...</span>
+
+</code></pre></div></div>
+
+<h3 id="sgi-stl的私房菜-__type_traits">SGI STL的私房菜 __type_traits</h3>
+
+<p>iterator_traits负责萃取迭代器的特性，__type_traits则负责萃取型别(type)的特性。它提供了一种机制，允许针对不同的型别属性，在编译时期完成函数派送决定。</p>
+
+:ET

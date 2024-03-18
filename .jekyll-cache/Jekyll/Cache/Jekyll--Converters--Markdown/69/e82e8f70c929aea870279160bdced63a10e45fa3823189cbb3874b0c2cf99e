@@ -1,0 +1,529 @@
+I"�<blockquote>
+  <p>2019-11-05 20:25:49</p>
+</blockquote>
+
+<h1 id="linux内核设计与实现-学习笔记-五">Linux内核设计与实现 学习笔记 (五)</h1>
+
+<hr />
+
+<h2 id="第-16-章-页高速缓存和页回写">第 16 章 页高速缓存和页回写</h2>
+
+<p>页高速缓存(cache)是Linux内核实现的磁盘缓存。主要用来减少对磁盘的I/O操作。通过将磁盘中的数据缓存在物理内存中，把对磁盘数据的访问变为对物理内存的访问。</p>
+
+<h3 id="161-缓存手段">16.1 缓存手段</h3>
+
+<p>页缓存是由内存中的物理页面组成的对应磁盘上的物理块。read()操作时，首先检查页是否为在内存中。如果在则直接读取，称为缓存命中。不再则进行中断。</p>
+
+<h4 id="1611-写缓存手段">16.1.1 写缓存手段</h4>
+
+<p>存在写缓存手段如下：</p>
+
+<ul>
+  <li>不缓存(nowrite):不去缓存任何写操作；直接写到磁盘</li>
+  <li>写透缓存(write-through cache):自动更新内存缓存；缓存数据时刻与后备存储保持同步。</li>
+  <li>回写(Linux采用)：程序页操作直接写入到缓存中，后端存储不会立刻更新；将高速缓存中的页标记成“脏”，并将其添加到脏页链表中。然后由一个进程(回写进程)周期性将脏页链表中的页写回到磁盘。最后清理脏页标识。</li>
+</ul>
+
+<h4 id="1612-缓存回收">16.1.2 缓存回收</h4>
+
+<p>Linux中的脏页回收策略是，通过选择干净页进行简单的替换。如果缓存中没有足够的干净页，内核将强制地进行回写操作，腾出尽可能多的页。页的回收策略方式如下：</p>
+
+<ul>
+  <li>最近最少使用(RLU)：</li>
+  <li>双链策略(RLU/2)：RLU链表的改进，维护两个链表：活跃链表和非活跃链表。活跃上的不会被换出，非活跃上的会被换出，基本上都是尾部加入头部移除。活跃链表数量超过非活跃链表时，将会将多余的头页面重新移回到非活跃链表中，以便能再被回收。</li>
+</ul>
+
+<h3 id="162-linux-页高速缓存">16.2 Linux 页高速缓存</h3>
+
+<h4 id="1621-address_space对象">16.2.1 address_space对象</h4>
+
+<p>页高速缓存可能包含了多个不连续的物理磁盘块。它可以通过扩展inode结构体支持I/O操作。为了更好的性能，其使用address_space结构体。其与vm_are_struct的物理地址对等。文件只能有一个address_sapce可以有多个vm_area_struct即虚拟地址可以有多个，但是物理内存只能有一份。其数据结构定义如下：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">address_space</span> <span class="p">{</span>
+	<span class="k">struct</span> <span class="n">inode</span>		<span class="o">*</span><span class="n">host</span><span class="p">;</span>		<span class="cm">/* 拥有节点 */</span>
+	<span class="k">struct</span> <span class="n">radix_tree_root</span>	<span class="n">page_tree</span><span class="p">;</span>	<span class="cm">/* 包含全部页面的radix树 */</span>
+	<span class="n">spinlock_t</span>		<span class="n">tree_lock</span><span class="p">;</span>	<span class="cm">/* 保护页面的自旋锁 */</span>
+	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">nrpages</span><span class="p">;</span>	<span class="cm">/* 页面总数 */</span>
+	<span class="n">pgoff_t</span>			<span class="n">writeback_index</span><span class="p">;</span><span class="cm">/* writeback starts here */</span>
+	<span class="k">struct</span> <span class="n">address_space_operations</span> <span class="o">*</span><span class="n">a_ops</span><span class="p">;</span>	<span class="cm">/* methods */</span>
+	<span class="k">struct</span> <span class="n">list_head</span>	<span class="n">i_mmap</span><span class="p">;</span>		<span class="cm">/* 私有映射连败哦 */</span>
+	<span class="k">struct</span> <span class="n">list_head</span>	<span class="n">i_mmap_shared</span><span class="p">;</span>	<span class="cm">/* 共享map链表 */</span>
+	<span class="k">struct</span> <span class="n">semaphore</span>	<span class="n">i_shared_sem</span><span class="p">;</span>	<span class="cm">/* 保护所有的链表 */</span>
+	<span class="n">atomic_t</span>		<span class="n">truncate_count</span><span class="p">;</span>	<span class="cm">/* 截断计数 */</span>
+	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">flags</span><span class="p">;</span>		<span class="cm">/* gfp_mask掩码和错误标志 */</span>
+	<span class="k">struct</span> <span class="n">backing_dev_info</span> <span class="o">*</span><span class="n">backing_dev_info</span><span class="p">;</span> <span class="cm">/* 预读信息等 */</span>
+	<span class="n">spinlock_t</span>		<span class="n">private_lock</span><span class="p">;</span>	<span class="cm">/* 私有address_space锁 */</span>
+	<span class="k">struct</span> <span class="n">list_head</span>	<span class="n">private_list</span><span class="p">;</span>	<span class="cm">/* address_space链表 */</span>
+	<span class="k">struct</span> <span class="n">address_space</span>	<span class="o">*</span><span class="n">assoc_mapping</span><span class="p">;</span>	<span class="cm">/* 相关缓冲 */</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>其对应的操作如下：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">address_space_operations</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">writepage</span><span class="p">)(</span><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="n">page</span><span class="p">,</span> <span class="k">struct</span> <span class="n">writeback_control</span> <span class="o">*</span><span class="n">wbc</span><span class="p">);</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">readpage</span><span class="p">)(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="p">);</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">sync_page</span><span class="p">)(</span><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="p">);</span>
+
+	<span class="cm">/* Write back some dirty pages from this mapping. */</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">writepages</span><span class="p">)(</span><span class="k">struct</span> <span class="n">address_space</span> <span class="o">*</span><span class="p">,</span> <span class="k">struct</span> <span class="n">writeback_control</span> <span class="o">*</span><span class="p">);</span>
+
+	<span class="cm">/* Set a page dirty */</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">set_page_dirty</span><span class="p">)(</span><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="n">page</span><span class="p">);</span>
+
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">readpages</span><span class="p">)(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">filp</span><span class="p">,</span> <span class="k">struct</span> <span class="n">address_space</span> <span class="o">*</span><span class="n">mapping</span><span class="p">,</span>
+			<span class="k">struct</span> <span class="n">list_head</span> <span class="o">*</span><span class="n">pages</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">nr_pages</span><span class="p">);</span>
+
+	<span class="cm">/*
+	 * ext3 requires that a successful prepare_write() call be followed
+	 * by a commit_write() call - they must be balanced
+	 */</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">prepare_write</span><span class="p">)(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="p">,</span> <span class="kt">unsigned</span><span class="p">,</span> <span class="kt">unsigned</span><span class="p">);</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">commit_write</span><span class="p">)(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="p">,</span> <span class="kt">unsigned</span><span class="p">,</span> <span class="kt">unsigned</span><span class="p">);</span>
+	<span class="cm">/* Unfortunately this kludge is needed for FIBMAP. Don't use it */</span>
+	<span class="n">sector_t</span> <span class="p">(</span><span class="o">*</span><span class="n">bmap</span><span class="p">)(</span><span class="k">struct</span> <span class="n">address_space</span> <span class="o">*</span><span class="p">,</span> <span class="n">sector_t</span><span class="p">);</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">invalidatepage</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span><span class="p">);</span>
+	<span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">releasepage</span><span class="p">)</span> <span class="p">(</span><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span>
+	<span class="kt">ssize_t</span> <span class="p">(</span><span class="o">*</span><span class="n">direct_IO</span><span class="p">)(</span><span class="kt">int</span><span class="p">,</span> <span class="k">struct</span> <span class="n">kiocb</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">iovec</span> <span class="o">*</span><span class="n">iov</span><span class="p">,</span>
+			<span class="n">loff_t</span> <span class="n">offset</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">nr_segs</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<h4 id="1623-基树">16.2.3 基树</h4>
+
+<p>每个address_space对象都有一个唯一的基树(radix tree)来进行文件偏移量的搜索。页面高速缓存的搜索函数find_get_page()要调用函数radix_tree_lookup(),该函数会指定基树中搜索指定页面。</p>
+
+<h4 id="1625-以前的页散列表">16.2.5 以前的页散列表</h4>
+
+<p>2.6之前，系统通过维护一个全局散列表进行检索。存在种种缺点：如锁的争用情况严重，搜索范围大等。</p>
+
+<h3 id="163-缓冲区高速缓存">16.3 缓冲区高速缓存</h3>
+
+<p>内核提供bread()函数实现从磁盘读取越高块的底层操作；通过缓存，磁盘块映射到他们相关的内存页。</p>
+
+<h3 id="flusher线程">flusher线程</h3>
+
+<p>一下三种情况发生时,脏页被写回磁盘：</p>
+
+<ul>
+  <li>当空闲内存低于一个特定的阀值时</li>
+  <li>脏页在内存中驻留时间超过一个特定的阀值时；flusher线程后台例程会被周期性唤醒来执行这个操作。</li>
+  <li>用户进程调用sync()和fsync()系统调用时；内核会按照要求执行回写动作。</li>
+</ul>
+
+<p>内核中由一群内核线程(flusher线程)执行这三种工作。当空闲内存比阀值(dirty_background_ratio)还低时，内核便会调用flusher_thread()唤醒一个或者多个flusher线程，随后flusher线程进一步调用函数bdi_writeback_all()开始将脏页写回磁盘。</p>
+
+<p>系统管理员可以在<code class="language-plaintext highlighter-rouge">/proc/sys/vm</code>中设置回写相关的参数，也可以通过sysctl系统调用设置它们。pdflush相关的所有可设置变量如下：</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-11-05-22-07-17.png" alt="可设置变量" /></p>
+
+<h4 id="1641-膝上型计算机模式">16.4.1 膝上型计算机模式</h4>
+
+<p>它是一种特殊的页回写策略：将硬盘的转动的机械行为最小化，允许硬盘尽可能长时间的停滞，以此延长电池供电。可以通过<code class="language-plaintext highlighter-rouge">/proc/sys/vm/laptop_mode</code>文件进行配置。向其中写入1开启。其会找准磁盘运转的实际，把所有其它的物理磁盘I/O、刷新脏页缓冲等统统写回到磁盘。来减少写磁盘要求的主动运行。</p>
+
+<h4 id="1643-避免拥塞的方法使用多线程">16.4.3 避免拥塞的方法：使用多线程</h4>
+
+<p>页回写时可能存在拥塞。使用多个回写线程并发执行，避免一个bdflush堵塞在某个队列的处理(正在等待将请求提交给磁盘的I/O请求队列)上。这也是使用多个flusher的原因。不同的flusher线程处理不同的设备队列。</p>
+
+<p>pflush线程采取了拥塞回避策略：主动尝试从那些没有拥塞的对了回写页。</p>
+
+<h2 id="第-17-章-设备与模块">第 17 章 设备与模块</h2>
+
+<p>设备驱动和设备管理，将讨论四种内核成分：</p>
+
+<ul>
+  <li>设备类型：所有Unix系统中为了统一普通设备的操作所采用的分类</li>
+  <li>模块：Linux内核中用于按需加载和卸载目标码的机制</li>
+  <li>内核对象：内核数据结构中支持面向对象的简单操作，还支持维护对象之间的父子关系</li>
+  <li>sysfs:表示系统设备树的一个文件系统</li>
+</ul>
+
+<h3 id="171-设备类型">17.1 设备类型</h3>
+
+<p>在Linux以及所有Unix系统中，设备被分为以下三种类型：</p>
+
+<ul>
+  <li>块设备(blkdev)：以寻址块为单位；块大小随设备不同而不同；块节点通常被挂载为文件系统。</li>
+  <li>字符设备：cdev，通常是不可寻址的；通过字符设备节点的特殊文件来访问</li>
+  <li>网络设备(ethernet devices)：不是通过设备节点来访问，而是通过套接字API这样的特殊接口来访问。</li>
+  <li>虚拟设备：设备驱动是虚拟的，仅仅提供访问内核功能。如随机数发生器(/dev/random和/dev/urandom).空设备(/dev/null)、零设备(/dev/zero)、满设备(/dev/full)、内存设备(/dev/mem)</li>
+</ul>
+
+<h3 id="172-模块">17.2 模块</h3>
+
+<p>Linux内核是模块化的，允许内核在运行时动态地向其中插入或者从中删除代码。代码集成的二进制文件；即所谓的可装载内核模块。下面是如何编写一个自己的内核模块</p>
+
+<h4 id="1721-hello-word">17.2.1 Hello Word</h4>
+<p>下面是一个简单的helloword内核模块</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;linux/init.h&gt;
+#include &lt;linux/module.h&gt;
+#include &lt;linux/kernel.h&gt;
+</span>
+<span class="cm">/*
+hello word 初始化函数
+*/</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="nf">hello_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span><span class="p">,</span><span class="s">"I bear a charmed life .</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/*
+hello word 退出函数，当模块卸载时被调用 
+*/</span>
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">hello_exit</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">"out,Out,brief candle!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="cm">/*
+初始化模块，所有的初始化函数都必须满足下面的格式： int my_init(void);
+*/</span>
+<span class="n">module_init</span><span class="p">(</span><span class="n">hello_init</span><span class="p">);</span>
+<span class="cm">/*
+初始化模块，所有的初始化函数都必须满足下面的格式： int my_init(void);
+*/</span>
+<span class="n">module_exit</span><span class="p">(</span><span class="n">hello_exit</span><span class="p">);</span>
+<span class="cm">/* 宏定义，指定模板的版权 */</span>
+<span class="n">MODULE_LICENSE</span><span class="p">(</span><span class="s">"GPL"</span><span class="p">);</span>
+<span class="cm">/* 指定代码作者 */</span>
+<span class="n">MODULE_AUTHOR</span><span class="p">(</span><span class="s">"Shakespeare"</span><span class="p">);</span>
+<span class="cm">/* 指定代码的简要描述 */</span>
+<span class="n">MODULE_DESCRIPTION</span><span class="p">(</span><span class="s">"A Hello,Word Module"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h4 id="1722-构建模块">17.2.2 构建模块</h4>
+<p><em>参考链接：</em></p>
+
+<ul>
+  <li><a href="https://blog.csdn.net/runner668/article/details/80919765">linux内核中添加模块</a></li>
+  <li><a href="https://blog.csdn.net/XU18829898203/article/details/84988383">Linux添加一个内核模块</a>
+Linux中采用了新的“kbuild”构建系统，相对比从前更加容易。需要将代码房子啊内核源代码树中。</li>
+</ul>
+
+<p>主要构建步奏如下：</p>
+
+<ol>
+  <li>放在内核源代码中：将文件放在正确的位置。如字符设备放在drivers/char/目录下，块设备放在drivers/block/目录下，usb则放在drivers/usb/目录下。如果文件太多可以创建自己的目录。此时需要更改对应的Makefile文件，在<code class="language-plaintext highlighter-rouge">obj-m += </code>后面添加子文件名称；<code class="language-plaintext highlighter-rouge">obj-$(CONFIG_FISHING_POLE) +=</code>添加新的配置选项文件夹。最后在子文件夹中添加Makefie文件，并添加目标文件<code class="language-plaintext highlighter-rouge">obj-m +=fishing.o</code>最终会生成扩展名为<code class="language-plaintext highlighter-rouge">.ko</code>的文件。</li>
+  <li>放在内核源代码外：非内核源代码目录中，正常创建文件夹fishing和Makefile文件。添加命令如下：</li>
+</ol>
+
+<pre><code class="language-makefie">#设置单个文件编译目标
+obj-m:=fishing.o
+#设置多个文件编译目标(多个文件组成)
+fishing-objs:=fishing-main.o fishing-line.o
+</code></pre>
+<p>使用make时需要缇娜及内核源码位置如下：</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">make</span> <span class="o">-</span><span class="n">C</span> <span class="o">/</span><span class="n">kernel</span><span class="o">/</span><span class="n">source</span><span class="o">/</span><span class="n">location</span> <span class="n">SUBDIRS</span><span class="o">=</span><span class="err">$</span><span class="n">PWD</span> <span class="n">modules</span>
+</code></pre></div></div>
+<ol>
+  <li>使用<code class="language-plaintext highlighter-rouge">make modules_install</code>命令来进行编译好的模块的安装。编译后的模块被安装到目录<code class="language-plaintext highlighter-rouge">/lib/modeules/version/kernel/</code>下。</li>
+  <li>产生模块依赖性：模块之间存在依赖性，每次启动时，内核依赖信息更新。也可以使用<code class="language-plaintext highlighter-rouge">sudo depmod/depmod -A</code>命令更新依赖。模块依赖的相关信息存放在<code class="language-plaintext highlighter-rouge">/lib/modules/version/modeules.dep</code>文件中</li>
+  <li>载入模块：使用<code class="language-plaintext highlighter-rouge">insmod</code>命令进行模块的载入。如<code class="language-plaintext highlighter-rouge">insmod ${module_name}.ko</code>;也可以使用<code class="language-plaintext highlighter-rouge">rmmod ${module_name}.ko</code>进行卸载模块。也可以使用<code class="language-plaintext highlighter-rouge">modprobe</code>模块</li>
+  <li>管理配置选项：在新模块文件夹中，设置<code class="language-plaintext highlighter-rouge">kconfig</code>文件，并在一个已经存在的配置文件中将它引入<code class="language-plaintext highlighter-rouge">source "drivers/char/flshing/Kconfig"</code>;里面可以设置一些相关的配置参数；(详细信息:<a href="https://blog.csdn.net/jianwen_hi/article/details/53398141">Linux内核配置Kconfig语法</a>)</li>
+  <li>模块参数:可以通过<code class="language-plaintext highlighter-rouge">module_param(name,type,perm)</code>进行相关模块参数的读取(定义在<code class="language-plaintext highlighter-rouge">linux/module.h</code>头文件中)。下面是一个简单的使用示例；详细请参考:<a href="https://www.cnblogs.com/mylinux/p/5670279.html">linux驱动: 如何向模块传递参数, module_param和module_param_array</a>；<a href="https://www.cnblogs.com/s1nn/p/6538084.html">内核模块参数传递–module_param()函数</a></li>
+</ol>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* 定义模块变量 */</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="n">fish</span><span class="p">[</span><span class="n">MAX_FISH</span><span class="p">];</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="n">nr_fish</span><span class="p">;</span>
+<span class="n">module_param_array</span><span class="p">(</span><span class="n">fish</span><span class="p">,</span><span class="kt">int</span><span class="p">,</span><span class="o">&amp;</span><span class="n">nr_fish</span><span class="p">,</span><span class="mo">0444</span><span class="p">);</span>
+<span class="cm">/* 将内部参数数组命名区别于外部参数，使用宏如下： */</span>
+<span class="n">module_param_array_named</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">array</span><span class="p">,</span><span class="n">type</span><span class="p">,</span><span class="n">nump</span><span class="p">,</span><span class="n">perm</span><span class="p">);</span>
+<span class="cm">/*MODULE_PARM_DESC 描述关键宏 */</span>
+<span class="k">static</span> <span class="kt">unsigned</span> <span class="kt">short</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="n">module_param</span><span class="p">(</span><span class="n">size</span><span class="p">,</span><span class="n">ushort</span><span class="p">,</span><span class="mo">0644</span><span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="s">"A integer variable"</span><span class="p">);</span>
+<span class="cm">/* 模块实例代码 */</span>
+<span class="cm">/*hello.c*/</span>
+<span class="cp">#include &lt;linux/module.h&gt;
+#include &lt;linux/moduleparam.h&gt;
+#include &lt;linux/kernel.h&gt;
+</span>
+<span class="cp">#define MAX_ARRAY 6
+</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="n">int_var</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">static</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str_var</span> <span class="o">=</span> <span class="s">"default"</span><span class="p">;</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="n">int_array</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+<span class="kt">int</span> <span class="n">narr</span><span class="p">;</span>
+<span class="cm">/* 初始化参数 */</span>
+<span class="n">module_param</span><span class="p">(</span><span class="n">int_var</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="mo">0644</span><span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">int_var</span><span class="p">,</span> <span class="s">"A integer variable"</span><span class="p">);</span>
+
+<span class="n">module_param</span><span class="p">(</span><span class="n">str_var</span><span class="p">,</span> <span class="n">charp</span><span class="p">,</span> <span class="mo">0644</span><span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">str_var</span><span class="p">,</span> <span class="s">"A string variable"</span><span class="p">);</span>
+
+<span class="n">module_param_array</span><span class="p">(</span><span class="n">int_array</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">narr</span><span class="p">,</span> <span class="mo">0644</span><span class="p">);</span>
+<span class="n">MODULE_PARM_DESC</span><span class="p">(</span><span class="n">int_array</span><span class="p">,</span> <span class="s">"A integer array"</span><span class="p">);</span>
+<span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">hello_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+       <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+       <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">"Hello, my LKM.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+       <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">"int_var %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">int_var</span><span class="p">);</span>
+       <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">"str_var %s.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">str_var</span><span class="p">);</span>
+
+       <span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">narr</span><span class="p">;</span> <span class="n">i</span> <span class="o">++</span><span class="p">){</span>
+               <span class="n">printk</span><span class="p">(</span><span class="s">"int_array[%d] = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">int_array</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+       <span class="p">}</span>
+       <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="n">__exit</span> <span class="nf">hello_exit</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+       <span class="n">printk</span><span class="p">(</span><span class="n">KERN_ALERT</span> <span class="s">"Bye, my LKM.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="n">module_init</span><span class="p">(</span><span class="n">hello_init</span><span class="p">);</span>
+<span class="n">module_exit</span><span class="p">(</span><span class="n">hello_exit</span><span class="p">);</span>
+<span class="n">MODULE_LICENSE</span><span class="p">(</span><span class="s">"GPL"</span><span class="p">);</span>
+<span class="n">MODULE_AUTHOR</span><span class="p">(</span><span class="s">"ydzhang"</span><span class="p">);</span>
+<span class="n">MODULE_DEION</span><span class="p">(</span><span class="s">"This module is a example."</span><span class="p">);</span>
+</code></pre></div></div>
+<ol>
+  <li>导出符号表：模块被载入后，动态地链接到内核中，需要使用<code class="language-plaintext highlighter-rouge">EXPORT_SYMBOL()</code>和<code class="language-plaintext highlighter-rouge">EXPORT_SYMBOL_GPL()</code>进行显式导出后的外部函数，才可以被动态库调用。insmod使用公共内核符号表来解析模块中未定义的符号。</li>
+</ol>
+
+<p>公共内核符号表中包含了所有的全局内核项（即函数和变量）的地址，这是实现模块化驱动程序所必需的。当模块被装入内核后，它所导出的任何内核符号都会变成内核符号表的一部分。在通常情况下，模块只需实现自己的功能，而无需导出任何符号。但是，如果其他模块需要从某个模块中获得好处时，我们也可以
+导出符号。</p>
+
+<p>详细请参考：<a href="https://blog.csdn.net/haolipengzhanshen/article/details/88025220">Linux 内核符号表</a>;<a href="https://blog.csdn.net/gs1069405343/article/details/50478758">内核模块编程之内核符号导出</a>;<a href="https://blog.csdn.net/T146lLa128XX0x/article/details/80102588">Linux内核符号表</a></p>
+
+<h3 id="173-设备模型">17.3 设备模型</h3>
+
+<p>2.6之后，提供了统一的设备模型(device model)，来表示设备，并描述其在系统中的拓扑结构。</p>
+
+<h4 id="1731-kobject">17.3.1 kobject</h4>
+
+<p>它是设备模型的核心。由struct kobject结构体表示，定义于头文件&lt;linux/kobject.h&gt;中。它类似于C#或者java这些面向对象语言中的对象(object)类，提供了诸如引用计数、名称和父指针等字段。可以创建对象的层次结构:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">struct</span> <span class="n">kobject</span> <span class="p">{</span>
+	<span class="cm">/* 指向kobject的名称 */</span>
+	<span class="kt">char</span>			<span class="o">*</span><span class="n">k_name</span><span class="p">;</span>
+	<span class="cm">/* 名称 */</span>
+	<span class="kt">char</span>			<span class="n">name</span><span class="p">[</span><span class="n">KOBJ_NAME_LEN</span><span class="p">];</span>
+	<span class="cm">/* 引用计数 */</span>
+	<span class="n">atomic_t</span>		<span class="n">refcount</span><span class="p">;</span>
+	<span class="cm">/* 链表节点 */</span>
+	<span class="k">struct</span> <span class="n">list_head</span>	<span class="n">entry</span><span class="p">;</span>
+	<span class="cm">/* 父指针 */</span>
+	<span class="k">struct</span> <span class="n">kobject</span>		<span class="o">*</span><span class="n">parent</span><span class="p">;</span>
+	<span class="cm">/* 关键设置 */</span>
+	<span class="k">struct</span> <span class="n">kset</span>		<span class="o">*</span><span class="n">kset</span><span class="p">;</span>
+	<span class="cm">/* 对象类型 */</span>
+	<span class="k">struct</span> <span class="n">kobj_type</span>	<span class="o">*</span><span class="n">ktype</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">dentry</span>		<span class="o">*</span><span class="n">dentry</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>设备常用的结构体cdev定义在<code class="language-plaintext highlighter-rouge">&lt;linux/cfev.h&gt;</code>中;关键内容如下：</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">cdev</span> <span class="p">{</span>
+	<span class="k">struct</span> <span class="n">kobject</span> <span class="n">kobj</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">module</span> <span class="o">*</span><span class="n">owner</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">file_operations</span> <span class="o">*</span><span class="n">ops</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">list_head</span> <span class="n">list</span><span class="p">;</span>
+	<span class="n">dev_t</span> <span class="n">dev</span><span class="p">;</span>
+	<span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">count</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<p>嵌入kobject的结构体可以成为对象层次架构中的一部分。</p>
+
+<h4 id="1732-ktype">17.3.2 ktype</h4>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//linux/kobject.h</span>
+
+<span class="k">struct</span> <span class="n">kobj_type</span> <span class="p">{</span>
+	<span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">release</span><span class="p">)(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="p">);</span>
+	<span class="cm">/* 指向系统文件选项结构体，描述了sysfs文件的读写时的特性 */</span>
+	<span class="k">struct</span> <span class="n">sysfs_ops</span>	<span class="o">*</span> <span class="n">sysfs_ops</span><span class="p">;</span>
+	<span class="cm">/* 指向了attribute结构体数组。定义了相关的默认属性，主要用于映射成文件 */</span>
+	<span class="k">struct</span> <span class="n">attribute</span>	<span class="o">**</span><span class="n">default_attrs</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<p>对象模型中描述kobject所具有的普遍特性；</p>
+
+<h4 id="1733-kset">17.3.3 kset</h4>
+
+<p>是kobject对象的集合体。把它看成是一个容器，可将所有相关的kobject对象，置于同一个位置。其相关代码如下：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">kset</span> <span class="p">{</span>
+	<span class="k">struct</span> <span class="n">subsystem</span>	<span class="o">*</span><span class="n">subsys</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">kobj_type</span>	<span class="o">*</span><span class="n">ktype</span><span class="p">;</span>
+	<span class="cm">/* 链接set中所有的kobject对象 */</span>
+	<span class="k">struct</span> <span class="n">list_head</span>	<span class="n">list</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">kobject</span>		<span class="n">kobj</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">kset_hotplug_ops</span>	<span class="o">*</span> <span class="n">hotplug_ops</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>三者的数据关系如下：</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-11-06-19-36-06.png" alt="数据结构的关系" /></p>
+
+<h4 id="1735-管理和操作kobject">17.3.5 管理和操作kobject</h4>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">;</span>
+<span class="n">kobj</span><span class="o">=</span><span class="n">kmalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">kobj</span><span class="p">),</span><span class="n">GFP_KERNEL</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">obj</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+<span class="n">memset</span><span class="p">(</span><span class="n">kobj</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">kobj</span><span class="p">));</span>
+<span class="n">kobj</span><span class="o">-&gt;</span><span class="n">kset</span><span class="o">=</span><span class="n">my_set</span><span class="p">;</span>
+<span class="n">kobject_init</span><span class="p">(</span><span class="n">kobj</span><span class="p">,</span><span class="n">my_ktype</span><span class="p">);</span>
+
+<span class="cm">/* 使用create函数直接创建 */</span>
+<span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">;</span>
+<span class="n">kobj</span><span class="o">=</span><span class="n">kobject_create</span><span class="p">();</span>
+<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">kobj</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+</code></pre></div></div>
+<h4 id="1736-引用计数">17.3.6 引用计数</h4>
+
+<p>递增和递减引用计数的方式如下：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* 增加一个引用计数 */</span>
+<span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="nf">kobject_get</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">);</span>
+<span class="cm">/* 降低一个引用计数 */</span>
+<span class="kt">void</span> <span class="nf">kobject_put</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">);</span>
+</code></pre></div></div>
+<p>当引用计数为0时，会调用release()函数。进行变量的重置和内存的释放。</p>
+
+<h3 id="174-sysfs">17.4 sysfs</h3>
+
+<p>文件系统，是一个处于内存中的虚拟文件系统，他为我们提供了kobject对象层次结构的视图。其将kobject对象与目录项(directory entries)紧密联系起来，通过dentry字段来实现。将其映射到文件上。将kobject形成内存中的目录文件。最终形成对象目录树。不同的文件夹对应着不同的设备。</p>
+
+<h4 id="1741-sysfs中添加和删除kobject">17.4.1 sysfs中添加和删除kobject</h4>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* 将kobject添加到sysfs中,kobject有父指针，则其文件存在在父文件夹下面 */</span>
+<span class="kt">int</span> <span class="nf">kobject_add</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">,</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">parent</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">fmt</span><span class="p">,...);</span>
+<span class="cm">/* 将创建和添加放在一起使用 */</span>
+<span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="nf">kobject_create_and_add</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">parent</span><span class="p">);</span>
+<span class="cm">/* 从中删除一个kobject目录 */</span>
+<span class="kt">void</span> <span class="nf">kobject_del</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h4 id="1742-向sysfs中添加文件">17.4.2 向sysfs中添加文件</h4>
+
+<ol>
+  <li>默认属性:</li>
+</ol>
+
+<p>默认的文件集合是通过kobject和kset中的ktype字段提供的。上文结构中的attribute属性包含将内核数据映射成为sysfs中的文件。其定义在<code class="language-plaintext highlighter-rouge">&lt;linux/sysfs.h&gt;</code>中：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">attribute</span> <span class="p">{</span>
+	<span class="cm">/* 属性名称 */</span>
+	<span class="kt">char</span>				<span class="o">*</span><span class="n">name</span><span class="p">;</span>
+	<span class="cm">/* 所属模块，如果存在 */</span>
+	<span class="k">struct</span> <span class="n">module</span> 		<span class="o">*</span><span class="n">owner</span><span class="p">;</span>
+	<span class="cm">/* 权限 */</span>
+	<span class="n">mode_t</span> 				<span class="n">mode</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<p>sysfs_ops字段则描述了如何使用它们。其定义在<code class="language-plaintext highlighter-rouge">linux/sysfs.h</code>中</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">sysfs_ops</span> <span class="p">{</span>
+	<span class="cm">/* 在sysfs文件时该方法被使用 */</span>
+	<span class="kt">ssize_t</span>	<span class="p">(</span><span class="o">*</span><span class="n">show</span><span class="p">)(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="p">,</span> <span class="k">struct</span> <span class="n">attribute</span> <span class="o">*</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="p">);</span>
+	<span class="cm">/* 在写sysfs文件时该方法被调用 */</span>
+	<span class="kt">ssize_t</span>	<span class="p">(</span><span class="o">*</span><span class="n">store</span><span class="p">)(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="p">,</span><span class="k">struct</span> <span class="n">attribute</span> <span class="o">*</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">size_t</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<p>show会拷贝attr提供的属性值到buffer指定的缓冲区中，缓冲区大小为PAGE_SIZE字节；读取成功，返回实际写入buffer的字节数，如果失败，则返回负的错误码。</p>
+
+<p>store()在写操作时调用，它会从buffer中读取size大小的字节，并将其存入attr表示的属性结构体变量中。缓冲区的大小是PAGE_SIZE或者更小。</p>
+
+<p>这组函数必须对所有的属性都进行I/O请求处理，所以它们通常需要维护某些通用映射来调用每个属性所特有的处理函数。</p>
+
+<ol>
+  <li>创建新属性和删除属性</li>
+</ol>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* 将新的属性添加到kobject中 */</span>
+<span class="kt">int</span> <span class="nf">sysfs_create_file</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="n">attribute</span> <span class="o">*</span><span class="n">attr</span><span class="p">);</span>
+<span class="cm">/* 创建一个符号链接 */</span>
+<span class="kt">int</span> <span class="nf">sysfs_create_link</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">,</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">target</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+<span class="cm">/* 删除新属性 */</span>
+<span class="kt">void</span> <span class="nf">sysfs_remove_file</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="n">attribute</span> <span class="o">*</span><span class="n">attr</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">sysfs_remove_link</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</code></pre></div></div>
+<ol>
+  <li>sysfs约定</li>
+</ol>
+
+<p>当前sysfs文件系统代替了以前需要由ioctl()和procfs文件系统完成的功能。sysfs提供内核到用户空间的服务。</p>
+
+<h4 id="1743-内核事件层">17.4.3 内核事件层</h4>
+
+<p>内核事件层，由内核空间传递到用户空间需要经过netlink.netlink是一个用于传送网络信息的多点传送套接字。</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* 内核空间向用户空间发送信号使用函数kobject_uevent() */</span>
+<span class="kt">int</span> <span class="nf">kobject_uevent</span><span class="p">(</span><span class="k">struct</span> <span class="n">kobject</span> <span class="o">*</span><span class="n">kobj</span><span class="p">,</span><span class="k">enum</span> <span class="n">kobject_action</span> <span class="n">action</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h2 id="第-18-章-调试">第 18 章 调试</h2>
+
+<h3 id="183-通过打印来调试">18.3 通过打印来调试</h3>
+
+<p>使用printk()来代替printf进行打印。</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">printk</span><span class="p">(</span><span class="n">KERN_DEBUG</span> <span class="s">"This is a debug notice</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+</code></pre></div></div>
+<p>日志等级如下：</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-11-06-21-48-53.png" alt="日志等级" /></p>
+
+<h4 id="1833-缓冲区记录">18.3.3 缓冲区记录</h4>
+
+<p>内核消息都被保存在一个LOG_BUF_LEN大小的环形队列中。其值可以在编译时的CONFIG_LOG_BUF_SHIFT中进行调整修改。当消息队列达到最大值时，会覆盖队列首部；方便解决同步和上下文中断。</p>
+
+<h4 id="1834-syslogd和klogd">18.3.4 syslogd和klogd</h4>
+
+<p>用户空间的守护进程klogd从记录缓冲区中获取内核消息，再通过syslogd守护进程将它们保存在系统日志文件中。klogd可以从<code class="language-plaintext highlighter-rouge">/proc/kmsg</code>系统文件中，也可以通过<code class="language-plaintext highlighter-rouge">syslog()</code>系统调用读取这些信息。</p>
+
+<h3 id="184-oops">18.4 oops</h3>
+
+<p>它是内核告知用户，内核错误；向终端输出错误信息，输出寄存器中保存的信息并输出可供追踪的线索。生成的错误文件，可以使用<code class="language-plaintext highlighter-rouge">ksymoops</code>或者<code class="language-plaintext highlighter-rouge">kallsyms</code>工具进行读取。</p>
+
+<h3 id="185-内核调试配置选项">18.5 内核调试配置选项</h3>
+
+<p>在内核编译，配置选项中，可以开启debug相关选项。</p>
+
+<h3 id="187-神奇的系统请求键">18.7 神奇的系统请求键</h3>
+
+<p>可以在定义<code class="language-plaintext highlighter-rouge">CONFIG_MAGIC_SYSRQ</code>选项来，直接通过键盘，向系统内核通信。可以使用<code class="language-plaintext highlighter-rouge">Sysrq-h</code>获取更多信息。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-11-06-22-01-15.png" alt="SysRq命令" /></p>
+
+<h3 id="188-内核调试的传奇">18.8 内核调试的传奇</h3>
+
+<p>kgdb是一个补丁，在远端主机上通过串口利用gdb的所有功能对内核进行调试。</p>
+
+<h3 id="189-探测系统">18.9 探测系统</h3>
+
+<p>fork()中使用uid来辨别子进程和主进程</p>
+
+<h2 id="第-19-章-可移植性">第 19 章 可移植性</h2>
+
+<p>C标准的char类型可以不带符号，但是有些体系结构上不同，要注意区别。</p>
+
+<p>如果一个变量的内存地址正好是它长度的整数倍，它是自然对齐的.指针转换后可能会出现内存对齐的问题。</p>
+
+<p>当内存中结构体不能满足各个成员自然对齐。编译器会创建填充，保证按照自然进行对齐。</p>
+
+<h3 id="195-字节序大小端">19.5 字节序(大小端)</h3>
+
+<p>它是指各个字节的顺序。处理器对字节取值时，可能将最低位(左边)当做第一个字节。也有可能是右边。可以使用如下代码进行判断</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">x</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+	<span class="cm">/* 低位优先 */</span>
+<span class="k">else</span>
+	<span class="cm">/* 高位优先 */</span>
+</code></pre></div></div>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-11-06-22-15-28.png" alt="高位优先" /></p>
+
+<p>x86基本都是低位优先</p>
+
+<h3 id="196-时间">19.6 时间</h3>
+
+<p>不同体系结构时钟HZ不同，时钟也不同。10章中已经讨论过了。</p>
+
+<h3 id="197-页长度">19.7 页长度</h3>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-11-06-22-18-20.png" alt="不同体系结构" /></p>
+:ET

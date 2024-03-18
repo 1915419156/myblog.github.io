@@ -1,0 +1,76 @@
+I"Z<h1 id="我的git学习笔记">我的Git学习笔记</h1>
+
+<blockquote>
+  <p>写作这篇文章是为了自己学习和使用git工具，防止自己遗忘，方便以后复习观看。</p>
+</blockquote>
+
+<hr />
+<p><em>参考链接</em>：<a href="https://git-scm.com/book/zh/v2">git book CN</a>;<a href="Git教程">廖雪峰的git教程</a>; <a href="http://marklodato.github.io/visual-git-guide/index-zh-cn.html">图解Git</a>; <a href="https://github.com/521xueweihan/git-tips/blob/master/README.md">Git的奇技淫巧</a>;</p>
+
+<h2 id="前言">前言</h2>
+<hr />
+<p>git 作为一个基本的管理工具，和SVN的最大区别在于他是分布式的。</p>
+
+<h2 id="git-原理">Git 原理</h2>
+<p>Git将文件区域分为工作目录（workspace）、暂存区（Index）、首部（HEAD）区域；工作目录是持有实际文件；暂存区（Index）临时保存你的改动；最后HEAD指向你最后一次提交的结果。</p>
+
+<p><img src="https://wangpengcheng.github.iotrees.png" alt="" /></p>
+
+<h2 id="git-基础操作git---简明指南">Git 基础操作（git - 简明指南）</h2>
+
+<p>一个git 代码管理的生命周期在于：创建-变更文件-添加HEAD-远程提交。</p>
+
+<ol>
+  <li>git 仓库的创建
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">git init</code>: 命令初始化git管理仓库</li>
+      <li><code class="language-plaintext highlighter-rouge">git clone /path/to/repository</code>: 创建本地的一个clone副本；</li>
+      <li><code class="language-plaintext highlighter-rouge">git clone username@host:/path/to/repository</code>: 从远端服务器上创建副本</li>
+    </ul>
+  </li>
+  <li>文件变更（将文件从工作区提交到暂存区）
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">git add &lt;filename&gt; </code>:添加文件</li>
+      <li><code class="language-plaintext highlighter-rouge">git add * </code>: 添加所有变更</li>
+      <li><code class="language-plaintext highlighter-rouge">git add . </code>: 添加当前文件夹下所有变更</li>
+    </ul>
+  </li>
+  <li>将文件添加到HEAD
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">git commit -m "xxxx"</code>: 将变更添加到HEAD区域；</li>
+    </ul>
+  </li>
+  <li>远程提交：将本地修改提交到远端；（可以在git 中设置simple sitting 似的直接git pull 推送到远端）
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">git push origin &lt;分支名称&gt;/master</code>: 将文件推送到其它远端。</li>
+      <li><code class="language-plaintext highlighter-rouge">git remote add origin &lt;server&gt; </code>: 将文件推送到服务器上。
+git 作为分布式代码管理工具，有另外一个重要功能就是分支管理：主要涉及到git 分支的创建、合并、销毁。</li>
+    </ul>
+  </li>
+</ol>
+
+<p><img src="https://wangpengcheng.github.iobranches.png" alt="" /></p>
+
+<ol>
+  <li>分支创建与切换
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">git checkout -b &lt;分支名称&gt;</code>；创建分支，并且切换回去</li>
+      <li><code class="language-plaintext highlighter-rouge">git checkout master</code> : 切换到主分支；</li>
+      <li><code class="language-plaintext highlighter-rouge">git branch -d &lt;分支名称&gt;</code> : 删除分支</li>
+      <li><code class="language-plaintext highlighter-rouge">git git push origin &lt;分支名称&gt;</code> : 将分支推送到远端</li>
+    </ul>
+  </li>
+  <li>更新与合并
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">git pull</code>: 从远端更新代码。但是需要注意，当远端代码与当前代码同时存在修改状况时，需要先将当前工作区域中的修改提交commit 但是不推荐，因为后期需要处理分支之间的冲突；</li>
+      <li><code class="language-plaintext highlighter-rouge">git merge &lt;分支名称&gt;</code> : 要合并其他分支到你的当前分支（例如 master）;
+注意：在这两种情况下，git 会尝试去自动合并改动。遗憾的是，这可能并非每次都成功，并可能出现冲突（conflicts）。 这时候就需要你修改这些文件来手动合并这些冲突（conflicts）。改完之后，你需要执行如下命令以将它们标记为合并成功：git add <filename></filename></li>
+    </ul>
+  </li>
+  <li>冲突处理;在合并之前需要进行其它处理方便，我们处理冲突
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">git diff &lt;source_branch&gt; &lt;target_branch&gt;</code> : 查看分支差异；</li>
+    </ul>
+  </li>
+</ol>
+:ET

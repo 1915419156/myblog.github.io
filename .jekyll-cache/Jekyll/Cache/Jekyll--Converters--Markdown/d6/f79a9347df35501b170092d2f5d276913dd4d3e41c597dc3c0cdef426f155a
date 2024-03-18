@@ -1,0 +1,2 @@
+I"L<p>编译优化选项，默认等级<code class="language-plaintext highlighter-rouge">-O1</code>,<code class="language-plaintext highlighter-rouge">-O2</code>告诉GCC除了完成<code class="language-plaintext highlighter-rouge">-O1</code>级别的优化之外，同时还要进行一些额外的调整工作，如处理器指令调度等,选项<code class="language-plaintext highlighter-rouge">-O3</code>则除了完成<code class="language-plaintext highlighter-rouge">-O2</code>级别的优化之外，还包括循环展开和其他一些与处理器特性相关的优化工作</p>
+:ET

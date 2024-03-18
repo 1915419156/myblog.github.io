@@ -1,0 +1,2 @@
+I"�<p>如果我们要取 <text> 中最后的一个单词,我们可以这样: $(word $(words <text>),<text>) 。</text></text></text></p>
+:ET

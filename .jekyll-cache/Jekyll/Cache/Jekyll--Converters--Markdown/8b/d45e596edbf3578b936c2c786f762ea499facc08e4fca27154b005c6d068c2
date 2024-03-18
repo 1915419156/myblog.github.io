@@ -1,0 +1,2 @@
+I"<p><code class="language-plaintext highlighter-rouge">istream,wistream</code> 从流读取数据；<code class="language-plaintext highlighter-rouge">ostream,wostream</code> 从流输出数据；<code class="language-plaintext highlighter-rouge">iostream,wiostream</code>读写流</p>
+:ET

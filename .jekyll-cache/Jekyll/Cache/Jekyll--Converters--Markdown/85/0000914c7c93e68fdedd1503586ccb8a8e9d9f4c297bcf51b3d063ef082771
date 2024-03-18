@@ -1,0 +1,2 @@
+I"�<p>p管理内置指针q所指的对象；q必须指向<code class="language-plaintext highlighter-rouge">new</code>分配的内存，且能够转换为<code class="language-plaintext highlighter-rouge">T*</code>类型</p>
+:ET

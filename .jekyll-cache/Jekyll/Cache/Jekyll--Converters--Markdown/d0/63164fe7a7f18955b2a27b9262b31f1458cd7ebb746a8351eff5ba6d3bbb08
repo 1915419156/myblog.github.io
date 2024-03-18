@@ -1,0 +1,670 @@
+I"��<h1 id="kubernetes-集群搭建">Kubernetes 集群搭建</h1>
+
+<h2 id="参考链接"><em>参考链接</em></h2>
+
+<ul>
+  <li><a href="https://kubernetes.io/zh-cn/docs/setup/production-environment/">kubernetes生产环境搭建</a></li>
+  <li><a href="https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/high-availability/">kubeadm环境快速搭建</a></li>
+  <li><a href="https://blog.csdn.net/zhang19903848257/article/details/125447578">腾讯云部署K8s集群</a></li>
+  <li><a href="https://www.seayee.net/2021/09/16/k8s-install/">CentOS 8安装Kubernetes集群详细教程</a></li>
+  <li><a href="https://www.cnbugs.com/post-3190.html">centos7使用kubeadm安装Kubernetes 1.19版本</a></li>
+  <li><a href="https://www.iamlightsmile.com/articles/CentOS8%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AEkubernetes%EF%BC%88K8S%EF%BC%89/">CentOS8安装配置kubernetes（K8S）</a></li>
+  <li><a href="http://victorfengming.gitee.io/kubernetes/2_%E6%90%AD%E5%BB%BAK8S%E9%9B%86%E7%BE%A4%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/#%E5%A4%9Amaster%E9%9B%86%E7%BE%A4">k8s集群搭建</a></li>
+  <li><a href="https://www.cnblogs.com/hujinzhong/p/14648961.html">二进制安装部署k8s高可用集群V1.20</a></li>
+  <li><a href="https://blog.51cto.com/u_15287666/5269619#_1">Kubernetes第二篇：从零开始搭建k8s集群（亲测可用）</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/462096658">CentOS8使用kubeadm部署kubernetes</a></li>
+  <li><a href="https://blog.51cto.com/lwm666/2619470">CentOS8安装Kubernetes1.20.2集群</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/460794489">k8s增加master节点</a></li>
+  <li><a href="https://dev-docs.csdn.net/articles/aaf25b1472304763899a88cc75e5152a/kubernetes">公网搭建Kubernetes 1.20.9（阿里云+腾讯云）</a></li>
+  <li><a href="https://blog.csdn.net/IT_rookie_newbie/article/details/124992940">公网环境搭建Kubernetes (k8s) 集群的详细图解</a></li>
+</ul>
+
+<h2 id="前言">前言</h2>
+<p>为了进一步学习kubernetes 集群搭建尝试自己搭建对应的k8s集群</p>
+
+<h2 id="集群设计">集群设计</h2>
+
+<h3 id="实例节点">实例节点</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">角色</th>
+      <th style="text-align: center">主机名称</th>
+      <th style="text-align: center">IP</th>
+      <th style="text-align: center">配置</th>
+      <th style="text-align: center">系统</th>
+      <th style="text-align: center">地域</th>
+      <th style="text-align: center">云厂商</th>
+      <th style="text-align: left">相关组件</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">k8s-master</td>
+      <td style="text-align: center">k8s-master-01</td>
+      <td style="text-align: center">xxx.xxx.113.233</td>
+      <td style="text-align: center">2C2GB</td>
+      <td style="text-align: center">CentOS 8.2 64bit</td>
+      <td style="text-align: center">成都</td>
+      <td style="text-align: center">腾讯云</td>
+      <td style="text-align: left">TODO</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">k8s-master</td>
+      <td style="text-align: center">k8s-master-02</td>
+      <td style="text-align: center">xxx.xxx.102.222</td>
+      <td style="text-align: center">2C4G</td>
+      <td style="text-align: center">CentOS 8.2 64bit</td>
+      <td style="text-align: center">北京</td>
+      <td style="text-align: center">百度云</td>
+      <td style="text-align: left">TODO</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">k8s-node01</td>
+      <td style="text-align: center">k8s-node-01</td>
+      <td style="text-align: center">xxx.xxx.67.59</td>
+      <td style="text-align: center">4C16G</td>
+      <td style="text-align: center">CentOS 8.2 64bit</td>
+      <td style="text-align: center">上海</td>
+      <td style="text-align: center">腾讯云</td>
+      <td style="text-align: left">TODO</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">k8s-node02</td>
+      <td style="text-align: center">k8s-node-02</td>
+      <td style="text-align: center">xxx.xxx.42.73</td>
+      <td style="text-align: center">4C16G</td>
+      <td style="text-align: center">CentOS 8.2 64bit</td>
+      <td style="text-align: center">北京</td>
+      <td style="text-align: center">百度云</td>
+      <td style="text-align: left">TODO</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="软件版本">软件版本</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">软件</th>
+      <th style="text-align: center">版本</th>
+      <th style="text-align: left">备注</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">k8s</td>
+      <td style="text-align: center">v1.23.2</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">kube-apiserver</td>
+      <td style="text-align: center">v1.23.2</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">kube-proxy</td>
+      <td style="text-align: center">v1.23.2</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">kube-controller-manager</td>
+      <td style="text-align: center">v1.23.2</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">kube-scheduler</td>
+      <td style="text-align: center">v1.23.2</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">coredns</td>
+      <td style="text-align: center">v1.8.0</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">etcd</td>
+      <td style="text-align: center">3.4.13-0</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">pause</td>
+      <td style="text-align: center">3.4.1</td>
+      <td style="text-align: left"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>k8s1.24版本之后不再使用docker作为容器，因此我们暂不使用该版本，使用1.23.2版本进行安装</p>
+
+<p>TODO 使用container 进行升级替换</p>
+
+<h2 id="操作步骤">操作步骤</h2>
+
+<h3 id="1-主机基础配置">1. 主机基础配置</h3>
+
+<h4 id="11-控制端颜色">1.1 控制端颜色</h4>
+<p>编辑 <code class="language-plaintext highlighter-rouge">/etc/bashrc</code> 添加如下代码</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># vim:ts=4:sw=4</span>
+<span class="nb">export </span><span class="nv">HISTSIZE</span><span class="o">=</span>3000
+<span class="nb">export </span><span class="nv">HISTTIMEFORMAT</span><span class="o">=</span><span class="s2">"%F %T "</span>
+<span class="nb">export </span><span class="nv">PROMPT_COMMAND</span><span class="o">=</span><span class="s2">"history -a; </span><span class="nv">$PROMPT_COMMAND</span><span class="s2">"</span>
+<span class="nb">unset </span>HISTCONTROL
+
+
+<span class="nv">PS1</span><span class="o">=</span><span class="s2">"</span><span class="se">\[\e</span><span class="s2">[1;33m</span><span class="se">\]\[\e</span><span class="s2">[0;33m</span><span class="se">\]</span><span class="s2">[</span><span class="se">\[\e</span><span class="s2">[1;32m</span><span class="se">\]\u\[\e</span><span class="s2">[m</span><span class="se">\]\[\e</span><span class="s2">[1;33m</span><span class="se">\]</span><span class="s2">@</span><span class="se">\[\e</span><span class="s2">[m</span><span class="se">\]\[\e</span><span class="s2">[1;35m</span><span class="se">\]\h\[\e</span><span class="s2">[m</span><span class="se">\]\[\e</span><span class="s2">[0;33m</span><span class="se">\]</span><span class="s2">] </span><span class="se">\w\$</span><span class="s2"> </span><span class="se">\[\e</span><span class="s2">[m</span><span class="se">\]</span><span class="s2">"</span>
+</code></pre></div></div>
+<p>增加控制台颜色和历史命令
+显示最终色彩
+<img src="http://wangpengcheng.github.io/img/2022-06-26-13-51-38.png" alt="最终色彩" /></p>
+
+<h4 id="12-增加dev-用户">1.2 增加dev 用户</h4>
+<p>所有机器新增dev用户并作为k8s 默认用户，可参考<a href="https://blog.csdn.net/happy__yun/article/details/124760781">centos8新增用户</a></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 新增dev用户</span>
+adduser dev
+<span class="c"># 修改密码</span>
+passwd dev 
+
+<span class="c"># 修改用户权限</span>
+<span class="nb">chmod</span> <span class="nt">-v</span> u+w /etc/sudoers
+vim /etc/sudoers
+<span class="c"># 添加</span>
+<span class="c"># dev ALL=(ALL) ALL</span>
+<span class="nb">chmod</span> <span class="nt">-v</span> u-w /etc/sudoers
+</code></pre></div></div>
+<h3 id="2-前置条件">2. 前置条件</h3>
+<p>无论node还是master都需要开启的前置条件</p>
+<h4 id="21-端口开放">2.1 端口开放</h4>
+<p>为了k8s 机器之间能够正常访问，云控制台开放对应端口如下：</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">端口</th>
+      <th style="text-align: center">协议</th>
+      <th style="text-align: center">服务</th>
+      <th style="text-align: center">说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">8080、6443</td>
+      <td style="text-align: center">HTTP/HTTPS</td>
+      <td style="text-align: center">kube-apiserver</td>
+      <td style="text-align: center">API专用端口号</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">10252</td>
+      <td style="text-align: center">TCP</td>
+      <td style="text-align: center">kube-controller-manager</td>
+      <td style="text-align: center"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">10251</td>
+      <td style="text-align: center">TCP</td>
+      <td style="text-align: center">kube-scheduler</td>
+      <td style="text-align: center"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">10250、10255</td>
+      <td style="text-align: center">TCP</td>
+      <td style="text-align: center">kubelet</td>
+      <td style="text-align: center"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2379</td>
+      <td style="text-align: center">TCP/UDP</td>
+      <td style="text-align: center">etcd</td>
+      <td style="text-align: center">客户端访问</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2380</td>
+      <td style="text-align: center">TCP/UDP</td>
+      <td style="text-align: center">etcd</td>
+      <td style="text-align: center">集群内部访问</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">53</td>
+      <td style="text-align: center">TCP/UDP</td>
+      <td style="text-align: center">DNS</td>
+      <td style="text-align: center">集群DNS</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">8472</td>
+      <td style="text-align: center">UDP</td>
+      <td style="text-align: center">flannel</td>
+      <td style="text-align: center">flannel网络通讯插件使用</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">6443</td>
+      <td style="text-align: center">TCP</td>
+      <td style="text-align: center">k8s-master</td>
+      <td style="text-align: center">k8smaster 端口</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">30000~32767</td>
+      <td style="text-align: center">TCP</td>
+      <td style="text-align: center">node service pod</td>
+      <td style="text-align: center">节点端口服务，如果希望Master的IP也可以访问Pod服务，那么也可以给Master主机开放这些端口（建议）</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">5000</td>
+      <td style="text-align: center">TCP</td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: center">镜像服务</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="22-初始化">2.2 初始化</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">## 在K8s中为了高效运行，整个集群的机器需要关闭防火墙、SWAP分区以及Selinuxif</span>
+<span class="c"># 1、关闭防火墙 </span>
+systemctl stop firewalld 
+systemctl disable firewalld 
+ 
+<span class="c"># 2、关闭selinux </span>
+<span class="c">## 服务器均已经默认关闭无需操作</span>
+<span class="nb">sed</span> <span class="nt">-i</span> <span class="s1">'s/enforcing/disabled/'</span> /etc/selinux/config  <span class="c"># 永久 </span>
+setenforce 0  <span class="c"># 临时 </span>
+ 
+<span class="c"># 3、关闭swap </span>
+<span class="c">## 服务器均已经默认关闭无需操作</span>
+swapoff <span class="nt">-a</span>  <span class="c"># 临时 </span>
+<span class="nb">sed</span> <span class="nt">-ri</span> <span class="s1">'s/.*swap.*/#&amp;/'</span> /etc/fstab    <span class="c"># 永久 </span>
+ 
+<span class="c"># 4、根据规划设置主机名 </span>
+hostnamectl set-hostname &lt;<span class="nb">hostname</span><span class="o">&gt;</span> 
+ 
+<span class="c"># 5、在master添加hosts </span>
+<span class="nb">cat</span> <span class="o">&gt;&gt;</span> /etc/hosts <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh"> 
+118.24.113.233 k8s-master-01
+124.222.67.59 k8s-node-01 
+120.48.42.73 k8s-node-02 
+120.48.102.222 k8s-master-02
+</span><span class="no">EOF
+ 
+</span><span class="c"># 6、将桥接的IPv4流量传递到iptables的链 </span>
+<span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+</span><span class="no">EOF
+ 
+</span><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+</span><span class="no">EOF
+</span><span class="nb">sudo </span>sysctl <span class="nt">--system</span>  <span class="c"># 生效 </span>
+ 
+<span class="c"># 7、时间同步 </span>
+ yum <span class="nb">install</span> <span class="nt">-y</span> chrony
+
+<span class="c"># 可以修改默认时间同步服务器，https://intl.cloud.tencent.com/zh/document/product/213/40227</span>
+<span class="c"># 如 </span>
+<span class="c"># server time1.tencentyun.com iburst</span>
+<span class="c"># pool 2.centos.pool.ntp.org iburst</span>
+<span class="c">#vim /etc/chrony.conf</span>
+<span class="c">#systemctl restart chronyd</span>
+<span class="c">#systemctl enable chronyd</span>
+
+<span class="c"># 查看时间同步</span>
+chronyc sourcestats <span class="nt">-v</span> 
+</code></pre></div></div>
+
+<h4 id="23-安装docker">2.3 安装docker</h4>
+
+<p>docker k8s 版本兼容情况如下
+|Kubernetes版本| Docker 版本兼容情况|
+|:–:|:–:|
+|1.21.x |v20.10.2 版本以上不兼容|
+|1.22.x |v20.10.2 版本以上不兼容|
+|1.23.x |v20.10.7 版本以上不兼容|</p>
+
+<p>docker 源添加</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo <span class="nt">-O</span> /etc/yum.repos.d/docker-ce.repo
+</code></pre></div></div>
+
+<p>修改docker cgroup驱动
+另外，Kubernetes默认设置cgroup驱动（cgroupdriver）为“systemd“，而Docker服务的cgroup驱动默认值 为“cgroupfs”， 建议将其修改为“systemd”，与Kubernetes保持一致。修改方法为修改/etc/dockere/daemon.json文件（如果没有就添加一个）：</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; /etc/docker/daemon.json
+{
+ "exec-opts": ["native.cgroupdriver=systemd"]
+}
+</span><span class="no">EOF
+</span></code></pre></div></div>
+<p>启动docker</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>systemctl daemon-reload
+<span class="nb">sudo </span>systemctl restart docker
+<span class="nb">sudo </span>systemctl <span class="nb">enable </span>docker
+</code></pre></div></div>
+
+<h4 id="24-创建公网网卡">2.4 创建公网网卡</h4>
+<p>虚拟网卡创建
+由于云主机网卡绑定的都是内网 IP, 而且几台云服务器位于不同的内网中（VPC网络不互通）, 直接搭建会将内网 IP 注册进集群导致搭建不成功。</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 所有主机都要创建虚拟网卡，并绑定对应的公网 ip</span>
+<span class="c"># 临时生效，重启会失效</span>
+ifconfig eth0:1 &lt;你的公网IP&gt;
+ 
+<span class="c"># 永久生效</span>
+<span class="nb">cat</span> <span class="o">&gt;</span> /etc/sysconfig/network-scripts/ifcfg-eth0:1 <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh">
+BOOTPROTO=static
+DEVICE=eth0:1
+IPADDR=120.48.42.73
+PREFIX=32
+TYPE=Ethernet
+USERCTL=no
+ONBOOT=yes
+</span><span class="no">EOF
+
+</span><span class="c"># 重启网卡</span>
+<span class="c"># SSH挂掉，从VNC登陆</span>
+ifdown eth0 <span class="o">&amp;&amp;</span> ifup eth0
+
+</code></pre></div></div>
+
+<h4 id="25-安装k8s">2.5 安装k8s</h4>
+
+<p>k8s 源添加</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> &gt; /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+</span><span class="no">EOF
+
+</span>setenforce 0
+
+<span class="c">## 移除旧版本</span>
+yum remove <span class="nt">-y</span> kubelet kubeadm kubectl
+
+<span class="c">## 查看可用k8s 版本</span>
+yum list kubelet <span class="nt">--showduplicates</span> | <span class="nb">sort</span> <span class="nt">-r</span>
+
+
+<span class="c">## 安装指定版本 k8s</span>
+
+yum <span class="nb">install</span> <span class="nt">-y</span> kubelet-1.23.2 kubeadm-1.23.2 kubectl-1.23.2
+<span class="c">## 设置服务开机启动</span>
+systemctl <span class="nb">enable </span>kubelet <span class="o">&amp;&amp;</span> systemctl start kubelet
+</code></pre></div></div>
+
+<h4 id="26-修改k8s-启动文件">2.6 修改k8s 启动文件</h4>
+<p>修改kubelet启动参数文件，让其能够从公网进行启动</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 此文件安装kubeadm后就存在了</span>
+vim /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+ 
+<span class="c"># 注意，这步很重要，如果不做，节点仍然会使用内网IP注册进集群</span>
+<span class="c"># 在末尾添加参数 --node-ip=公网IP</span>
+<span class="nv">ExecStart</span><span class="o">=</span>/usr/bin/kubelet <span class="nv">$KUBELET_KUBECONFIG_ARGS</span> <span class="nv">$KUBELET_CONFIG_ARGS</span> <span class="nv">$KUBELET_KUBEADM_ARGS</span> <span class="nv">$KUBELET_EXTRA_ARGS</span> <span class="nt">--node-ip</span><span class="o">=</span>&lt;公网IP&gt;
+</code></pre></div></div>
+
+<h4 id="27-初始化节点">2.7 初始化节点</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c"># 初始化节点</span>
+<span class="nb">sudo </span>kubeadm init <span class="se">\</span>
+<span class="nt">--apiserver-advertise-address</span><span class="o">=</span>公网IP <span class="se">\</span>
+<span class="nt">--image-repository</span> registry.aliyuncs.com/google_containers <span class="se">\</span>
+<span class="nt">--kubernetes-version</span> v1.23.2 <span class="se">\</span>
+<span class="nt">--control-plane-endpoint</span><span class="o">=</span>公网IP <span class="se">\</span>
+<span class="nt">--service-cidr</span><span class="o">=</span>10.96.0.0/12 <span class="se">\</span>
+<span class="nt">--pod-network-cidr</span><span class="o">=</span>10.244.0.0/16 <span class="se">\</span>
+<span class="nt">--v</span><span class="o">=</span>5
+
+
+<span class="c"># 初始化master</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> <span class="nv">$HOME</span>/.kube
+<span class="nb">sudo cp</span> <span class="nt">-i</span> /etc/kubernetes/admin.conf <span class="nv">$HOME</span>/.kube/config
+<span class="nb">sudo chown</span> <span class="si">$(</span><span class="nb">id</span> <span class="nt">-u</span><span class="si">)</span>:<span class="si">$(</span><span class="nb">id</span> <span class="nt">-g</span><span class="si">)</span> <span class="nv">$HOME</span>/.kube/config
+<span class="c">#</span>
+<span class="nb">sudo chmod </span>u+wr /etc/kubernetes/admin.conf
+<span class="c"># 初始化网络</span>
+kubectl apply <span class="nt">-f</span> <span class="s2">"https://docs.projectcalico.org/manifests/calico.yaml"</span>
+</code></pre></div></div>
+
+<h2 id="结果">结果</h2>
+
+<p><img src="http://wangpengcheng.github.io/img/2022-06-26-22-57-52.png" alt="图像" /></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 配置永久环境变量</span>
+<span class="nb">cat</span> <span class="o">&gt;</span> /etc/profile.d/kubeconfig.sh <span class="o">&lt;&lt;</span> <span class="no">EOF</span><span class="sh">
+export KUBECONFIG=/etc/kubernetes/admin.conf
+</span><span class="no">EOF
+
+</span><span class="c"># 加载环境变量</span>
+<span class="nb">source</span> /etc/profile
+
+</code></pre></div></div>
+
+<h3 id="创建nginx测试节点">创建nginx测试节点</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 创建节点</span>
+kubectl create deployment nginx <span class="nt">--image</span><span class="o">=</span>nginx deployment.apps/nginx created
+
+<span class="c"># 进行测试</span>
+kubectl expose deployment nginx <span class="nt">--port</span><span class="o">=</span>80 <span class="nt">--type</span><span class="o">=</span>NodePort
+service/nginx exposed
+
+<span class="c"># 查看pod状态</span>
+kubectl get pod,svc
+</code></pre></div></div>
+
+<h3 id="异常清空">异常清空</h3>
+<p>出现异常情况，需要对master 进行清空重试</p>
+
+<p>清空网卡节点</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#第一步，在master节点删除flannel</span>
+kubectl delete <span class="nt">-f</span> https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+<span class="c">#第二步，在node节点清理flannel网络留下的文件</span>
+<span class="nb">sudo </span>ifconfig cni0 down
+<span class="nb">sudo </span>ip <span class="nb">link </span>delete cni0
+<span class="nb">sudo </span>ifconfig flannel.1 down
+<span class="nb">sudo </span>ip <span class="nb">link </span>delete flannel.1
+<span class="nb">sudo rm</span> <span class="nt">-rf</span> /var/lib/cni/
+<span class="nb">sudo rm</span> <span class="nt">-f</span> /etc/cni/net.d/<span class="k">*</span>
+<span class="nb">sudo </span>systemctl restart kubelet.service
+
+<span class="c">#第三步，应用calico相关的yaml文件</span>
+</code></pre></div></div>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># k8s 重置脚本</span>
+kubectl delete pod <span class="nt">--all</span>
+kubectl delete node <span class="nt">--all</span>
+
+<span class="nb">sudo </span>kubeadm reset <span class="nt">-f</span> 
+
+<span class="nb">rm</span> <span class="nt">-rf</span> <span class="nv">$HOME</span>/.kube
+
+
+kubeadm reset
+systemctl stop kubelet
+systemctl stop docker
+<span class="nb">rm</span> <span class="nt">-rf</span> /var/lib/cni/
+<span class="nb">rm</span> <span class="nt">-rf</span> /var/lib/kubelet/<span class="k">*</span>
+<span class="nb">rm</span> <span class="nt">-rf</span> /etc/cni/
+<span class="c">##重启kubelet</span>
+systemctl restart kubelet
+<span class="c">##重启docker</span>
+systemctl restart docker
+
+
+<span class="nb">sudo </span>ifconfig cni0 down
+<span class="nb">sudo </span>ip <span class="nb">link </span>delete cni0
+<span class="nb">sudo </span>ifconfig flannel.1 down
+<span class="nb">sudo </span>ip <span class="nb">link </span>delete flannel.1
+<span class="nb">sudo rm</span> <span class="nt">-rf</span> /var/lib/cni/
+<span class="nb">sudo rm</span> <span class="nt">-f</span> /etc/cni/net.d/<span class="k">*</span>
+<span class="nb">sudo </span>systemctl restart kubelet.service
+
+<span class="k">for </span>service <span class="k">in </span>kube-apiserver kube-controller-manager kubectl kubelet kube-proxy kube-scheduler<span class="p">;</span> 
+<span class="k">do
+      </span>systemctl stop <span class="nv">$service</span>
+<span class="k">done
+
+</span><span class="nb">rm</span> <span class="nt">-rf</span> ~/.kube/
+
+<span class="nb">rm</span> <span class="nt">-rf</span> /etc/kubernetes/
+ 
+<span class="nb">rm</span> <span class="nt">-rf</span> /etc/systemd/system/kubelet.service.d
+
+<span class="nb">rm</span> <span class="nt">-rf</span> /etc/systemd/system/kubelet.service
+
+<span class="nb">rm</span> <span class="nt">-rf</span> /usr/bin/kube<span class="k">*</span>
+
+<span class="nb">rm</span> <span class="nt">-rf</span> /etc/cni
+
+<span class="nb">rm</span> <span class="nt">-rf</span> /opt/cni
+
+<span class="nb">rm</span> <span class="nt">-rf</span> /var/lib/etcd
+
+<span class="nb">rm</span> <span class="nt">-rf</span> /var/etcd
+
+yum clean all
+
+yum remove kube<span class="k">*</span> <span class="nt">-y</span>
+
+
+</code></pre></div></div>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 重新安装k8s </span>
+systemctl disable docker
+systemctl stop docker
+<span class="nb">sudo </span>yum remove docker-<span class="k">*</span>
+<span class="nb">rm</span> <span class="nt">-rf</span> /var/lib/docker/
+<span class="nb">rm</span> <span class="nt">-rf</span> /etc/docker/
+<span class="nb">rm</span> <span class="nt">-rf</span> /run/docker
+<span class="nb">rm</span> <span class="nt">-rf</span> /var/lib/dockershim
+<span class="nb">rm</span> <span class="nt">-rf</span> /usr/libexec/docker/
+
+yum <span class="nb">install</span> <span class="nt">-y</span> yum-utils
+
+yum <span class="nb">install</span> <span class="nt">-y</span> docker-ce-19.03.13 docker-ce-cli-19.03.13 containerd.io
+
+systemctl start docker
+
+<span class="c"># 设置开机自启动</span>
+systemctl <span class="nb">enable </span>docker.service
+systemctl <span class="nb">enable </span>containerd.service
+
+<span class="nb">sudo </span>yum <span class="nb">install</span> <span class="nt">-y</span> kubelet-1.20.9 kubeadm-1.20.9 kubectl-1.20.9 <span class="nt">--disableexcludes</span><span class="o">=</span>kubernetes
+ 
+<span class="nb">sudo </span>systemctl <span class="nb">enable</span> <span class="nt">--now</span> kubelet
+</code></pre></div></div>
+
+<h3 id="搭建dashborad">搭建dashborad</h3>
+<ul>
+  <li><a href="https://blog.csdn.net/make_progress/article/details/124566603">k8s（v18.6）安装Dashboard</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/341857389?ivk_sa=1024320u">(转载）Chrome 您的连接不是私密连接解决办法</a></li>
+</ul>
+
+<p><a href="https://github.com/kubernetes/dashboard/releases/tag/v2.3.1">对应版本</a></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> wget <span class="nt">-c</span> https://raw.githubusercontent.com/kubernetes/dashboard/v2.3.1/aio/deploy/recommended.yaml
+<span class="c"># 执行模板文件</span>
+kubectl apply <span class="nt">-f</span> recommended.yaml
+ 
+<span class="c"># 查看所有的Pod，参数-A可以换成 --all-namespaces</span>
+kubectl get pods <span class="nt">-A</span>
+ 
+<span class="c"># 出现以下结果说明成功</span>
+NAMESPACE              NAME                                            READY   STATUS    RESTARTS   AGE
+..... <span class="c">#省略</span>
+kubernetes-dashboard   dashboard-metrics-scraper-6b4884c9d5-88sct      1/1     Running   0          3m13s
+kubernetes-dashboard   kubernetes-dashboard-7b544877d5-6bvfr           1/1     Running   0          3m13s
+</code></pre></div></div>
+
+<p>新建“kubernetes-dashboard-service.yaml”文件</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># kubernetes-dashboard-service.yaml</span>
+<span class="c"># 下面的配置文件可以从recommended.yaml中找到</span>
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  <span class="nb">type</span>: NodePort
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+</code></pre></div></div>
+
+<p>应用文件</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> kubernetes-dashboard-service.yaml
+</code></pre></div></div>
+
+<p>此时可以用公网IP + port 进行访问
+出现chrome 无法访问 参考：<a href="https://zhuanlan.zhihu.com/p/341857389?ivk_sa=1024320u">(转载）Chrome 您的连接不是私密连接解决办法</a></p>
+
+<p>新建“kubernetes-dashboard-account.yaml” 
+设置访问权限</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># kubernetes-dashboard-account.yaml</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">kubernetes-dashboard</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">dashboard-admin</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kubernetes-dashboard</span>
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRoleBinding</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">dashboard-admin-bind-cluster-role</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">kubernetes-dashboard</span>
+<span class="na">roleRef</span><span class="pi">:</span>
+  <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io</span>
+  <span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">cluster-admin</span>
+<span class="na">subjects</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">dashboard-admin</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kubernetes-dashboard</span>
+</code></pre></div></div>
+<p>执行配置文件并获取token</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> kubernetes-dashboard-account.yaml
+
+
+<span class="c"># 执行如下命令</span>
+kubectl <span class="nt">-n</span> kubernetes-dashboard describe secret <span class="si">$(</span>kubectl <span class="nt">-n</span> kubernetes-dashboard get secret | <span class="nb">grep </span>dashboard-admin | <span class="nb">awk</span> <span class="s1">'{print $1}'</span><span class="si">)</span>
+ 
+<span class="c"># 返回结果</span>
+Name:         dashboard-admin-token-l49vj
+Namespace:    kubernetes-dashboard
+Labels:       &lt;none&gt;
+Annotations:  kubernetes.io/service-account.name: dashboard-admin
+              kubernetes.io/service-account.uid: e1bdcbbc-5d43-479c-be6d-508960413b6a
+ 
+Type:  kubernetes.io/service-account-token
+ 
+Data
+<span class="o">====</span>
+<span class="c"># 注意！！！ Tocken值，在登录Dashboard时使用</span>
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IjhNbjY3S1FMRFhHUkNBS2pYMmE3UHpuZmk4NEEzODJqbWxjUHZ4Mk1xMnMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJkYXNoYm9hcmQtYWRtaW4tdG9rZW4tbDQ5dmoiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGFzaGJvYXJkLWFkbWluIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiZTFiZGNiYmMtNWQ0My00NzljLWJlNmQtNTA4OTYwNDEzYjZhIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmVybmV0ZXM
+ca.crt:     1025 bytes
+namespace:  20 bytes
+
+</code></pre></div></div>
+
+<p>继续进行登陆
+可以看到登陆面板</p>
+
+<p>如果想看到所有，需要创建admin账号， 详见：<a href="https://blog.csdn.net/LoveyourselfJiuhao/article/details/91044268">K8S关于Dashboard浏览器访问填坑</a></p>
+
+:ET

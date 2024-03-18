@@ -1,0 +1,294 @@
+I"�'<h1 id="jekyll-spcaeship功能测试">jekyll-spcaeship功能测试</h1>
+
+<p><strong>参考链接</strong>:</p>
+<ul>
+  <li><a href="https://github.com/jeffreytse/jekyll-spaceship">jekyll-spaceship插件说明</a></li>
+  <li><a href="https://github.com/jeffreytse/jekyll-deploy-action">GitHub Action自动编译</a></li>
+  <li><a href="https://jekyllrb.com/">jekyll官方网站</a></li>
+  <li><a href="https://jekyllrb.com/docs/installation/macos/">jekyll mac安装说明</a></li>
+  <li><a href="https://github.com/jeffreytse/jekyll-spaceship/edit/master/README.md">标准状况地址</a></li>
+</ul>
+
+<h3 id="table测试">Table测试</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">Stage</th>
+      <th style="text-align: right">Direct Products</th>
+      <th style="text-align: right">ATP Yields</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">Glycolysis</td>
+      <td style="text-align: right">2 ATP              |</td>
+      <td style="text-align: right"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: right">^^</td>
+      <td style="text-align: right">2 NADH</td>
+      <td style="text-align: right">3–5 ATP</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">Pyruvaye oxidation</td>
+      <td style="text-align: right">2 NADH</td>
+      <td style="text-align: right">5 ATP</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">Citric acid cycle</td>
+      <td style="text-align: right">2 ATP              |</td>
+      <td style="text-align: right"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: right">^^</td>
+      <td style="text-align: right">6 NADH</td>
+      <td style="text-align: right">15 ATP</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">^^</td>
+      <td style="text-align: right">2 FADH</td>
+      <td style="text-align: right">3 ATP</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">30–32 ATP        ||</td>
+      <td style="text-align: right"> </td>
+      <td style="text-align: right"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="multiline">Multiline</h4>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">:    Easy Multiline   : ||</th>
+      <th style="text-align: left"> </th>
+      <th style="text-align: left"> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Orange  \</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Orange  \</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Orange</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Orange  \</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Orange</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Orange</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="headerless">Headerless</h4>
+<p>|–|–|–|–|–|–|–|–|
+|♜| |♝|♛|♚|♝|♞|♜|
+| |♟|♟|♟| |♟|♟|♟|
+|♟| |♞| | | | | |
+| |♗| | |♟| | | |
+| | | | |♙| | | |
+| | | | | |♘| | |
+|♙|♙|♙|♙| |♙|♙|♙|
+|♖|♘|♗|♕|♔| | |♖|</p>
+
+<h4 id="cell-alignment">Cell Alignment</h4>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">:        Fruits || Food       : ||</th>
+      <th style="text-align: left"> </th>
+      <th style="text-align: left"> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">: Apple :</td>
+      <td style="text-align: left">Apple      \</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Banana     \</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Orange</td>
+      <td style="text-align: left">Orange</td>
+      <td style="text-align: left">Orange</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">:   Rowspan is 4    : |</td>
+      <td style="text-align: left">How’s it?</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">^^    A. Peach         |</td>
+      <td style="text-align: left">1. Fine :</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">^^    B. Orange        |</td>
+      <td style="text-align: left">^^ 2. Bad</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">^^    C. Banana        |</td>
+      <td style="text-align: left">It’s OK!</td>
+      <td style="text-align: left"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="cell-markdown">Cell Markdown</h4>
+
+<p>Sometimes we may need some abundant content (e.g., mathjax, image, video) in Markdown table
+Therefore, here we also make markown syntax possible inside a cell.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">:                   MathJax || Image                 : ||</th>
+      <th style="text-align: left"> </th>
+      <th style="text-align: left"> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Apple</td>
+      <td style="text-align: left">: Apple :</td>
+      <td style="text-align: left">Apple                          \</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Banana</td>
+      <td style="text-align: left">Banana                         \</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Orange</td>
+      <td style="text-align: left">Orange</td>
+      <td style="text-align: left">Orange</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">:     Rowspan is 4     : |</td>
+      <td style="text-align: left">:        How’s it?           :</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">^^     A. Peach          |</td>
+      <td style="text-align: left">1. ![example](https://jekyllrb.com/img/octojekyll.png "An exemplary image")</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">^^     B. Orange         |</td>
+      <td style="text-align: left">^^ 2. $I = \int \rho R^{2} dV$</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">^^     C. Banana         |</td>
+      <td style="text-align: left">**It’s OK!**</td>
+      <td style="text-align: left"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="cell-inline-attributes">Cell Inline Attributes</h4>
+
+<p id="id" class="cls1 cls2 cls1 cls2 .cls3 cls4" title="hallo you">{: #id .cls1 .cls2} <!-- #id <=> id="id", .cls1 .cls2 <=> class="cls1 cls2" --></p>
+
+<h4 id="表格测试">表格测试</h4>
+
+<table>
+  <thead>
+    <tr>
+      <th>:             Here’s an Inline Attribute Lists example                :|||</th>
+      <th> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:       :</td>
+      <td>:  &lt;div style="color: red;"&gt; &lt; Normal HTML Block &gt; &lt;/div&gt; :||</td>
+    </tr>
+    <tr>
+      <td>^^</td>
+      <td>Red    {: .cls style="background: orange" }                ||</td>
+    </tr>
+    <tr>
+      <td>^^ IALs</td>
+      <td>Green  {: #id style="background: green; color: white" }    ||</td>
+    </tr>
+    <tr>
+      <td>^^</td>
+      <td>Blue   {: style="background: blue; color: white" }         ||</td>
+    </tr>
+    <tr>
+      <td>^^</td>
+      <td>Black  {: color-style text-style }                         ||</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="mathjax-测试">MathJax 测试</h3>
+
+<p>$ a * b = c ^ b $</p>
+
+<p>$ 2^{\frac{n-1}{3}} $</p>
+
+<p>$ \int_a^b f(x)\,dx. $</p>
+
+<h3 id="plantuml测试">PlantUML测试</h3>
+
+<p><img class="plantuml" src="http://www.plantuml.com/plantuml/svg/~h407374617274756d6c0a426f62202d3e20416c696365203a2068656c6c6f20776f726c640a40656e64756d6c" />
+OR</p>
+
+<p><img class="plantuml" src="http://www.plantuml.com/plantuml/svg/~h407374617274756d6c0a426f62202d3e20416c696365203a2068656c6c6f0a40656e64756d6c" /></p>
+
+<h3 id="mermaid-usage">Mermaid Usage</h3>
+
+<p><img class="mermaid" src="https://mermaid.ink/img/eyJjb2RlIjoicGllIHRpdGxlIFBldHMgYWRvcHRlZCBieSB2b2x1bnRlZXJzXG5cIkRvZ3NcIiA6IDM4NlxuXCJDYXRzXCIgOiA4NVxuXCJSYXRzXCIgOiAzNSIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In19" /></p>
+
+<p><img class="mermaid" src="https://mermaid.ink/img/eyJjb2RlIjoicGllIHRpdGxlIFBldHMgYWRvcHRlZCBieSB2b2x1bnRlZXJzXG5cIkRvZ3NcIiA6IDM4NlxuXCJDYXRzXCIgOiA4NVxuXCJSYXRzXCIgOiAzNSIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In19" /></p>
+
+<p><img class="mermaid" src="https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5wYXJ0aWNpcGFudCBBbGljZVxucGFydGljaXBhbnQgQm9iXG5BbGljZS0-PkpvaG46IEhlbGxvIEpvaG4sIGhvdyBhcmUgeW91P1xubG9vcCBIZWFsdGhjaGVja1xuSm9obi0-PkpvaG46IEZpZ2h0IGFnYWluc3QgaHlwb2Nob25kcmlhXG5lbmRcbk5vdGUgcmlnaHQgb2YgSm9objogUmF0aW9uYWwgdGhvdWdodHMgPGJyLz5wcmV2YWlsIVxuSm9obi0tPj5BbGljZTogR3JlYXQhXG5Kb2huLT4-Qm9iOiBIb3cgYWJvdXQgeW91P1xuQm9iLS0-PkpvaG46IEpvbGx5IGdvb2QhIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0" /></p>
+
+<h3 id="media-usage">Media Usage</h3>
+
+<p><img src="http://open.spotify.com/track/4Dg5moVCTqxAb7Wr8Dq2T5" alt="测试" /></p>
+
+<p><img src="//www.html5rocks.com/en/tutorials/video/basics/devstories.webm" alt="" /></p>
+
+<p><img src="//techslides.com/demos/sample-videos/small.ogv?allow=autoplay" alt="" /></p>
+
+<p><img src="//techslides.com/demos/sample-videos/small.mp4?width=400" alt="" /></p>
+
+<p><img src="https://www.youtube.com/watch?v=Ptk_1Dc2iPY?width=800&amp;height=500" alt="" /></p>
+
+<p><img src="https://www.dailymotion.com/video/x7tfyq3?width=100%&amp;height=400&amp;autoplay=1" alt="" /></p>
+
+<h3 id="8-emoji-usage">8. Emoji Usage</h3>
+
+<p>I give this plugin two :+1:!</p>
+:ET

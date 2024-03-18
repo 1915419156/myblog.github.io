@@ -1,0 +1,293 @@
+I"s[<h1 id="找工作需要学习的东西笔记">找工作需要学习的东西笔记</h1>
+<p><em>参考链接</em>：</p>
+<ul>
+  <li><a href="https://zhuanlan.zhihu.com/p/61457047">C++后台开发学习路线</a>;<a href="https://www.zhihu.com/question/34574154/answer/253165162">C++ 后台开发面试时一般考察什么</a>;</li>
+  <li><a href="https://www.zhihu.com/question/56110328/answer/1215742230">Java学习的路线图时怎么样的</a></li>
+</ul>
+
+<h2 id="需要学习的东西">需要学习的东西</h2>
+
+<hr />
+<h3 id="开源书籍地址">开源书籍地址</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/EbookFoundation/free-programming-books/blob/master/free-programming-books-zh.md">中文翻译</a></li>
+</ul>
+
+<h3 id="计算机组成原理">计算机组成原理</h3>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />计算机组成原理</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />数字逻辑电路</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />嵌入式开发</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />CSAPP</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />ARM嵌入式系统编程与优化</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />OpenMP</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />OpenCL</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />计算机是怎样跑起来的</li>
+</ul>
+
+<h3 id="汇编基础">汇编基础</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />处理器架构</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />英特尔平台编程</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />汇编语言-王爽</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />跟我一起学MakeFile</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />cmake编程指南</li>
+</ul>
+
+<h3 id="c-基础">C++ 基础</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />C++ primer 第五版</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />STL 源码剖析（侯捷 著）</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />深度探索C++对象模型（侯捷 译）</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Effective C++（侯捷 译）</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />C++ 发展与演进</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />C++ 模板编程</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />C++ 高级编程</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />C++ 多核编程，多线程编程</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />C++ 并发编程实战</li>
+</ul>
+
+<h3 id="数据结构与算法">数据结构与算法</h3>
+
+<ul>
+  <li>数据结构基础
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />大话数据结构</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />数据结构与算法分析（严奶奶）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />算法 第四版</li>
+    </ul>
+  </li>
+  <li>算法
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />算法导论</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />ACM 竞赛指南</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />挑战程序设计竞赛(第二版)</li>
+    </ul>
+  </li>
+  <li>刷题
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />LeetCode 中文网站(300-500题)</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />剑指offer 第2版（建议至少刷两遍）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />程序员代码面试指南（左程云 著）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />程序员面试金典</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="操作系统">操作系统</h3>
+
+<ul>
+  <li>通用知识
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />操作系统 精髓与设计原理 第8版</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />设计模式</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />程序员的自我修养</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />编程之美</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />数学之美</li>
+    </ul>
+  </li>
+  <li>多线程编程
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />多核多线程编程</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />LINUX 多线程服务器端编程</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />深入理解Nginx</li>
+    </ul>
+  </li>
+  <li>Linux
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />鸟哥的Linux私房菜 第4版（用于了解Linux基本命令）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />鸟哥的Linux私房菜 服务器篇 （Linux 服务器架设）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Linux命令、编辑器与Shell编程</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Linux程序设计(马修)</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />UNIX环境高级编程 第3版（APUE）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Linux/UNIX系统编程手册（上下册）</li>
+    </ul>
+  </li>
+  <li>内核
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Linux内核设计与实现</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />深入理解Linux内核</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Linux设备驱动程序</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />深入理解Linux网络内幕</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />深入理解Linux虚拟内存管理</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Linux内核完全注释(修正版v3.0)</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Linux 系统编程</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="计算机网络">计算机网络</h3>
+
+<ul>
+  <li>基础网络知识
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />计算机网络 第7版（谢希仁 著）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />计算机网络 自顶向下方法</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />TCP/IP详解 原书第2版</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />UNIX网络编程 第3版（卷1）</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />VC++ 编程</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="数据库">数据库</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />数据库系统概念 第6版</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />mysql必知必会</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />高性能MySQL</li>
+</ul>
+
+<h3 id="缓存">缓存</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />redis设计与实现</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />memcache</li>
+</ul>
+
+<h3 id="消息队列">消息队列</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />RocketMQ</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />RabbitMQ</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Kafka</li>
+</ul>
+
+<h3 id="rpc框架">RPC框架</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Dubbo</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />gRPC</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Thrift</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Netty</li>
+</ul>
+
+<h3 id="分布式">分布式</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />分布式服务架构：原理、设计与实战</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />分布式系统概念与设计（原书第4版）</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />分布式系统原理与范型（第2版）</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />大型分布式网站架构设计与实践</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />大型网站技术架构：核心原理与案例分析</li>
+</ul>
+
+<h3 id="golang">Golang</h3>
+<p><em>参考链接：</em></p>
+<ul class="task-list">
+  <li><a href="https://www.zhihu.com/question/428207760/answer/1580545245">如何学习golang？</a></li>
+  <li><a href="https://www.zhihu.com/question/431008947/answer/1584756130">golang越来越有优势，有什么学习路线没有？</a></li>
+  <li>
+    <p><a href="https://www.zhihu.com/question/23486344/answer/1204644361">怎么学习 Golang？</a></p>
+  </li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://golang.org/">官网参考手册</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://tour.go-zh.org/welcome/1">Go编程指南</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://legacy.gitbook.com/book/yar999/gopl-zh/details">Go语言圣经</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://tiancaiamao.gitbooks.io/go-internals/content/zh/index.html">深入解析Go</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://astaxie.gitbooks.io/build-web-application-with-golang/zh/">Go Web编程</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/gunsluo/Learning-Go-zh-cn">学习 Go 语言</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://zhuanlan.zhihu.com/p/25493806">学习路线</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://golang.org/pkg/">官网语言包</a></li>
+</ul>
+
+<p><strong>推荐学习路线</strong>
+<img src="https://wangpengcheng.github.io/img/go_path.png" alt="学习路线" /></p>
+<h2 id="java后端开发学习路线">Java后端开发学习路线</h2>
+
+<p><img src="https://pic1.zhimg.com/80/v2-43156cca0de1619a56b7589c82961b76_720w.jpg" alt="Java后端开发学习路线" /></p>
+
+<h3 id="java语言基础">Java语言基础</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Java核心技术卷 I –基础</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Java核心技术卷 II –高级特性</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />深入理解JVM虚拟机</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Java多线程编程</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />算法(第四版)</li>
+</ul>
+
+<h3 id="集成开发环境">集成开发环境</h3>
+<ul>
+  <li>项目管理/构建工具
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Maven</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Gradle</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="java应用框架">Java应用框架</h3>
+<ul>
+  <li>Spring家族
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Spring IoC/AOP</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Spring MVC</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Spring boot</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Spring Cloud</li>
+    </ul>
+  </li>
+  <li>服务器软件
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Web服务器:Nginx</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用服务器:Tomcat/Jetty/Undertow</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="面试技巧">面试技巧</h3>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://www.nowcoder.com/discuss/164721?type=all&amp;order=time&amp;pos=&amp;page=1">c++工程师校招面试考点汇总（附面试题和答案）【持续更新】</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/huihut/interview#%EF%B8%8F-effective">C/C++ 技术面试基础知识总结</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/wangpengcheng/Learning-Note/blob/master/%E6%89%BE%E5%B7%A5%E4%BD%9C/C%2B%2B%E5%90%8E%E5%8F%B0%E5%BC%80%E5%8F%91(1).pdf">C++后台开发面试答案</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/wangpengcheng/Learning-Note/blob/master/%E6%89%BE%E5%B7%A5%E4%BD%9C/c%2B%2B(1).pdf">C++面试题库</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/wangpengcheng/Learning-Note/blob/master/%E6%89%BE%E5%B7%A5%E4%BD%9C/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E7%AE%97%E6%B3%95%E5%B7%A5%E7%A8%8B%E5%B8%88(1).pdf">算法工程师常考</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/chankeh/cpp-backend-reference/blob/master/back-end.md">c++后端开发面试题</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/Ewenwan/ShiYanLou">学习C &amp; C++ &amp; python&amp;汇编语言 数据结构 算法 操作系统 单片机 linux 面试</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/zhengjianglong915/note-of-interview">互联网面试笔记</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://github.com/PokerM/OfferRoad">c++开发面试准备复习笔记</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://www.nowcoder.com/discuss/85719?type=5&amp;order=4&amp;pos=4&amp;page=1">轻松搞定十大排序算法(c++版)</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://www.nowcoder.com/discuss/22886?type=1&amp;order=4&amp;pos=16&amp;page=1">设计模式总结（C++和Python实现）</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://www.nowcoder.com/discuss/55353?type=2&amp;order=4&amp;pos=20&amp;page=5">送你一个励志故事——涵盖20多所互联网公司的校招C++面经</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://www.nowcoder.com/discuss/164781?type=0&amp;order=0&amp;pos=26&amp;page=8">C++后台开发学习路线（已签腾讯sp）</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://www.nowcoder.com/discuss/193598">Linux C/C++ 学习路线（已拿腾讯、百度等）</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="https://www.nowcoder.com/discuss/147538?type=0&amp;order=4&amp;pos=25&amp;page=10">我的C++后台/基础架构岗位学习路线(offer大多是ssp）</a></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><a href="http://www.linya.pub/">博客列表</a></li>
+</ul>
+
+<h3 id="dnn算法优化">DNN算法优化</h3>
+
+<p><em>参考链接：</em></p>
+
+<ul>
+  <li>
+    <p><a href="http://bbs.cvmart.net/topics/1086">嵌入式和移动深度学习研究</a>(<a href="https://github.com/EMDL/awesome-emdl">EMDL</a>)</p>
+  </li>
+  <li>算法层面(优化算法本身)：
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />稀疏训练</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />量化</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />网络剪枝(network pruning)</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />张量分解(tensor factorization)</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />模型压缩</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />二值化</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />pipeline优化</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />稀疏优化</li>
+    </ul>
+  </li>
+  <li>工程层面
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />矩阵优化</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />汇编语言</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />CUDA/TensorRT</li>
+    </ul>
+  </li>
+</ul>
+
+<p>相关链接：</p>
+
+<ul>
+  <li>
+    <p>图书百度云链接:<a href="https://pan.baidu.com/s/1-jnpobW4gDL8kKxY55oXDA">https://pan.baidu.com/s/1-jnpobW4gDL8kKxY55oXDA</a>,  提取码： nq5i</p>
+  </li>
+  <li>
+    <p>论文和代码链接:<a href="https://github.com/wangpengcheng/Learning-Note">Learning-Note</a></p>
+  </li>
+</ul>
+
+:ET

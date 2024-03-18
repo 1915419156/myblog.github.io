@@ -1,0 +1,243 @@
+I"�K<blockquote>
+  <p>2019-08-04 21:47:52</p>
+</blockquote>
+
+<h2 id="第七章-仿函数">第七章 仿函数</h2>
+
+<p>仿函数也叫对象函数；在STL提供的各种算法中，都允许用户自定义相关算法。以结果的false或者true来进行相关的排序操作，用来执行函数的就是仿函数。一般步骤是先设计一个函数，在将函数的相关指针指向函数对应的结果。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-11-10-20-39.png" alt="STL仿函数与STL算法之间的关系" /></p>
+
+<p>仿函数的分类：</p>
+
+<ul>
+  <li>操作数的个数：一元和二元仿函数</li>
+  <li>功能划分:算术运算、关系运算、逻辑运算。</li>
+</ul>
+
+<p>使用STL内建的仿函数，都必须含有<functional>头文件。</functional></p>
+
+<h3 id="72-可配接adaptable的关键">7.2 可配接(Adaptable)的关键</h3>
+
+<ul>
+  <li>unary_function 用来呈现一元函数的参数型别和返回值类型。</li>
+  <li>binary_function 用来呈现二元函数的参数型别和返回值类型。</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Arg1</span><span class="p">,</span><span class="k">class</span> <span class="nc">Arg2</span><span class="p">,</span><span class="k">class</span> <span class="nc">Result</span><span class="p">&gt;</span>
+
+<span class="k">struct</span> <span class="nc">binary_function</span>
+<span class="p">{</span>
+    <span class="n">typdef</span> <span class="n">Arg1</span> <span class="n">first_argument_type</span><span class="p">;</span>
+    <span class="n">typdef</span> <span class="n">Arg2</span> <span class="n">second_argument_type</span><span class="p">;</span>
+    <span class="n">typdef</span> <span class="n">Result</span> <span class="n">result_type</span><span class="p">;</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+
+<h3 id="73-算术类arithmetic仿函数">7.3 算术类(Arithmetic)仿函数</h3>
+
+<ul>
+  <li>加法：plus<T></T></li>
+  <li>减法：minus<T></T></li>
+  <li>乘法:multiplies<T></T></li>
+  <li>除法：divides<T></T></li>
+  <li>膜取(modulus):modulus<T></T></li>
+  <li>否定(negation):negate<T></T></li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">plus</span><span class="o">:</span><span class="k">public</span> <span class="n">binary_function</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span>
+<span class="p">{</span>
+    <span class="n">T</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">,</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">y</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">;}</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+
+<p><strong>证同元素</strong></p>
+
+<p>数值A若与该元素做OP运算，会得到A自己。加法的同证元素为0，因为任何匀速加上0仍为自己。乘法的同证元素为1，因为任何元素乘以1任然为自己</p>
+
+<h3 id="74-关系运算类仿函数">7.4 关系运算类仿函数</h3>
+<p>他们都是二元的运算函数</p>
+
+<ul>
+  <li>等于：equal_to<T></T></li>
+  <li>不等于：not_equal_to<T></T></li>
+  <li>大于: greater<T></T></li>
+  <li>大于或者等于：greater_equal<T></T></li>
+  <li>小于：less<T></T></li>
+  <li>小于或者等于:less_equal<T></T></li>
+</ul>
+
+<h3 id="75-逻辑运算类仿函数">7.5 逻辑运算类仿函数</h3>
+
+<p>其中And和Or为二元运算符，Not为一元运算符</p>
+
+<ul>
+  <li>And:logical_and<T></T></li>
+  <li>Or:logical_or<T></T></li>
+  <li>Not:logical_not<T></T></li>
+</ul>
+
+<h3 id="76-证同identity选择select投射project">7.6 证同(identity)、选择(select)、投射(project)</h3>
+
+<ul>
+  <li>证同：任何数值通过此函数后，不会有任何改变，此式运用于<stl_set.h>用来指定RB-tree所需要的KeyOfValue op ，因为set元素的键值即实值，所以采用identity</stl_set.h></li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">identity</span><span class="o">:</span><span class="k">public</span> <span class="n">unary_function</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span>
+<span class="p">{</span>
+    <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">(){</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">x</span><span class="p">}</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">x</span><span class="p">;}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<ul>
+  <li>
+    <p>选择： 接受一个pair,传回第一元素。此式运用于<stl_map.h>用来指定RB-tree所需要的KeyOfValue op ，因为map系以pair元素的第一个元素为其键值，所以采用select1st。</stl_map.h></p>
+  </li>
+  <li>
+    <p>投射函数：传回第一参数，忽略第二参数</p>
+  </li>
+</ul>
+
+<h2 id="第8章-配接器">第8章 配接器</h2>
+
+<p>Adapter实际上是一种设计模式，将一个class的借口转换为另外一个class的接口。</p>
+
+<h3 id="81-配接器之概观与分类">8.1 配接器之概观与分类</h3>
+
+<ul>
+  <li>function adapter:改变仿函数(functors)接口</li>
+  <li>container adapter:改变容器(container)接口</li>
+  <li>iterators adapter:改变迭代器借口</li>
+</ul>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-11-13-58-31.png" alt="function adapters及其辅助函数" /></p>
+
+<h3 id="82-container-adapter">8.2 container adapter</h3>
+
+<p>stack和queue的底层都是使用deque构成。</p>
+
+<h3 id="83-iterator-adapters">8.3 iterator adapters</h3>
+<p>insert  iterator底层的调用是push_front()或者push_back()或者insert()操作函数。</p>
+
+<h4 id="832-reverse-iterators">8.3.2 reverse iterators</h4>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">deque</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">id</span><span class="o">=</span><span class="p">{</span><span class="mi">32</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="mi">99</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">};</span>
+<span class="c1">//32</span>
+
+<span class="n">cout</span> <span class="o">&lt;&lt;*</span><span class="p">(</span><span class="n">id</span><span class="p">.</span><span class="n">begin</span><span class="p">())</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+<span class="c1">//3</span>
+
+<span class="n">cout</span> <span class="o">&lt;&lt;*</span><span class="p">(</span><span class="n">id</span><span class="p">.</span><span class="n">rbegin</span><span class="p">())</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+<span class="c1">//0</span>
+
+<span class="n">cout</span> <span class="o">&lt;&lt;*</span><span class="p">(</span><span class="n">id</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+<span class="c1">//0</span>
+
+<span class="n">cout</span> <span class="o">&lt;&lt;*</span><span class="p">(</span><span class="n">id</span><span class="p">.</span><span class="n">rend</span><span class="p">())</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+<span class="c1">//查找对应的值</span>
+
+<span class="n">deque</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">ite</span><span class="o">=</span><span class="n">find</span><span class="p">(</span><span class="n">id</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">id</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="mi">99</span><span class="p">);</span>
+<span class="n">reverse_iterator</span><span class="o">&lt;</span><span class="n">deque</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span><span class="o">&gt;</span> <span class="n">rite</span><span class="p">(</span><span class="n">ite</span><span class="p">);</span>
+<span class="c1">//99</span>
+
+<span class="n">cout</span><span class="o">&lt;&lt;*</span><span class="n">ite</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+<span class="c1">//26</span>
+
+<span class="n">cout</span><span class="o">&lt;&lt;*</span><span class="n">rite</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>注意，由于迭代器区间的“前闭后开”的习惯，当迭代器被逆向方向时，虽然实体位置(真正的地址)不变，但其逻辑位置(迭代器所代表的元素)改变了(必须如此改变)：因此正向和逆向迭代器所取出的是不同的元素：</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-11-14-20-30.png" alt="当迭代器被逆转" /></p>
+
+<p>对逆向迭代器取值，就是将“对应之正向迭代器”后退一格而后取值。</p>
+
+<h4 id="833-stream-iterators">8.3.3 stream iterators</h4>
+
+<p>可以将一个迭代器绑定到一格stream对象上。绑定到istream对象例如(std::cin)者，就是istream_iterator拥有输入能力，同理输出对象上有输出能力。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-11-15-13-25.png" alt="copy istream_iterator" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-11-15-14-45.png" alt="copy ostream_iterator" /></p>
+
+<h3 id="84-function-adapters">8.4 function adapters</h3>
+
+<p>容器是以class templates完成，算法是以function templates完成，仿函数是一种将operator()重载的class template,迭代器则是一种将operator++和operator*等指针习惯性常行为重载的class template。</p>
+
+<p>function adapters也内藏了一格member object</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-11-15-22-14.png" alt="" /></p>
+
+<p>因此function adapters多是在内部实现函数的合成与操作</p>
+
+<h4 id="844-用于函数指针-ptr_fun">8.4.4 用于函数指针： ptr_fun</h4>
+
+<p>这种配接器使得我们能够将一般函数当做仿函数使用。一般函数当做仿函数传给STL算法。其实质就是把一个函数指针包裹起来。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//当仿函数被使用时，就调用该函数指针,这里是一元函数指针的封装</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Arg</span><span class="p">,</span><span class="k">class</span> <span class="nc">Result</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">pointer_to_unary_function</span><span class="o">:</span><span class="k">public</span> <span class="n">unary_function</span><span class="o">&lt;</span><span class="n">Arg</span><span class="p">,</span><span class="n">Result</span><span class="o">&gt;</span>
+<span class="p">{</span>
+<span class="nl">protected:</span>
+    <span class="c1">//内部成员，一个函数指针</span>
+
+    <span class="n">Result</span> <span class="p">(</span><span class="o">*</span><span class="n">Ptr</span><span class="p">)(</span><span class="n">Arg</span><span class="p">);</span>
+<span class="nl">public:</span>
+    <span class="n">pointer_to_unary_function</span><span class="p">(){}</span>
+    <span class="c1">//以下constructor将函数指针记录于内部成员之中</span>
+
+    <span class="k">explicit</span> <span class="n">pointer_to_unary_function</span><span class="p">(</span><span class="n">Result</span> <span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)(</span><span class="n">Arg</span><span class="p">))</span><span class="o">:</span><span class="n">ptr</span><span class="p">(</span><span class="n">x</span><span class="p">){}</span>
+    <span class="c1">//以下，通过函数指针指向函数</span>
+
+    <span class="n">Result</span> <span class="k">operator</span><span class="p">()(</span><span class="n">Arg</span> <span class="n">x</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">ptr</span><span class="p">(</span><span class="n">x</span><span class="p">);}</span>
+<span class="p">};</span>
+<span class="c1">//辅助函数，让我们得以方便运用</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Arg</span><span class="p">,</span><span class="k">class</span> <span class="nc">Result</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="n">pointer_to_unary_function</span><span class="o">&lt;</span><span class="n">Arg</span><span class="p">,</span><span class="n">Result</span><span class="o">&gt;</span> <span class="n">ptr_fun</span><span class="p">(</span><span class="n">Result</span> <span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)(</span><span class="n">Arg</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">pointer_to_unary_function</span><span class="o">&lt;</span><span class="n">Arg</span><span class="p">,</span><span class="n">Result</span><span class="o">&gt;</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">//二元函数指针的封装</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Arg1</span><span class="p">,</span><span class="k">class</span> <span class="nc">Arg2</span><span class="p">,</span><span class="k">class</span> <span class="nc">Result</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">pointer_to_binary_function</span><span class="o">:</span><span class="k">public</span> <span class="n">binary_function</span><span class="o">&lt;</span><span class="n">Arg1</span><span class="p">,</span><span class="n">Arg2</span><span class="p">,</span><span class="n">Result</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="nl">protected:</span>
+    <span class="c1">//内部成员，一个函数指针</span>
+
+    <span class="n">Result</span> <span class="p">(</span><span class="o">*</span><span class="n">ptr</span><span class="p">)(</span><span class="n">Arg1</span><span class="p">,</span><span class="n">Arg2</span><span class="p">);</span>
+<span class="nl">public:</span>
+    <span class="n">pointer_to_binary_function</span><span class="p">(){}</span>
+    <span class="c1">//将函数指针记录在内部成员之中</span>
+
+    <span class="k">explicit</span> <span class="n">pointer_to_binary_function</span><span class="p">(</span><span class="n">Result</span> <span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)(</span><span class="n">Arg1</span><span class="p">,</span><span class="n">Arg2</span><span class="p">))</span><span class="o">:</span><span class="n">ptr</span><span class="p">(</span><span class="n">x</span><span class="p">){}</span>
+    <span class="c1">//函数指针执行函数</span>
+
+    <span class="n">Result</span> <span class="k">operator</span><span class="p">()(</span><span class="n">Arg1</span> <span class="n">x</span><span class="p">,</span><span class="n">Arg2</span> <span class="n">y</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">ptr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">);}</span>
+<span class="p">};</span>
+<span class="c1">//辅助函数，方便函数的使用</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Arg1</span><span class="p">,</span><span class="k">class</span> <span class="nc">Arg2</span><span class="p">,</span><span class="k">class</span> <span class="nc">Result</span><span class="p">&gt;</span>
+<span class="c1">//定义返回类型</span>
+
+<span class="kr">inline</span> <span class="n">pointer_to_binary_function</span><span class="o">&lt;</span><span class="n">Arg1</span><span class="p">,</span><span class="n">Arg2</span><span class="p">,</span><span class="n">Result</span><span class="o">&gt;</span>
+<span class="n">ptr_fun</span><span class="p">(</span><span class="n">Result</span> <span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)(</span><span class="n">Arg1</span><span class="p">,</span><span class="n">Arg2</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">pointer_to_binary_function</span><span class="o">&lt;</span><span class="n">Arg1</span><span class="p">,</span><span class="n">Arg2</span><span class="p">,</span><span class="n">Result</span><span class="o">&gt;</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="845-用于成员函数指针mem_funmem_fun_ref">8.4.5 用于成员函数指针：mem_fun,mem_fun_ref；</h4>
+
+<p>这种配接器使得我们能够将成员函数当做仿函数来进行使用，使得成员函数可以搭配各种泛型算法。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-11-15-48-03.png" alt="类阶层体系" /></p>
+:ET

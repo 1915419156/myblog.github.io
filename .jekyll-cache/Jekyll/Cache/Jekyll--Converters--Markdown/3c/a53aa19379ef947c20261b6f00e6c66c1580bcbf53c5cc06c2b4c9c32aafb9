@@ -1,0 +1,2 @@
+I"{<p><code class="language-plaintext highlighter-rouge">$(filter-out main1.o main2.o,main1.o foo.o main2.o bar.o)</code></p>
+:ET

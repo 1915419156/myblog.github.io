@@ -1,0 +1,2 @@
+I",<p><code class="language-plaintext highlighter-rouge">ifstream,wifstream</code> 从文件读取数据；<code class="language-plaintext highlighter-rouge">ofstream,wofstream</code> 从文件写入数据；<code class="language-plaintext highlighter-rouge">fstream,wfstream</code> 读写文件；</p>
+:ET

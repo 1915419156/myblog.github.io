@@ -1,0 +1,45 @@
+I"�
+<h1 id="虚拟化工程师之路">虚拟化工程师之路</h1>
+
+<h2 id="前言">前言</h2>
+<p>虚拟化工程师需要很多专业知识积累，在这里进行相关学习路线和知识笔记的记录。对应的学习路线规划。</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+  <li><a href="https://job.toutiao.com/experienced/position/7024006656662456589/detail?spread=A43M6VU">虚拟化工程师(字节)</a></li>
+  <li><a href="https://www.zhipin.com/job_detail/b26d1709084eab031nB-2dm1GVRQ.html?lid=4UT9SSbcZK.search.15&amp;securityId=jbBsYQK9wjih5-P1tS2wgtlz-08UM2Ns_FwOavMl_7VlEcyaHlRzRQJpGvhZb_vXHlefuP79zW_3AKCyAr69jNaw38GG3RVUIWYV_qMAknImGEzviOHG&amp;sessionId=">虚拟化工程师(百度)</a></li>
+  <li><a href="https://www.zhipin.com/job_detail/326441465c93bb361XN43di4FVdZ.html?lid=4SnUFigTXn.search.4&amp;securityId=wCyFpPCneFDe0-z1I4_t33YaLifiyeh82SZUUarto3UE23ymgUrY0nfprGwVZBU8hkn1FZr_KD2yJQQFHFEbhkkO7_4qDVeAny-Q0IAdm8Z9gbg~&amp;sessionId=">虚拟化工程师(中曙光)</a></li>
+  <li><a href="https://cloud.tencent.com/developer/article/1452064">KVM学习及应用的七个阶段</a></li>
+</ul>
+
+<h2 id="虚拟化技能要求">虚拟化技能要求</h2>
+<ul>
+  <li>字节虚拟化工程师要求
+<img src="http://wangpengcheng.github.io/img/2023-04-11-11-39-16.png" alt="" /></li>
+  <li>百度
+<img src="http://wangpengcheng.github.io/img/2023-04-11-11-43-58.png" alt="" /></li>
+  <li>中曙光
+<img src="http://wangpengcheng.github.io/img/2023-04-11-11-41-58.png" alt="" /></li>
+</ul>
+
+<h2 id="学习资料与书籍">学习资料与书籍</h2>
+
+<h3 id="书籍资料">书籍资料</h3>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />系统虚拟化：原理与实现</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />深度探索Linux系统虚拟化</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />QEMU-KVM 源码剖析</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />openstack 设计与实现</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />自己动手写docker</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />cgroup 深入解析</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />kubernete 源码剖析</li>
+</ul>
+
+<h2 id="面经收集">面经收集</h2>
+
+<h3 id="面经地址">面经地址</h3>
+
+<h3 id="面试问题">面试问题</h3>
+
+<h2 id="结合工作准备">结合工作准备</h2>
+:ET

@@ -1,0 +1,2 @@
+I"<p>在一个输入流或输出流中将标记定位到from之前或之后<code class="language-plaintext highlighter-rouge">off</code>个字符，<code class="language-plaintext highlighter-rouge">from</code>可以是下列值之一：<code class="language-plaintext highlighter-rouge">beg</code>,偏移量相对于流开始位置，<code class="language-plaintext highlighter-rouge">cur</code>,偏移量相对于流当前结束位置；<code class="language-plaintext highlighter-rouge">end</code>,偏移量相对于流结尾位置</p>
+:ET

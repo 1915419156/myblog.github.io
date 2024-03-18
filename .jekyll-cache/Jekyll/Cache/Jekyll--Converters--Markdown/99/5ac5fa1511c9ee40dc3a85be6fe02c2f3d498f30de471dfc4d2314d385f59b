@@ -1,0 +1,26 @@
+I"<h1 id="阿里中间件学习笔记">阿里中间件学习笔记</h1>
+
+<ul>
+  <li><a href="https://github.com/alibaba/tengine">tengine</a></li>
+  <li><a href="https://github.com/alibaba/arthas">arthas</a></li>
+  <li><a href="https://github.com/takeseem/diamond">diamond</a></li>
+  <li><a href="https://github.com/alibaba/Sentinel">Sentinel</a></li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Test</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">testbreakpointStorePlay</span><span class="o">(){</span>
+        <span class="nc">SopStoreBreakpointRequest</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">SopStoreBreakpointRequest</span><span class="o">();</span>
+        <span class="n">request</span><span class="o">.</span><span class="na">setSessionId</span><span class="o">(</span><span class="s">"sid"</span><span class="o">);</span>
+        <span class="n">request</span><span class="o">.</span><span class="na">setResumeParamMaps</span><span class="o">(</span><span class="nc">Maps</span><span class="o">.</span><span class="na">newHashMap</span><span class="o">());</span>
+        <span class="nc">Boolean</span> <span class="n">res</span> <span class="o">=</span> <span class="nc">Boolean</span><span class="o">.</span><span class="na">TRUE</span><span class="o">;</span>
+        <span class="n">doReturn</span><span class="o">(</span><span class="n">res</span><span class="o">).</span><span class="na">when</span><span class="o">(</span><span class="n">sopEngineManager</span><span class="o">).</span><span class="na">breakpointStorePlay</span><span class="o">(</span><span class="n">anyObject</span><span class="o">());</span>
+        <span class="nc">Result</span><span class="o">&lt;</span><span class="nc">Void</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">sopRuntimeService</span><span class="o">.</span><span class="na">breakpointStorePlay</span><span class="o">(</span><span class="n">request</span><span class="o">,</span><span class="kc">null</span><span class="o">);</span>
+        <span class="nc">Assert</span><span class="o">.</span><span class="na">assertTrue</span><span class="o">(</span><span class="n">result</span><span class="o">.</span><span class="na">getSuccess</span><span class="o">());</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="nc">Boolean</span><span class="o">.</span><span class="na">FALSE</span><span class="o">;</span>
+        <span class="nc">Result</span><span class="o">&lt;</span><span class="nc">Void</span><span class="o">&gt;</span> <span class="n">failRes</span> <span class="o">=</span> <span class="n">sopRuntimeService</span><span class="o">.</span><span class="na">breakpointStorePlay</span><span class="o">(</span><span class="n">request</span><span class="o">,</span><span class="kc">null</span><span class="o">);</span>
+        <span class="nc">Assert</span><span class="o">.</span><span class="na">assertFalse</span><span class="o">(</span><span class="n">failRes</span><span class="o">.</span><span class="na">getSuccess</span><span class="o">());</span>
+
+    <span class="o">}</span>
+
+</code></pre></div></div>
+:ET

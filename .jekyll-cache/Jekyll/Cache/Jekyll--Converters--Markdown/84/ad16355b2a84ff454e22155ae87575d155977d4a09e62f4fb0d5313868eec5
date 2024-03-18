@@ -1,0 +1,2 @@
+I"`<p>Always four bytes. More efficient than uint32 if values are often greater than 228.</p>
+:ET

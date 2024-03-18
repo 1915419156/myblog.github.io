@@ -1,0 +1,197 @@
+I"�/<h1 id="更改usb设备配置">更改USB设备配置</h1>
+
+<p><em>参考链接：</em></p>
+
+<ul>
+  <li><a href="https://blog.csdn.net/jiangchao3392/article/details/76227180">ubuntu16.04 中永久修改USB设备权限</a></li>
+  <li><a href="https://blog.csdn.net/bigdog_1027/article/details/79009603">Ubuntu下USB权限问题以及udev规则文件笔记</a></li>
+  <li><a href="https://blog.csdn.net/xinmei4275/article/details/88620984">ubuntu 为USB串口绑定固定的设备名</a></li>
+  <li><a href="https://blog.csdn.net/scx837685002/article/details/80316176">为 USB设备绑定固定的设备名</a></li>
+</ul>
+
+<p>在嵌入式开发和其它过程中，往往会出现USB设备的接入。但是对于多个USB设备接入时，由于操作系统的<code class="language-plaintext highlighter-rouge">ttyUSB*</code>的动态分配原则，不同设备之间可能存在USB设备文件更新不及时的冲突。而且设备驱动和ROS的launch文件也经常需要更换<code class="language-plaintext highlighter-rouge">ttyUSB*</code>的设备编号配置。<strong>并且每一次需要更新设备读写权限</strong>，较为麻烦。</p>
+
+<p>这里可以在Linux中通过设置USB rules配置文件的方式来进行配置，通过识别设备的芯片编号绑定将设备绑定到固定的设备文件符中。</p>
+
+<p>主要流程如下：</p>
+
+<ol>
+  <li>查询设备的硬件编号。</li>
+  <li>根据硬件编号设置rules文件。</li>
+  <li>重新启动udev serveice 更新配置文件</li>
+  <li>重新插拔设备，查看设备文件符</li>
+</ol>
+
+<h2 id="查询设备硬件编号">查询设备硬件编号</h2>
+
+<p>一般USB设备插入，会自动分配<code class="language-plaintext highlighter-rouge">ttyUSB*</code>的设备编号，可以使用<code class="language-plaintext highlighter-rouge">ls -ahl /dev/ttyUSB*</code>查看所有的USB接口。显示内容如下</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-10-04-13-32-58.png" alt="usb显示内容" /></p>
+
+<p>也可以直接使用，如下命令查看USB设备的详细信息</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>udevadm info <span class="nt">--attribute-walk</span> <span class="nt">--name</span><span class="o">=</span>/dev/ttyUSB0
+</code></pre></div></div>
+<p><img src="https://img-blog.csdn.net/20180109170439856?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvYmlnZG9nXzEwMjc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="详细设备信息" /></p>
+
+<p>其中<code class="language-plaintext highlighter-rouge">ATTRS{idProduct}</code>和<code class="language-plaintext highlighter-rouge">ATTRS{idVendor</code>代表设备的硬件芯片信息。是操作系统内核识别设备的关键。</p>
+
+<p>也可以使用<code class="language-plaintext highlighter-rouge">lsusb</code>命令直接查看所有设备的关键信息如下：</p>
+
+<p><img src="https://img-blog.csdn.net/20180109121201876?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvYmlnZG9nXzEwMjc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="查看设备的关键信息" /></p>
+
+<h2 id="添加udev-rules规则文件">添加<code class="language-plaintext highlighter-rouge">udev rules</code>规则文件</h2>
+
+<p><em>参考链接：</em> <a href="https://linux.cn/article-6449-1.html?utm_source=weixin">如何在 Linux 中永久修改 USB 设备权限</a>;<a href="https://blog.csdn.net/jiangchao3392/article/details/76227180">ubuntu 16.04 中永久修改 USB 设备权限</a></p>
+
+<p>设备规则文件在Ubuntu中存放在<code class="language-plaintext highlighter-rouge">/etc/udev/rules.d/</code>文件夹下。可以在此文件夹中添加自定义的以<code class="language-plaintext highlighter-rouge">.rules</code>的文件。</p>
+
+<p>udev的规则的匹配关键键内容如下：</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">关键键</th>
+      <th style="text-align: left">含义</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">ACTION</td>
+      <td style="text-align: left">事件 (uevent)的行为，例如：add( 添加设备 )、remove(删除设备 )。</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">KERNEL</td>
+      <td style="text-align: left">在内核里看到的设备名字，比如sd*表示任意SCSI磁盘设备</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DEVPATH</td>
+      <td style="text-align: left">内核设备录进，比如/devices/*</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SUBSYSTEM</td>
+      <td style="text-align: left">子系统名字，例如：sda的子系统为 block。</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">BUS</td>
+      <td style="text-align: left">总线的名字，比如IDE,USB</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DRIVER</td>
+      <td style="text-align: left">设备驱动的名字，比如ide-cdrom</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ID</td>
+      <td style="text-align: left">独立于内核名字的设备名字</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SYSFS{value}</td>
+      <td style="text-align: left">sysfs属性值，他可以表示任意</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ENV{ key}</td>
+      <td style="text-align: left">环境变量，可以表示任意</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">PROGRAM</td>
+      <td style="text-align: left">可执行的外部程序，如果程序返回0值，该键则认为为真(true)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESULT</td>
+      <td style="text-align: left">上一个PROGRAM调用返回的标准输出。</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">NAME</td>
+      <td style="text-align: left">根据这个规则创建的设备文件的文件名。**注意：仅仅第一行的NAME描述是有效的，后面的均忽略。如果你想使用使用两个以上的名字来访问一个设备的话，可以考虑SYMLINK键。**</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SYMLINK</td>
+      <td style="text-align: left">为 /dev/下的设备文件产生符号链接。由于 udev只能为某个设备产生一个设备文件，**所以为了不覆盖系统默认的 udev规则所产生的文件，推荐使用符号链接。**</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">OWNER</td>
+      <td style="text-align: left">设备文件的属组</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">GROUP</td>
+      <td style="text-align: left">设备文件所在的组。</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">MODE</td>
+      <td style="text-align: left">设备文件的权限，采用8进制</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RUN </td>
+      <td style="text-align: left">为设备而执行的程序列表</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">LABEL</td>
+      <td style="text-align: left">在配置文件里为内部控制而采用的名字标签(下下面的GOTO服务)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">GOTO</td>
+      <td style="text-align: left">跳到匹配的规则（通过LABEL来标识），有点类似程序语言中的GOTO</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">IMPORT{type}</td>
+      <td style="text-align: left">导入一个文件或者一个程序执行后而生成的规则集到当前文件</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">WAIT_FOR_SYSFS</td>
+      <td style="text-align: left">等待一个特定的设备文件的创建。主要是用作时序和依赖问题。</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">PTIONS</td>
+      <td style="text-align: left">特定的选项：</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">last_rule</td>
+      <td style="text-align: left">对这类设备终端规则执行；</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignore_device</td>
+      <td style="text-align: left">忽略当前规则；</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ignore_remove</td>
+      <td style="text-align: left">忽略接下来的并移走请求。</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">all_partitions</td>
+      <td style="text-align: left">为所有的磁盘分区创建设备文件。</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>在<code class="language-plaintext highlighter-rouge">/etc/udev/rules.d</code>文件夹下创建自定义<code class="language-plaintext highlighter-rouge">my_usb_rules.rules</code>文件内容如下</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ultrasonic_radar usb rules</span>
+<span class="nv">KERNEL</span><span class="o">==</span><span class="s2">"ttyUSB*"</span>, <span class="nv">SUBSYSTEMS</span><span class="o">==</span><span class="s2">"usb"</span>, ATTRS<span class="o">{</span>idVendor<span class="o">}==</span><span class="s2">"10c4"</span>, ATTRS<span class="o">{</span>idProduct<span class="o">}==</span><span class="s2">"ea60"</span>, <span class="nv">GROUP</span><span class="o">=</span><span class="s2">"users"</span>, <span class="nv">MODE</span><span class="o">=</span><span class="s2">"0666"</span>, ENV<span class="o">{</span>ID_MM_DEVICE_IGNORE<span class="o">}=</span><span class="s2">"1"</span>, SYMLINK+<span class="o">=</span><span class="s2">"ultrasonic_radar"</span>
+<span class="c"># imu usb rules</span>
+<span class="nv">KERNEL</span><span class="o">==</span><span class="s2">"ttyUSB*"</span>, <span class="nv">SUBSYSTEMS</span><span class="o">==</span><span class="s2">"usb"</span>, ATTRS<span class="o">{</span>idVendor<span class="o">}==</span><span class="s2">"0403"</span>, ATTRS<span class="o">{</span>idProduct<span class="o">}==</span><span class="s2">"6001"</span>, <span class="nv">GROUP</span><span class="o">=</span><span class="s2">"users"</span>, <span class="nv">MODE</span><span class="o">=</span><span class="s2">"0666"</span>, ENV<span class="o">{</span>ID_MM_DEVICE_IGNORE<span class="o">}=</span><span class="s2">"1"</span>, SYMLINK+<span class="o">=</span><span class="s2">"imu"</span>
+</code></pre></div></div>
+
+<p>注意：
+这里的<code class="language-plaintext highlighter-rouge">ATTRS{idVendor}</code>和<code class="language-plaintext highlighter-rouge">ATTRS{idProduct}</code>是查询到的对应的设备地芯片的硬件值。<code class="language-plaintext highlighter-rouge">SYMLINK+=</code>对应的是对设备<code class="language-plaintext highlighter-rouge">ttyUSB*</code>生成的软连接名称。<code class="language-plaintext highlighter-rouge">MODE</code>是对设备权限的更改。<strong>一定要添加<code class="language-plaintext highlighter-rouge">KERNEL=="ttyUSB*"</code></strong>生成软连接。否则直接生成对名称的设备号。一般的linux驱动无法识别。</p>
+
+<h3 id="重启服务查看-对应设备">重启服务查看 对应设备</h3>
+
+<p>当添加或者删除udev的rules文件后，都需要使用如下命令，进行设备读取rules的更新</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>service udev reload
+<span class="nb">sudo </span>service udev restart
+</code></pre></div></div>
+
+<p><strong>然后重新插拔USB设备，就可以按照新的规则执行了</strong>。查看生成的设备文件符如下：</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-10-04-13-58-59.png" alt="设备符" /></p>
+
+<p>使用<code class="language-plaintext highlighter-rouge">cutecom</code>查看串口通信结果如下：</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-10-04-14-00-50.png" alt="串口测试" /></p>
+
+<p>表示能够正常使用。</p>
+
+<p><strong>注意：这里是根据设备芯片类进行的配置具有唯一性，一个规则只能配置一种设备，两个设备是同种设备时不能由设备芯片进行识别区分</strong></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-10-04-14-10-26.png" alt="" /></p>
+:ET

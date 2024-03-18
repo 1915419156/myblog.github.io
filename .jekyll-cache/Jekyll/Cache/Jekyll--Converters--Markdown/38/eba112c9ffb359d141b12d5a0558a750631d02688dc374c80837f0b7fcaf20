@@ -1,0 +1,1209 @@
+I"w�<blockquote>
+  <p>2019-7-3 20:56:48</p>
+</blockquote>
+
+<h1 id="c并发编程阅读笔记">C++并发编程阅读笔记</h1>
+
+<p><em>参考链接：</em></p>
+
+<ul>
+  <li><a href="https://chenxiaowei.gitbooks.io/cpp_concurrency_in_action/">C++ 并发编程中文版</a>；</li>
+  <li><a href="https://legacy.gitbook.com/book/chenxiaowei/c-concurrency-in-action-second-edition-2019">第二版在线地址</a></li>
+</ul>
+
+<h2 id="第1章-你好c的并发世界">第1章 你好，C++的并发世界</h2>
+
+<h3 id="111--何谓并发">1.1.1  何谓并发</h3>
+
+<p><strong>并发</strong>：CPU交替使用时钟，模拟并发</p>
+
+<p><strong>并行</strong>：线程的真正并行执行</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-07-03 21-04-58.png" alt="多线程并行比较" /></p>
+
+<h4 id="112--并发的途径">1.1.2  并发的途径</h4>
+
+<ul>
+  <li>多进程并发：将应用程序分为多个独立的进程,它们在同一时刻运行,就像同
+时进行网页浏览和文字处理一样。</li>
+  <li>多线程并发：在单个进程中运行多个线程。线程很像轻量级的进程:每个线程相互独
+立运行,且线程可以在不同的指令序列中运行。进程中的所有线程都共享地址空间,
+并且所有线程访问到大部分数据———全局变量仍然是全局的,指针、对象的引用或数据可
+以在线程之间传递。</li>
+</ul>
+
+<p><strong>注意：Linux 一般允许的最大堆栈为8-10M，需要自己设置扩容</strong></p>
+
+<p>程序并发的方式有2种：</p>
+
+<ul>
+  <li>程序执行并行：不同的线程执行，不同的过程</li>
+  <li>数据并行：不同的线程执行相同的程序，处理不同的数据。</li>
+</ul>
+
+<h3 id="14-开始入门">1.4 开始入门</h3>
+<p>开始多线程编程的一个简单例子：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;iostream&gt;
+</span>
+<span class="cp">#include &lt;thread&gt;
+</span>
+<span class="kt">void</span> <span class="nf">hello</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"Hello Concurrent World</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//设置线程初始函数名称</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">hello</span><span class="p">);</span> 
+    <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="第2章--线程管理">第2章  线程管理</h2>
+
+<h3 id="21-线程管理的基础">2.1 线程管理的基础</h3>
+
+<p>main()函数就是一个程序的主要线程，其它线程主要由函数的入口所决定。当线程执行完入口函数后，线程也会退出。</p>
+
+<h4 id="211-启动线程">2.1.1 启动线程</h4>
+
+<p><em>参考链接:</em> <a href="https://www.cnblogs.com/zhanghu52030/p/9166526.html">c++并发编程</a></p>
+
+<p>线程在<code class="language-plaintext highlighter-rouge">std::thread</code>对象构造时就开始启动了，无返回值时，启动后自动结束，存在返回值时，参数传递完成后结束。</p>
+
+<p><code class="language-plaintext highlighter-rouge">std::thread</code>允许使用带有函数调用符类型的实例传入<code class="language-plaintext highlighter-rouge">std::thread</code>类中，来替换默认的构造函数</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">class</span> <span class="nc">background_task</span>
+<span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="kt">void</span> <span class="k">operator</span><span class="p">()()</span> <span class="k">const</span>
+    <span class="p">{</span>
+        <span class="n">do_something</span><span class="p">();</span>
+        <span class="n">do_something_else</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="n">background_task</span> <span class="n">f</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">my_thread</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+
+
+</code></pre></div></div>
+
+<p>注意： 当把函数对象传入到线程构造函数中时，如果你传递一个临时变量，而不是一个命名的变
+量;C++编译器会将其解析为函数声明,而不是类型对象的定义。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">my_thread</span><span class="p">(</span><span class="n">background_task</span><span class="p">());</span>
+
+<span class="c1">// 声明了一个名为my_thread的函数，函数指针指向没有参数并返回background_task对象的函数；返回一个std::thread对象的函数，而非启动了一个线程</span>
+
+<span class="c1">//使用多组括号或者新的统一初始化语法可以避免这个问题</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">my_thread</span><span class="p">((</span><span class="n">background_task</span><span class="p">()));</span> 
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">{</span><span class="n">background_task</span><span class="p">()};</span>
+
+<span class="c1">//使用lambda表达式也能避免这个问题</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">my_thread</span><span class="p">([]{</span>
+    <span class="n">do_something</span><span class="p">();</span>
+    <span class="n">do_something_else</span><span class="p">();</span>
+<span class="err">}</span><span class="p">);</span>
+
+</code></pre></div></div>
+<p>如果没有指定线程的销毁<code class="language-plaintext highlighter-rouge">std::thread</code>对象会在析构函数中调用<code class="language-plaintext highlighter-rouge">std::terminate()</code>进行对象销毁和析构。</p>
+
+<p>注意：</p>
+
+<ul>
+  <li><strong>如果需要自己指定线程销毁，必须在<code class="language-plaintext highlighter-rouge">std::thread</code>对象销毁之前决定</strong></li>
+  <li><strong>如果不主动等待线程结束，就必须保证线程结束之前，数据的有效性，避免线程还未结束，函数已经退出，变量成为销毁的局部变量</strong></li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">func</span>
+<span class="p">{</span>
+    <span class="kt">int</span><span class="o">&amp;</span> <span class="n">i</span><span class="p">;</span>
+    <span class="n">func</span><span class="p">(</span><span class="kt">int</span><span class="o">&amp;</span> <span class="n">i_</span><span class="p">)</span> <span class="o">:</span><span class="n">i</span><span class="p">(</span><span class="n">i_</span><span class="p">){}</span>
+    <span class="kt">void</span> <span class="k">operator</span><span class="p">()</span> <span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">unsigned</span>   <span class="n">j</span><span class="o">=</span><span class="mi">0</span> <span class="p">;</span>   <span class="n">j</span><span class="o">&lt;</span><span class="mi">1000000</span>   <span class="p">;</span>   <span class="o">++</span><span class="n">j</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="n">do_something</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+                <span class="c1">//  1.  潜在访问隐患:悬空引用</span>
+
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+<span class="kt">void</span> <span class="nf">oops</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">some_local_state</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="n">func</span> <span class="n">my_func</span><span class="p">(</span><span class="n">some_local_state</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">my_thread</span><span class="p">(</span><span class="n">my_func</span><span class="p">);</span>
+    <span class="n">my_thread</span><span class="p">.</span><span class="n">detach</span><span class="p">();</span>
+    <span class="c1">//  2.  不等待线程结束</span>
+
+<span class="p">}</span>                                                                    <span class="c1">//  3.  新线程可能还在运行</span>
+
+
+</code></pre></div></div>
+
+<p>对于上述的处理方法是将数据复制到线程中，使得线程函数的功能齐全。而非复制到共享数据中。此外,可以通过join()函数来确保线程在函数完成前结束。但是join()只是简单粗暴的等待线程完成或者不等待。等待线程完成的例子如下：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span>  <span class="nc">func</span><span class="p">;</span>   <span class="c1">//定义在清单2.1中</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">some_local_state</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="n">func</span> <span class="n">my_func</span><span class="p">(</span><span class="n">some_local_state</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">my_func</span><span class="p">);</span>
+    <span class="c1">//使用异常捕获，保证访问本地状态的线程退出后，函数才结束</span>
+
+    <span class="k">try</span>
+    <span class="p">{</span>
+        <span class="n">do_something_in_current_thread</span><span class="p">();</span>
+    <span class="p">}</span><span class="k">catch</span><span class="p">(...)</span>
+    <span class="p">{</span>
+        <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>       <span class="cm">/* 等待线程结束 */</span>
+        <span class="k">throw</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>       <span class="cm">/* 等待线程结束 */</span>
+
+<span class="p">}</span>
+
+<span class="cm">/*使用“资源获取即初始化方式”(RAII,Resource  Acquisition Is  Initialization)等待线程退出*/</span>
+
+<span class="k">class</span> <span class="nc">thread_guard</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&amp;</span> <span class="n">t</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="k">explicit</span> <span class="n">thread_guard</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&amp;</span> <span class="n">t_</span><span class="p">)</span><span class="o">:</span><span class="n">t</span><span class="p">(</span><span class="n">t_</span><span class="p">)</span>
+    <span class="p">{</span>
+
+    <span class="p">}</span>
+    <span class="o">~</span><span class="n">thread_guard</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//判断线程是否已经开始加入</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">joinable</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="c1">//析构函数中使得线程被加入到原始线程中</span>
+
+            <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="cm">/* 禁止使用默认的拷贝构造函数 */</span>
+    <span class="n">thread_guard</span><span class="p">(</span><span class="n">thread_guard</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+    <span class="cm">/* 禁止使用赋值函数 */</span>
+    <span class="n">thread_guard</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">thread_guard</span> <span class="k">const</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="nc">func</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">some_local_state</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="n">func</span> <span class="n">my_func</span><span class="p">(</span><span class="n">some_local_state</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">my_function</span><span class="p">);</span>
+    <span class="n">thread_guard</span> <span class="n">g</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+    <span class="n">thread_guard</span> <span class="n">g</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+    <span class="n">do_something_in_current_thread</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="c1">//函数结束，局部对象开始逆序销毁，</span>
+
+</code></pre></div></div>
+<h5 id="214-后台运行线程">2.1.4 后台运行线程</h5>
+
+<p>使用<code class="language-plaintext highlighter-rouge">detach()</code>会让线程在后台运行。意味着主线程不能与该线程产生直接互交。使得线程实现分离，并且由C++编译器实现资源的回收。</p>
+
+<p>通常称分离线程为守护线程(daemon threads);UNIX中守护线程是指,没有任何显式的用户接
+口,并在后台运行的线程。这种线程的特点就是长时间运行;线程的生命周期可能会从某一个应用起始到结束,可能会在后台监视文件系统,还有可能对缓存进行清理,亦或对数据结构进行优化。另一方面,分离线程的另一方面只能确定线程什么时候结束,发后即忘(fire and forget)的任务就使用到线程的这种方式。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">t</span><span class="p">(</span><span class="n">do_background_work</span><span class="p">);</span>
+<span class="n">t</span><span class="p">.</span><span class="n">detach</span><span class="p">();</span>
+<span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">t</span><span class="p">.</span><span class="n">joinable</span><span class="p">());</span>
+
+<span class="c1">//线程分离之后与之前的主线程无关</span>
+
+<span class="c1">//多线程处理文档的示例：</span>
+
+<span class="kt">void</span> <span class="nf">edit_document</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span>   <span class="k">const</span><span class="o">&amp;</span>  <span class="n">filename</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">open_document_and_display_gui</span><span class="p">(</span><span class="n">filename</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">done_editing</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="n">user_command</span>  <span class="n">cmd</span><span class="o">=</span><span class="n">get_user_input</span><span class="p">();</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">cmd</span><span class="p">.</span><span class="n">type</span><span class="o">==</span><span class="n">open_new_document</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="k">const</span>   <span class="n">new_name</span><span class="o">=</span><span class="n">get_filename_from_user</span><span class="p">();</span>
+            <span class="c1">//启动一个新线程开始显示和处理文档</span>
+
+            <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">edit_document</span><span class="p">,</span><span class="n">new_name</span><span class="p">);</span>
+            <span class="c1">//分离线程</span>
+
+            <span class="n">t</span><span class="p">.</span><span class="n">detach</span><span class="p">();</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="n">process_user_input</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<h4 id="22-向线程函数传递参数">2.2 向线程函数传递参数</h4>
+
+<p><em>参考链接：</em> <a href="https://blog.csdn.net/lvdan1/article/details/54098559">C++11的6种内存序总结</a>;</p>
+
+<p>线程调用的默认参数要拷贝到线程独立内存中，几十参数是引用的形式，也可以在新线程中进行访问。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">s</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">t</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="s">"hello"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>注意： <strong>指向动态变量的指针作为参数传递给线程的情况，可能在传递过程中产生未定义的行为。使得程序崩溃</strong></p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="kt">void</span> <span class="nf">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="k">const</span><span class="o">&amp;</span>  <span class="n">s</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">oops</span><span class="p">(</span><span class="kt">int</span> <span class="n">some_param</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//指针变量</span>
+
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+    <span class="c1">//指针变量指向输入参数</span>
+
+    <span class="n">sprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="s">"%i"</span><span class="p">,</span><span class="n">some_param</span><span class="p">);</span>
+    <span class="c1">//创建线程，输入指针函数</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">buffer</span><span class="p">);</span>
+    <span class="cm">/* 线程执行与主线程分离 */</span>
+    <span class="n">t</span><span class="p">.</span><span class="n">detach</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">//在从char*到std::string类型转换的过程中，函数很有可能在转化成功之前崩溃；但是`std::thread`的构造函数会复制提供的变量，就只复制了没有转换成期望类型的字符串字面值，最终造成程序崩溃。</span>
+
+<span class="c1">//只要能在构造函数之前将字面值转换为`string`对象就可以了。</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">s</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">not_oops</span><span class="p">(</span><span class="kt">int</span> <span class="n">some_param</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+    <span class="n">sprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="s">"%i"</span><span class="p">,</span><span class="n">some_param</span><span class="p">);</span>
+    <span class="c1">//使用显示转换避免指针悬垂</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+    <span class="n">t</span><span class="p">.</span><span class="n">detach</span><span class="p">();</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p>注意：</p>
+<ul>
+  <li>当想要在线程构造函数中传递参数为引用参数，使得变量在线程中进行更改的时候，需要使用<code class="language-plaintext highlighter-rouge">std::ref</code>将参数转换成为引用的形式，避免其在构造的过程中使用默认拷贝。如<code class="language-plaintext highlighter-rouge">std::thread t(update_data_for_widget,w,std::ref(data));</code>;这样data就在线程前后发生了改变。</li>
+  <li>可以使用<code class="language-plaintext highlighter-rouge">std::move</code>将一个参数，移动到线程中去。</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//输如参数是一个只允许一个使用的指针</span>
+
+<span class="kt">void</span> <span class="nf">process_big_object</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">big_object</span><span class="o">&gt;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">big_object</span><span class="o">&gt;</span> <span class="n">p</span><span class="p">(</span><span class="k">new</span> <span class="n">big_object</span><span class="p">);</span>
+<span class="n">p</span><span class="o">-&gt;</span><span class="n">prepare_data</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>
+<span class="c1">//使用move函数，进行移动语义，右值引用；将指针的所有权，交给线程内部的函数库</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">t</span><span class="p">(</span><span class="n">process_big_object</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+
+</code></pre></div></div>
+
+<h4 id="23-转移线程所有权">2.3 转移线程所有权</h4>
+<p>为了保证线程控制句柄的有效性，<code class="language-plaintext highlighter-rouge">std::thread</code>支持使用<code class="language-plaintext highlighter-rouge">std:move()</code>函数实现函数的转移，<strong>但是线程的拷贝构造和赋值操作符决定了，它在进行复制时会先使用<code class="language-plaintext highlighter-rouge">std::terminate()</code>强制结束原来已有的线程，再接受新句柄；即说明：不能通过赋一个新值给std::thread 对象的方式来“丢弃”一个线程</strong>。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">some_function</span><span class="p">();</span>
+<span class="kt">void</span> <span class="nf">some_other_function</span><span class="p">();</span>
+<span class="c1">//直接构造线程对象</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">t1</span><span class="p">(</span><span class="n">some_function</span><span class="p">);</span> 
+<span class="c1">//移动线程句柄到t2，之后t1无用</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t2</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t1</span><span class="p">);</span>
+<span class="c1">//创建拷贝的时候，默认隐式调用std::move()函数</span>
+
+<span class="n">t1</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="n">some_other_function</span><span class="p">);</span>
+<span class="c1">//创建线程对象</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t3</span><span class="p">;</span>
+<span class="c1">//t2线程句柄，交给t3 </span>
+
+<span class="n">t3</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t2</span><span class="p">);</span>
+<span class="c1">//t1执行std::terminate()终止程序继续运行，保证与std::thread的析构函数行为一致，需要在</span>
+
+<span class="n">t1</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t3</span><span class="p">);</span>
+
+</code></pre></div></div>
+<p>建议的线程拷贝使用如下：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">scoped_thread</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="c1">//直接获取线程的句柄函数</span>
+
+    <span class="k">explicit</span> <span class="n">scoped_thread</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">t_</span><span class="p">)</span><span class="o">:</span>
+                <span class="n">t</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">t_</span><span class="p">))</span>
+    <span class="p">{</span>
+        <span class="c1">//线程以及结束过一次就返回失败</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">t</span><span class="p">.</span><span class="n">joinable</span><span class="p">())</span>
+            <span class="k">throw</span>   <span class="n">std</span><span class="o">::</span><span class="n">logic_error</span><span class="p">(</span><span class="err">“</span><span class="n">No</span> <span class="kr">thread</span><span class="err">”</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="c1">//析构函数结束线程</span>
+
+    <span class="o">~</span><span class="n">scoped_thread</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="c1">//拷贝构造函数</span>
+    
+    <span class="n">scoped_thread</span><span class="p">(</span><span class="n">scoped_thread</span> <span class="k">const</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+    <span class="c1">//赋值操作符</span>
+
+    <span class="n">scoped_thread</span><span class="o">&amp;</span>  <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">scoped_thread</span> <span class="k">const</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">struct</span>  <span class="nc">func</span><span class="p">;</span>   <span class="c1">//  定义在清单2.1中</span>
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">some_local_state</span><span class="p">;</span>
+    <span class="c1">//条用拷贝构造函数</span>
+
+    <span class="n">scoped_thread</span>   <span class="n">t</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">some_local_state</span><span class="p">)));</span>
+    <span class="c1">//执行程序</span>
+
+    <span class="n">do_something_in_current_thread</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">do_work</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">id</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">f1</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">20</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//产生线程</span>
+
+            <span class="n">threads</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span><span class="n">do_work</span><span class="p">,</span><span class="n">i</span><span class="p">));</span>  
+        <span class="p">}</span>
+        <span class="c1">//对每个线程调用join()；注意这里的mem_fn直接获取对象的函数指针</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">threads</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">threads</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="n">std</span><span class="o">::</span><span class="n">mem_fn</span><span class="p">(</span><span class="o">&amp;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">join</span><span class="p">));</span>  
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<h3 id="24-运行时决定线程数量">2.4 运行时决定线程数量</h3>
+
+<p><code class="language-plaintext highlighter-rouge">std::accumulate</code>可以用来计算容器中元素的和，总体思路是利用<code class="language-plaintext highlighter-rouge">std::thread::hardware_concurrency()</code>返回并发在一个程序中的线程数量，由此来决定最终的线程数目。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="c1">//定义小块计算的类</span>
+
+<span class="k">struct</span> <span class="nc">accumulate_block</span>
+<span class="p">{</span>
+    <span class="kt">void</span> <span class="k">operator</span><span class="p">()(</span><span class="n">Iterator</span> <span class="n">frist</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">T</span><span class="o">&amp;</span> <span class="n">result</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//使用计算结果</span>
+
+        <span class="n">result</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">result</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">//定义并行计算的模板函数</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Iterator</span><span class="p">,</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+
+<span class="n">T</span> <span class="nf">parallel_accumulate</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span><span class="n">Iterator</span> <span class="n">last</span><span class="p">,</span><span class="n">T</span> <span class="n">init</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//计算元素的总数量</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">length</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="c1">//长度为0直接返回初始值</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">length</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">init</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//最小线程数量</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">min_per_thread</span><span class="o">=</span><span class="mi">25</span><span class="p">;</span>
+    <span class="c1">//最大线程数量</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">max_threads</span><span class="o">=</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="n">min_per_thread</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">min_per_thread</span><span class="p">;</span>
+    <span class="c1">//计算正在运行的线程数量</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">hardware_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">hardware_concurrency</span><span class="p">();</span>
+    <span class="c1">//计算真正的线程数量</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">num_threads</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">hardware_threads</span><span class="o">!=</span><span class="mi">0</span><span class="o">?</span><span class="n">hardware_threads</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span><span class="n">max_threads</span><span class="p">);</span>
+    <span class="c1">//计算分块运行的数量</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">block_size</span><span class="o">=</span><span class="n">length</span><span class="o">/</span><span class="n">num_threads</span><span class="p">;</span>
+    <span class="c1">//准备结果数据</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">results</span><span class="p">(</span><span class="n">num_threads</span><span class="p">);</span>
+    <span class="c1">//准备线程</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">&gt;</span> <span class="n">threads</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="c1">//遍历初始化数据</span>
+    <span class="n">Iterator</span> <span class="n">block_start</span><span class="o">=</span><span class="n">frist</span><span class="p">;</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="p">(</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//临时分块的终点</span>
+
+        <span class="n">Iterator</span> <span class="n">block_end</span><span class="o">=</span><span class="n">block_start</span><span class="p">;</span>
+        <span class="c1">//移动迭代器将其指向末尾</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">advance</span><span class="p">(</span><span class="n">block_end</span><span class="p">,</span><span class="n">block_size</span><span class="p">);</span>
+        <span class="c1">//初始化线程</span>
+
+        <span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="p">(</span>
+            <span class="n">accumulate_block</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(),</span>
+            <span class="n">block_start</span><span class="p">,</span>
+            <span class="n">block_end</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">ref</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="p">);</span>
+        <span class="c1">//更新迭代器位置</span>
+
+        <span class="n">block_start</span><span class="o">=</span><span class="n">block_end</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//将剩余的数全部分到最后一个线程块</span>
+
+    <span class="n">accumulate_block</span><span class="o">&lt;</span><span class="n">Iterator</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">()(</span>
+        <span class="n">block_start</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">results</span><span class="p">[</span><span class="n">num_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">);</span>
+    <span class="c1">//等待创建线程的完成</span>
+    
+    <span class="n">std</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">threads</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span>
+        <span class="n">threads</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">mem_fn</span><span class="p">(</span><span class="o">&amp;</span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="o">::</span><span class="n">join</span><span class="p">)</span>
+        <span class="p">);</span>
+    <span class="c1">//计算求和</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">accumulate</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">results</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="n">init</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="c1">//注意：这里的迭代器都必须是前向迭代器，并且必须保证T存在默认的构造函数</span>
+
+</code></pre></div></div>
+
+<h3 id="25-识别线程">2.5 识别线程</h3>
+
+<p>线程标示类型是<code class="language-plaintext highlighter-rouge">std::thread::id</code>，可以通过两种方式进行检索。</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">std::thread::get_id()</code>函数直接来获取。当没有绑定线程时，函数返回<code class="language-plaintext highlighter-rouge">std::thread::type</code></li>
+  <li>在当前线程中调用<code class="language-plaintext highlighter-rouge">std::this_thread::get_id()</code>获取当前的线程标识符</li>
+</ul>
+
+<h2 id="第3章-线程间共享数据">第3章 线程间共享数据</h2>
+
+<p><em>参考链接：</em> <a href="https://blog.csdn.net/qq_37303711/article/details/78576671">C++并发编程学习——3.在线程间共享数据</a>;<a href="https://www.jianshu.com/p/c342d65c951c">线程间共享数据</a>;</p>
+
+<h3 id="31-共享数据带来的问题">3.1 共享数据带来的问题</h3>
+
+<p>对于只读的数据是不存在操作之间的共享数据问题的，但是对于读写操作或者删除操作，需要添加而锁实现，数据的互斥和共享。注意使用条件竞争操作，避免恶性条件竞争。</p>
+
+<p>避免思路：</p>
+
+<ul>
+  <li>对数据结构采取某种保护机制，确保只有进行修改的线程才能看到不变量被破坏时的中间状态。</li>
+  <li>对数据结构和不变量的设计进行修改，修改完成的结构必须能完成一系列不可分割的变化。即 <strong>无锁编程</strong>。</li>
+  <li>,使用事务的方式去处理数据结构的更新(这里的”处理”就如同对数据库进行更新一样)。所需的一些数据和读取都存储在事务日志中,然后将之前的操作合为一步,再进行提交。在被另外一个线程修改后，提交就无法进行。这成为“软件事务内存”。但是C+++中没有对<code class="language-plaintext highlighter-rouge">STM</code>进行支持。</li>
+</ul>
+
+<p>C++中保护共享数据的最基本方式是使用 C++标准库提供的互斥量</p>
+
+<h3 id="32-使用互斥两保护共享数据">3.2 使用互斥两保护共享数据</h3>
+
+<h4 id="321-c中使用互斥量">3.2.1 C++中使用互斥量</h4>
+
+<p>c++中通过使用<code class="language-plaintext highlighter-rouge">std::mutex</code>创建互斥量，通过调用成员函数<code class="language-plaintext highlighter-rouge">lock()/unlock()</code>进行上锁/解锁。同时可以使用<code class="language-plaintext highlighter-rouge">std::lock_guard()</code>，在构造的时候提供已锁的互斥，并在析构的时候进行解锁，从而保证总是会被正确的解锁。
+使用示例：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;list&gt;
+</span>
+<span class="cp">#include &lt;mutex&gt;
+</span>
+<span class="cp">#include &lt;algorithm&gt;
+</span>
+<span class="c1">//创建全局的互斥保护变量</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">some_list</span><span class="p">;</span>  
+<span class="c1">//互斥信号变量</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">some_mutex</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">add_to_list</span><span class="p">(</span><span class="kt">int</span> <span class="n">new_value</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//使用std::lock_guard互斥访问数据</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">guard</span><span class="p">(</span><span class="n">some_mutex</span><span class="p">);</span>
+    <span class="c1">//添加数据</span>
+
+    <span class="n">some_param</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">new_value</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">bool</span> <span class="nf">list_contains</span><span class="p">(</span><span class="kt">int</span> <span class="n">value_to_find</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//互斥访问数据，为信号变量加锁</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">guard</span><span class="p">(</span><span class="n">some_mutex</span><span class="p">);</span>
+    <span class="c1">//查找对应的变量</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">find</span><span class="p">(</span><span class="n">some_list</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">some_list</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="n">value_to_find</span><span class="p">)</span><span class="o">!=</span><span class="n">some_list</span><span class="p">.</span><span class="n">end</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">//大多数情况下，互斥变量会直接定义在同一个类中，而不是定义成全局变量。互斥量 和要保护的数据都必须定义为priavte成员。</span>
+
+<span class="c1">//注意：函数返回的是被保护数据或者成员的指针时</span>
+
+
+</code></pre></div></div>
+
+<h4 id="322-精心组织代码来保护共享数据">3.2.2 精心组织代码来保护共享数据</h4>
+<p>针对返回指针或者引用会使得成员变量失去保护。这样互斥变量形同虚设。但是这些只要你确保没有在使用过程中显式调用就没有问题，但是更危险的是 <strong>将一个保护数据作为运行时参数</strong> 例如下面，无意中使用了保护数据的引用</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">some_data</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">a</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">b</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="kt">void</span> <span class="n">do_something</span><span class="p">();</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">data_warpper</span>
+<span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="n">some_data</span> <span class="n">data</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">m</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Function</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">process_data</span><span class="p">(</span><span class="n">Function</span> <span class="n">func</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="mi">1</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+        <span class="c1">//在这里传递保护数据给用户函数</span>
+
+        <span class="n">func</span><span class="p">(</span><span class="n">data</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//非保护数据</span>
+
+<span class="n">some_data</span><span class="o">*</span> <span class="n">unprotected</span><span class="p">;</span>
+<span class="c1">//恶意拷贝数据</span>
+
+<span class="kt">void</span> <span class="nf">malicious_function</span><span class="p">(</span><span class="n">some_data</span><span class="o">&amp;</span> <span class="n">protected_data</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">unprotected</span><span class="o">=&amp;</span><span class="n">protected_data</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">//数据指针</span>
+
+<span class="n">data_wrapper</span> <span class="n">x</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//传递一个恶意值，将类中的保护成员赋值给外部的非保护变量</span>
+
+    <span class="n">x</span><span class="p">.</span><span class="n">process_data</span><span class="p">(</span><span class="n">malicious_function</span><span class="p">);</span>
+    <span class="c1">//执行操作，更改 内部的data值</span>
+
+    <span class="n">nprotected</span><span class="o">-&gt;</span><span class="n">do_something</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+
+</code></pre></div></div>
+<h4 id="323-发现接口内在的条件竞争">3.2.3 发现接口内在的条件竞争</h4>
+
+<p>针对上面的问题，比较好的解决方案是将方法和接口封装好，避免在外部调用使得方法操作的安全性。例如下面一个stack的实现</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//定义模板类和方法</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span>   <span class="nc">T</span><span class="p">,</span><span class="k">typename</span>  <span class="nc">Container</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">deque</span><span class="o">&lt;</span><span class="n">T</span><span class="p">&gt;</span> <span class="o">&gt;</span>
+<span class="k">class</span>   <span class="nc">stack</span>
+<span class="p">{</span>
+<span class="nl">public:</span>
+        <span class="k">explicit</span>    <span class="n">stack</span><span class="p">(</span><span class="k">const</span> <span class="n">Container</span><span class="o">&amp;</span><span class="p">);</span>
+        <span class="k">explicit</span>    <span class="n">stack</span><span class="p">(</span><span class="n">Container</span><span class="o">&amp;&amp;</span>   <span class="o">=</span>   <span class="n">Container</span><span class="p">());</span>
+        <span class="k">template</span>    <span class="o">&lt;</span><span class="k">class</span>  <span class="nc">Alloc</span><span class="p">&gt;</span>  <span class="k">explicit</span>    <span class="n">stack</span><span class="p">(</span><span class="k">const</span> <span class="n">Alloc</span><span class="o">&amp;</span><span class="p">);</span>
+        <span class="k">template</span>    <span class="o">&lt;</span><span class="k">class</span>  <span class="nc">Alloc</span><span class="p">&gt;</span>  <span class="n">stack</span><span class="p">(</span><span class="k">const</span> <span class="n">Container</span><span class="o">&amp;</span><span class="p">,</span> <span class="k">const</span>   <span class="n">Alloc</span><span class="o">&amp;</span><span class="p">);</span>
+        <span class="k">template</span>    <span class="o">&lt;</span><span class="k">class</span>  <span class="nc">Alloc</span><span class="p">&gt;</span>  <span class="n">stack</span><span class="p">(</span><span class="n">Container</span><span class="o">&amp;&amp;</span><span class="p">,</span>  <span class="k">const</span>   <span class="n">Alloc</span><span class="o">&amp;</span><span class="p">);</span>
+        <span class="k">template</span>    <span class="o">&lt;</span><span class="k">class</span>  <span class="nc">Alloc</span><span class="p">&gt;</span>  <span class="n">stack</span><span class="p">(</span><span class="n">stack</span><span class="o">&amp;&amp;</span><span class="p">,</span>  <span class="k">const</span>   <span class="n">Alloc</span><span class="o">&amp;</span><span class="p">);</span>
+        <span class="kt">bool</span>    <span class="n">empty</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+        <span class="kt">size_t</span>  <span class="n">size</span><span class="p">()</span>  <span class="k">const</span><span class="p">;</span>
+        <span class="n">T</span><span class="o">&amp;</span>  <span class="n">top</span><span class="p">();</span>
+        <span class="n">T</span>   <span class="k">const</span><span class="o">&amp;</span>  <span class="n">top</span><span class="p">()</span>   <span class="k">const</span><span class="p">;</span>
+        <span class="kt">void</span>    <span class="n">push</span><span class="p">(</span><span class="n">T</span>  <span class="k">const</span><span class="o">&amp;</span><span class="p">);</span>
+        <span class="kt">void</span>    <span class="n">push</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span><span class="p">);</span>
+        <span class="kt">void</span>    <span class="n">pop</span><span class="p">();</span>
+        <span class="kt">void</span>    <span class="n">swap</span><span class="p">(</span><span class="n">stack</span><span class="o">&amp;&amp;</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<p>为了防止多线程时的empty()和size()函数的操作，需要进行变量的互斥保护;保护的主要思想是通过线程锁，使得两个线程的存取操作具有原子事物性，操作的顺序先后固定。下面是一种可能的顺序</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Thread A</th>
+      <th style="text-align: left">Thread B</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">if (!s.empty);|</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">|</td>
+      <td style="text-align: left">if(!s.empty);</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">int const value=s.top();|</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">|</td>
+      <td style="text-align: left">int const value=s.top();</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">s.pop()|</td>
+      <td style="text-align: left"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: left">do_something(value);</td>
+      <td style="text-align: left">s.pop()</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">|</td>
+      <td style="text-align: left">do_something(value);</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>标准库的stack类使用将这个操作分为了两个部分： 1. 获取顶部元素(top());2.从栈中移除(pop())。这样在不安全的将元素拷贝出去的情况下，栈中的这个数据依旧存在，没有丢失。</p>
+
+<p>下面介绍一些其它的方法：</p>
+
+<ol>
+  <li>传入一个引用，作为想要的弹出值来进行使用。</li>
+</ol>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+  <span class="n">some_stack</span><span class="p">.</span><span class="n">pop</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ol>
+  <li>无异常抛出的拷贝构造函数或则移动构造函数</li>
+  <li>
+    <p>返回指向弹出值的指针</p>
+
+    <p>这样可以方便自由拷贝，并且不会产生异常，缺点是返回一个指针需要对内存分配进行管理，对于简单数据类型，内存管理的开销远大于直接返回值。通常使用<code class="language-plaintext highlighter-rouge">std::shared_ptr</code>进行操作。</p>
+  </li>
+  <li>“选项1+选项2”或“选项1+选项3”</li>
+</ol>
+
+<p>下面是一个线程安全的堆栈的定义</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;exception&gt;
+</span>
+<span class="cp">#include &lt;memory&gt;
+</span>
+<span class="cp">#include &lt;mutex&gt;
+</span>
+<span class="cp">#include &lt;stack&gt;
+</span>
+<span class="c1">// 定义空栈函数</span>
+
+<span class="k">struct</span> <span class="nc">empty_stack</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span>
+<span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">what</span><span class="p">()</span> <span class="k">const</span> <span class="k">throw</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="s">"empty stack"</span><span class="p">;</span>
+    <span class="p">};</span>
+    
+<span class="p">};</span>
+<span class="c1">//定义模板类</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">threadsafe_stack</span> <span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="c1">//保护成员变量</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">stack</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
+    <span class="c1">//互斥信号量</span>
+
+    <span class="k">mutable</span> <span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">m</span><span class="p">;</span> 
+<span class="nl">public:</span>
+    <span class="n">threadsafe_stack</span><span class="p">()</span><span class="o">:</span><span class="n">data</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">satck</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">()){}</span>
+
+    <span class="n">threadsafe_stack</span><span class="p">(</span><span class="k">const</span> <span class="n">threadsafe_stack</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">other</span><span class="p">.</span><span class="n">m</span><span class="p">);</span>
+        <span class="c1">//在构造体中执行拷贝</span>
+
+        <span class="n">data</span><span class="o">=</span><span class="n">other</span><span class="p">.</span><span class="n">data</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//禁用默认赋值</span>
+
+    <span class="n">threadsafe_stack</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">threadsafe_stack</span><span class="o">&amp;</span><span class="p">)</span><span class="o">=</span><span class="k">delete</span><span class="p">;</span>
+    <span class="c1">//添加</span>
+
+    <span class="kt">void</span> <span class="n">push</span><span class="p">(</span><span class="n">T</span> <span class="n">new_value</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+        <span class="n">data</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">new_value</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">pop</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+        <span class="c1">//在调用pop前，检查栈是否为空</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">throw</span> <span class="n">empty_stack</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="c1">//在修改堆栈之前，分配出返回值</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="k">const</span> <span class="n">res</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">top</span><span class="p">()));</span>
+        <span class="n">data</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">pop</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;</span> <span class="n">value</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="k">throw</span> <span class="n">empty_stack</span><span class="p">();</span>
+
+        <span class="n">value</span><span class="o">=</span><span class="n">data</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
+        <span class="n">data</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="kt">bool</span> <span class="n">empty</span><span class="p">()</span> <span class="k">const</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
+    <span class="p">}</span>
+    
+<span class="p">};</span>
+
+<span class="c1">//上面的检查拷贝操作全部都加上了锁，虽然性能有所损耗，但是实现了线程级安全。</span>
+
+</code></pre></div></div>
+
+<h4 id="324-死锁问题描述及解决方案">3.2.4 死锁：问题描述及解决方案</h4>
+
+<p>问题描述在操作系统中有着较为详细的叙述，再次不做过多的解释。</p>
+
+<p>解决问题的主要思路是：</p>
+
+<ul>
+  <li>死锁预防：
+    <ul>
+      <li>破坏互斥条件：资源互斥使用，无法破坏互斥条件</li>
+      <li>破坏不剥夺条件：后来者，强制抢夺资源，但会增加系统开销，降低吞吐量</li>
+      <li>破坏请求和保持条件：不再一直请求和保持状态；会严重浪费资源，还可能导致饥饿现象</li>
+      <li>破坏循环条件：会浪费系统资源，并造成编程不便</li>
+    </ul>
+  </li>
+  <li>死锁避免：
+    <ul>
+      <li>安全状态：找到一个分配资源的序列能让所有进程都顺利完成。</li>
+      <li>银行家算法：采用预分配策略监察分配完成时系统是否处在安全状态。</li>
+    </ul>
+  </li>
+  <li>死锁检测： 利用死锁定力简化资源分配图以检测死锁的存在。</li>
+  <li>死锁解除：
+    <ul>
+      <li>资源剥夺法：挂起某些死锁进程并抢夺它的资源，以便让其他进程继续推进。</li>
+      <li>撤销进程法：强制撤销部分、甚至全部死锁进程并剥夺这些进程的资源。</li>
+      <li>进程回退法：让进程回退到足以回避死锁的地步。</li>
+    </ul>
+  </li>
+</ul>
+
+<p>对于线程的具体实现思路是：让两个互斥量，总是以相同的顺序上锁。避免多线程对数据的修改时的死锁。c++标准库，提供了<code class="language-plaintext highlighter-rouge">lock</code>方法，可以一次锁住多个互斥量，并没有死锁风险。下面是一个简单的使用示例：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;mutex&gt;
+</span>
+<span class="k">class</span> <span class="nc">some_big_object</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">swap</span><span class="p">(</span><span class="n">some_big_object</span><span class="o">&amp;</span> <span class="n">lhs</span><span class="p">,</span><span class="n">some_big_object</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">);</span>
+
+<span class="k">class</span> <span class="nc">X</span> <span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="c1">//目标对象</span>
+
+    <span class="n">some_big_object</span> <span class="n">some_detail</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">m</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="n">X</span><span class="p">(</span><span class="n">some_big_object</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">sd</span><span class="p">)</span><span class="o">:</span><span class="n">some_detail</span><span class="p">(</span><span class="n">sd</span><span class="p">){};</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">swap</span><span class="p">(</span><span class="n">X</span><span class="o">&amp;</span> <span class="n">lhs</span><span class="p">,</span><span class="n">X</span><span class="o">&amp;</span><span class="n">rhs</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lhs</span><span class="o">==&amp;</span><span class="n">rhs</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="c1">//锁住两个互斥变量</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">lock</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">m</span><span class="p">,</span><span class="n">rhs</span><span class="p">.</span><span class="n">m</span><span class="p">);</span>
+        <span class="c1">//表示    std::lock_guard 对象可获取锁之外,还将锁交由  std::lock_guard  对象管理,而不需要std::lock_guard 对象再去构建新的锁。保证退出时胡吃两能被正确的解析。</span>
+
+
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock_a</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">m</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">adopt_lock</span><span class="p">);</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock_b</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">m</span><span class="p">,</span><span class="n">sth</span><span class="o">::</span><span class="n">adopt_lock</span><span class="p">);</span>
+
+        <span class="n">swap</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">some_detail</span><span class="p">,</span><span class="n">rhs</span><span class="p">.</span><span class="n">some_detail</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<h4 id="325-避免死锁的进阶指导">3.2.5 避免死锁的进阶指导</h4>
+
+<p>避免相关线程发生死锁的建议：</p>
+
+<ul>
+  <li>避免嵌套锁：当前线程已经取得锁时，在未解锁前，不获取新锁。</li>
+  <li>避免在持有锁的时候调用用户提供的代码，用户行为很容易产生未定义行为。</li>
+  <li>使用固定顺序获取锁：当线程需要多个资源配合完成，而不得不使用多个锁时，尽量将锁按照顺序执行，避免死锁。在遍历需要获取多个锁的时候，必须按照固定顺序得到多个相关锁。每个线程的遍历次序必须相同。</li>
+  <li>使用锁的层次结构：提供对于运行时鱼等是否被坚持的检查。</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//使用层次锁来避免死锁</span>
+
+<span class="c1">//层级锁，层级为10000</span>
+
+<span class="n">hierarchical_mutex</span>  <span class="nf">high_level_mutex</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+<span class="c1">//层级锁，层级为5000</span>
+
+<span class="n">hierarchical_mutex</span>  <span class="nf">high_level_mutex</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="nf">do_low_level_stuff</span><span class="p">();</span>
+
+<span class="kt">int</span> <span class="nf">low_level_func</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//层级锁互斥</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">hierarchical_mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">low_level_mutex</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">do_low_level_stuff</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">high_level_stuff</span><span class="p">(</span><span class="kt">int</span> <span class="n">some_param</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">high_level_func</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//让hight_level_mutex上锁</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">hierarchical_mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">high_level_mutex</span><span class="p">);</span>
+    <span class="c1">//调用low_level_func()会对low_level_mutex上锁</span>
+    
+    <span class="n">high_level_stuff</span><span class="p">(</span><span class="n">low_level_func</span><span class="p">());</span>
+<span class="p">}</span>
+<span class="c1">//线程a遵守层级规则，所以运行灭有问题</span>
+
+<span class="kt">void</span> <span class="nf">thread_a</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">high_level_func</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">hierarchical_mutex</span>  <span class="nf">other_mutex</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">do_other_stuff</span><span class="p">();</span>
+<span class="kt">void</span> <span class="nf">other_stuff</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">high_level_func</span><span class="p">();</span>
+    <span class="n">do_other_stuff</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="c1">//线程b无视层级规则</span>
+
+<span class="kt">void</span> <span class="nf">thread_b</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//先锁住other_mutex；它的层级只有100，意味着低层级已经被保护，再使用high_level_func()，会造成此hierarchical_mutex将会产生一个错误。导致程序意外终止</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">hierarchical_mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">other_mutex</span><span class="p">);</span>
+    <span class="n">other_stuff</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+</code></pre></div></div>
+
+<p>简单层级的互斥实现</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">hierarchical_mutex</span>
+<span class="p">{</span>
+    <span class="c1">//互斥信号量</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">internal_mutex</span><span class="p">;</span>
+    <span class="c1">//接受的层级值</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="k">const</span> <span class="n">hierarchical_value</span><span class="p">;</span>
+    <span class="c1">//原来的层级值</span>
+
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">previous_hierarchy_value</span><span class="p">;</span>
+    <span class="c1">//静态指针，指向线程的层级值</span>
+
+    <span class="k">static</span> <span class="k">thread_local</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">this_thread_hierarchy_value</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">check_for_hierarchy_violation</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//检查层级值保持递减的序列</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">this_thread_hierarchy_value</span><span class="o">&lt;=</span><span class="n">hierarchical_value</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">logic_error</span><span class="p">(</span><span class="err">“</span><span class="n">mutex</span>   <span class="n">hierarchy</span>   <span class="n">violated</span><span class="err">”</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">update_hierachy_value</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//更改层级值前，先将原来的层级值保存</span>
+
+        <span class="n">previous_hierarchy_value</span><span class="o">=</span><span class="n">this_thread_hierarchy_value</span><span class="p">;</span>
+        <span class="c1">//更改当前的层级值</span>
+
+        <span class="n">this_thread_hierarchy_value</span><span class="o">=</span><span class="n">hierarchical_value</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="nl">public:</span>
+    <span class="k">explicit</span> <span class="n">hierarchical_mutex</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">value</span><span class="p">)</span><span class="o">:</span><span class="n">hierarchical_value</span><span class="p">(</span><span class="n">value</span><span class="p">),</span><span class="n">previous_hierarchy_value</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">{}</span>
+    <span class="o">~</span><span class="n">hierarchical_mutex</span><span class="p">();</span>
+    <span class="c1">//加锁函数</span>
+
+    <span class="kt">void</span> <span class="n">lock</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//确认当前值小于新值</span>
+
+        <span class="n">check_for_hierarchy_violation</span><span class="p">();</span>
+        <span class="c1">//当前线程加锁</span>
+
+        <span class="n">internal_mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
+        
+        <span class="n">update_hierachy_value</span><span class="p">();</span>
+
+        <span class="n">update_hierachy_value</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="kt">void</span> <span class="n">unlock</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//还原原来的层级值</span>
+
+        <span class="n">this_thread_hierarchy_value</span><span class="o">=</span><span class="n">previous_hierarchy_value</span><span class="p">;</span>
+        <span class="n">internal_mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="kt">bool</span> <span class="n">try_lock</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">check_for_hierarchy_violation</span><span class="p">();</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">internal_mutex</span><span class="p">.</span><span class="n">try_lock</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">update_hierachy_value</span><span class="p">();</span>
+        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+<span class="c1">//直接将信号变量，初始化为最大值</span>
+
+<span class="k">thread_local</span> <span class="kt">unsigned</span> <span class="kt">long</span>  <span class="n">hierarchical_mutex</span><span class="o">::</span><span class="n">this_thread_hierarchy_value</span><span class="p">(</span><span class="n">ULONG_MAX</span><span class="p">);</span>
+
+</code></pre></div></div>
+
+<h4 id="326-stdunique_lock-灵活的锁">3.2.6 std::unique_lock– 灵活的锁</h4>
+
+<p><code class="language-plaintext highlighter-rouge">std::unique_lock</code>可以根据传入的第二个参数的不同，对析构函数进行管理，使用<code class="language-plaintext highlighter-rouge">std::defer_lock</code>作为参数的时候，表明互斥量应该保持解锁状态，方便被其它线程加锁。但是   <code class="language-plaintext highlighter-rouge">std::unique_lock</code>会占用比较多的空间,并且比<code class="language-plaintext highlighter-rouge">std::lock_guard</code>稍慢一些。并且<code class="language-plaintext highlighter-rouge">std::unique_lock</code>实例不带互斥量：信息一倍存储，且被更新。</p>
+
+<p><code class="language-plaintext highlighter-rouge">std::lock()</code>和<code class="language-plaintext highlighter-rouge">std::unique_lock</code>的使用</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">some_big_object</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">swap</span><span class="p">(</span><span class="n">some_big_object</span><span class="o">&amp;</span> <span class="n">lhs</span><span class="p">,</span><span class="n">some_big_object</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">);</span>
+<span class="k">class</span> <span class="nc">X</span>
+<span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="n">some_big_object</span> <span class="n">some_detail</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">mutex</span>  <span class="n">m</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="n">X</span><span class="p">(</span><span class="n">some_big_object</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">sd</span><span class="p">)</span><span class="o">:</span><span class="n">some_detail</span><span class="p">(</span><span class="n">sd</span><span class="p">){}</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">swap</span><span class="p">(</span><span class="n">X</span><span class="o">&amp;</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">X</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lhs</span><span class="o">==&amp;</span><span class="n">rhs</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="c1">//std::def_lock   留下未上锁的互斥量</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span>    <span class="n">lock_a</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">m</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">defer_lock</span><span class="p">);</span>  
+        <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span>    <span class="n">lock_b</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">m</span><span class="p">,</span><span class="n">std</span><span class="o">::</span><span class="n">defer_lock</span><span class="p">);</span>  
+        <span class="c1">// 互斥量在这里上锁</span>
+        
+        <span class="n">std</span><span class="o">::</span><span class="n">lock</span><span class="p">(</span><span class="n">lock_a</span><span class="p">,</span><span class="n">lock_b</span><span class="p">);</span>
+        <span class="n">swap</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">some_detail</span><span class="p">,</span><span class="n">rhs</span><span class="p">.</span><span class="n">some_detail</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+
+<h4 id="327-不同域中互斥量所有权的传递">3.2.7 不同域中互斥量所有权的传递</h4>
+<p>允许一个函数去锁住一个互斥量,并且将所有权移到调用者上,所以调用者可以在这个锁保护的范围内执行额外的动作。</p>
+
+<p>下面的程序片段展示了:函数get_lock()锁住了互斥量,然后准备数据,返回锁的调用函数:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">get_lock</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">extern</span>  <span class="n">std</span><span class="o">::</span><span class="n">mutex</span>  <span class="n">some_mutex</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span>    <span class="n">lk</span><span class="p">(</span><span class="n">some_mutex</span><span class="p">);</span>
+    <span class="n">prepare_data</span><span class="p">();</span>
+    <span class="c1">//声明自动变量，不需要调用`std::move()`直接返回信号量的锁</span>
+
+    <span class="k">return</span>  <span class="n">lk</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">process_data</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//获取线程的信号量锁转移std::unique_lock实例的所有权</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">get_lock</span><span class="p">());</span>
+    <span class="n">do_something</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<h4 id="328-锁的粒度">3.2.8 锁的粒度</h4>
+
+<p>锁的粒度通常用来描述通过一个锁保护着的数据量的大小。细粒度保护较小的数据，粗粒度保护较多的数据。在操作过程中，自己要注意锁的粒度问题。</p>
+
+<h3 id="33-保护共享数据的替代设施">3.3 保护共享数据的替代设施</h3>
+
+<p>除了互斥量之外，还有其它的保护共享数据的方式。C++提供了一种纯粹保护共享数据初始化过程的机制。</p>
+
+<p>使用一个互斥量的延迟初始化(线程安全)过程</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">some_resource</span><span class="o">&gt;</span>  <span class="n">resource_ptr</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">mutex</span>  <span class="n">resource_mutex</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//所有线程在此序列化</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">resource_mutex</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">resource_ptr</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//初始化资源</span>
+
+        <span class="n">resource_ptr</span><span class="p">.</span><span class="n">reset</span><span class="p">(</span><span class="k">new</span> <span class="n">some_resource</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">lk</span><span class="p">.</span><span class="n">unlock</span><span class="p">()</span>
+    <span class="c1">//执行操作</span>
+
+    <span class="n">resource_ptr</span><span class="o">-&gt;</span><span class="n">do_something</span><span class="p">();</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p>c++ 提供了 <code class="language-plaintext highlighter-rouge">std::once_flag</code>  和  <code class="language-plaintext highlighter-rouge">std::call_once</code> 来处理多线程的读写同步问题。比起锁住互斥量,并显式的检查指针,每个线程只需要使用<code class="language-plaintext highlighter-rouge">std::call_once</code>  ,在<code class="language-plaintext highlighter-rouge">std::call_once</code>的结束时,就能安全的知道指针已经被其他的线程初始化了。使用<code class="language-plaintext highlighter-rouge">std::call_once</code>比显式使用互斥量消耗的资源更少,特别是当初始化完成后。下面是一个使用示例：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">some_resource</span><span class="o">&gt;</span>  <span class="n">resource_ptr</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">once_flag</span>  <span class="n">resource_flag</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">init_resource</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">resource_ptr</span><span class="p">.</span><span class="n">reset</span><span class="p">(</span><span class="k">new</span>  <span class="n">some_resource</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//可以完整的进行一次初始化</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">call_once</span><span class="p">(</span><span class="n">resource_flag</span><span class="p">,</span><span class="n">init_resource</span><span class="p">);</span>
+    <span class="n">resource_ptr</span><span class="o">-&gt;</span><span class="n">do_something</span><span class="p">();</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p>使用  std::call_once   作为类成员的延迟初始化(线程安全)</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">class</span>   <span class="nc">X</span>
+<span class="p">{</span>
+<span class="nl">private:</span>
+    <span class="n">connection_info</span> <span class="n">connection_details</span><span class="p">;</span>
+    <span class="n">connection_handle</span>   <span class="n">connection</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">once_flag</span>  <span class="n">connection_init_flag</span><span class="p">;</span>
+    <span class="c1">//打开数据库</span>
+
+    <span class="kt">void</span> <span class="n">open_connection</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">connection</span><span class="o">=</span><span class="n">connection_manager</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="n">connection_details</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="nl">public:</span>
+    <span class="n">X</span><span class="p">(</span><span class="n">connection_info</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">connection_details_</span><span class="p">)</span><span class="o">:</span><span class="n">connection_details</span><span class="p">(</span><span class="n">connection_details_</span><span class="p">)</span>
+        <span class="p">{}</span>
+    <span class="c1">//完成线程的初始化</span>
+
+    <span class="kt">void</span> <span class="n">send_data</span><span class="p">(</span><span class="n">data_packet</span> <span class="k">const</span><span class="o">&amp;</span>  <span class="n">data</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">call_once</span><span class="p">(</span><span class="n">connection_init_flag</span><span class="p">,</span><span class="o">&amp;</span><span class="n">X</span><span class="o">::</span><span class="n">open_connection</span><span class="p">,</span><span class="k">this</span><span class="p">);</span>      
+        <span class="n">connection</span><span class="p">.</span><span class="n">send_data</span><span class="p">(</span><span class="n">data</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="c1">//接受数据，返回数据包</span>
+
+    <span class="n">data_packet</span> <span class="n">receive_data</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">//传递一个额外的参数，完成这个操作</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">call_once</span><span class="p">(</span><span class="n">connection_init_flag</span><span class="p">,</span><span class="o">&amp;</span><span class="n">X</span><span class="o">::</span><span class="n">open_connection</span><span class="p">,</span><span class="k">this</span><span class="p">);</span>
+        <span class="k">return</span>  <span class="n">connection</span><span class="p">.</span><span class="n">receive_data</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+
+<h4 id="332--保护很少更新的数据结构">3.3.2  保护很少更新的数据结构</h4>
+
+<p>类似于DNS域名缓存表，在boost库中也存在缓存可以被多个线程访问，并且每次更新的都是少数数据。可以使用<code class="language-plaintext highlighter-rouge">boost::share_mutex</code>来进行同步。</p>
+
+<p>使用  boost::shared_mutex  对数据结构进行保护的简单DNS缓存</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="cp">#include &lt;map&gt;
+</span>
+<span class="cp">#include &lt;string&gt;
+</span>
+<span class="cp">#include &lt;mutex&gt;
+</span>
+<span class="cp">#include &lt;boost/thread/shared_mutex.hpp&gt;
+</span>
+<span class="k">class</span> <span class="nc">dns_entry</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">dns_cache</span>
+<span class="p">{</span>
+    <span class="c1">//DNS缓冲表</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="n">dns_entry</span><span class="o">&gt;</span> <span class="n">entries</span><span class="p">;</span>
+    <span class="k">mutable</span> <span class="n">boost</span><span class="o">::</span><span class="n">shared_mutex</span> <span class="n">entry_mutex</span><span class="p">;</span>
+<span class="nl">public:</span>
+    <span class="n">dns_entry</span> <span class="n">find_entry</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span>  <span class="k">const</span><span class="o">&amp;</span>  <span class="n">domain</span><span class="p">)</span> <span class="k">const</span>
+    <span class="p">{</span>
+        <span class="c1">//创建共享锁</span>
+
+        <span class="n">boost</span><span class="o">::</span><span class="n">shared_lock</span><span class="o">&lt;</span><span class="n">boost</span><span class="o">::</span><span class="n">shared_mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">entry_mutex</span><span class="p">);</span>
+        <span class="c1">//获取查找结果迭代器</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="n">dns_entry</span><span class="o">&gt;::</span><span class="n">const_iterator</span> <span class="k">const</span>  <span class="n">it</span><span class="o">=</span><span class="n">entries</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">domain</span><span class="p">);</span>
+        <span class="k">return</span>  <span class="p">(</span><span class="n">it</span><span class="o">==</span><span class="n">entries</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">?</span><span class="n">dns_entry</span><span class="p">()</span><span class="o">:</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="kt">void</span> <span class="n">update_or_add_entry</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">domain</span><span class="p">,</span>
+                            <span class="n">dns_entry</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">dns_details</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//线程独占锁，会阻止其它线程对数据结构进行修改，并阻止线程调用find_entry()</span>
+
+        <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">boost</span><span class="o">::</span><span class="n">shared_mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">entry_mutex</span><span class="p">);</span>
+        <span class="n">entries</span><span class="p">[</span><span class="n">domain</span><span class="p">]</span><span class="o">=</span><span class="n">dns_details</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<h4 id="333-嵌套锁">3.3.3 嵌套锁</h4>
+
+<p>C++ 标准库提供了<code class="language-plaintext highlighter-rouge">std::recursive_mutex</code>类。其功能与<code class="language-plaintext highlighter-rouge">std::mutex</code>类似,除了你可以从同一线程的单个实例上获取多个锁。互斥量锁住其他线程前,你必须释放你拥有的所有锁,所以当你调用<code class="language-plaintext highlighter-rouge">lock()</code>三次时,你也必须调用<code class="language-plaintext highlighter-rouge">unlock()</code>三次。正确使用<code class="language-plaintext highlighter-rouge">std::lock_guard&lt;std::recursive_mutex&gt;</code>和<code class="language-plaintext highlighter-rouge">std::unique_lock&lt;std::recursive_mutex&gt;</code>可以帮你处理这些问题。主要用于成员函数嵌套调用的时候的互斥。</p>
+
+<p>推荐的使用方式是：提取处一个函数作为类的私有成员，并且让其它成员函数都进行调用，这个私有成员函数不会对互斥量进行上锁。</p>
+
+:ET

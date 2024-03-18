@@ -1,0 +1,2 @@
+I"�<p>p和q都是<code class="language-plaintext highlighter-rouge">shared_ptr</code>，所保存的指针必须能够相互转换。此操作会递减<code class="language-plaintext highlighter-rouge">p</code>的引用计数，递增<code class="language-plaintext highlighter-rouge">q</code>的引用计数；若<code class="language-plaintext highlighter-rouge">p</code>的引用计数变为0，则将其管理的原内存释放</p>
+:ET

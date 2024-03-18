@@ -1,0 +1,360 @@
+I"Hh<h1 id="protobuf-学习笔记">protobuf 学习笔记</h1>
+
+<blockquote>
+  <p>2020-10-08 19:57:58</p>
+</blockquote>
+
+<h2 id="0-参考链接">0 参考链接</h2>
+<ul>
+  <li><a href="https://developers.google.com/protocol-buffers/docs/reference/cpp-generated">官方文档</a></li>
+  <li><a href="https://www.jianshu.com/p/73c9ed3a4877">深入 ProtoBuf-编码</a></li>
+  <li><a href="https://www.jianshu.com/p/62f0238beec8">深入 ProtoBuf - 序列化源码解析</a></li>
+  <li><a href="https://colobu.com/2015/01/07/Protobuf-language-guide/">Protobuf 语法指南</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf">protobuff源码</a></li>
+  <li><a href="https://github.com/google/flatbuffers">flatbuffers源码</a></li>
+</ul>
+
+<h2 id="1-基础语法">1. 基础语法</h2>
+<p>下面是一个简单的使用示例:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">message</span> <span class="n">SearchRequest</span> <span class="p">{</span>
+  <span class="n">required</span> <span class="n">string</span> <span class="n">query</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">optional</span> <span class="n">int32</span> <span class="n">page_number</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="n">optional</span> <span class="n">int32</span> <span class="n">result_per_page</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="p">[</span><span class="k">default</span><span class="o">=</span><span class="mi">10</span><span class="p">]</span> <span class="c1">//设置默认值</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>其中后面的数字编号表示；二进制格式中识别各个字段的，一旦开始使用就不能再改变，[1,15]之内的标识号在编码的时候会占用一个字节，之后的[16,2047]会占用两个字节</p>
+
+<h3 id="11-指定字段规则">1.1 指定字段规则:</h3>
+<ul>
+  <li>required: 表示该字段必须</li>
+  <li>optional: 可选项，表示该字段必须有0个或者1个值(不超过一个)</li>
+  <li>repeated: 可重复值，相当于List
+基本数值类型的repeated的字段并没有被尽可能地高效编码。在新的代码中，用户应该使用特殊选项[packed=true]来保证更高效的编码。如：</li>
+</ul>
+
+<p><strong>注意:在proto3中没有这些选项</strong></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>repeated int32 samples <span class="o">=</span> 4 <span class="o">[</span><span class="nv">packed</span><span class="o">=</span><span class="nb">true</span><span class="o">]</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="12-基本数据类型">1.2 基本数据类型</h3>
+
+<p>proto中定义的基本数据类型会对应不同语言的基本数据类型如下:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">.proto Type</th>
+      <th style="text-align: left">Notes</th>
+      <th style="text-align: center">C++ Type</th>
+      <th style="text-align: center">Java Type</th>
+      <th style="text-align: center">Python Type</th>
+      <th style="text-align: center">Go Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">double</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: center">double</td>
+      <td style="text-align: center">double</td>
+      <td style="text-align: center">float</td>
+      <td style="text-align: center">*float64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">float</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: center">float</td>
+      <td style="text-align: center">float</td>
+      <td style="text-align: center">float</td>
+      <td style="text-align: center">*float32</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">int32</td>
+      <td style="text-align: left">Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.</td>
+      <td style="text-align: center">int32</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">*int32</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">int64</td>
+      <td style="text-align: left">Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.</td>
+      <td style="text-align: center">int64</td>
+      <td style="text-align: center">long</td>
+      <td style="text-align: center">int/long</td>
+      <td style="text-align: center">*int64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">uint32</td>
+      <td style="text-align: left">Uses variable-length encoding.</td>
+      <td style="text-align: center">uint32</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">int/long</td>
+      <td style="text-align: center">*uint32</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">uint64</td>
+      <td style="text-align: left">Uses variable-length encoding.</td>
+      <td style="text-align: center">uint64</td>
+      <td style="text-align: center">long</td>
+      <td style="text-align: center">int/long</td>
+      <td style="text-align: center">*uint64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">sint32</td>
+      <td style="text-align: left">Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.</td>
+      <td style="text-align: center">int32</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">*int32</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">sint64</td>
+      <td style="text-align: left">Usesvariable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.</td>
+      <td style="text-align: center">int64</td>
+      <td style="text-align: center">long</td>
+      <td style="text-align: center">int/long</td>
+      <td style="text-align: center">*int64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">fixed32</td>
+      <td style="text-align: left">Always four bytes. More efficient than uint32 if values are often greater than 228.</td>
+      <td style="text-align: center">uint32</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">int/long</td>
+      <td style="text-align: center">*uint32</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">fixed64</td>
+      <td style="text-align: left">Always eight bytes. More efficient than uint64 if values are often greater than 256.</td>
+      <td style="text-align: center">uint64</td>
+      <td style="text-align: center">long</td>
+      <td style="text-align: center">int/long</td>
+      <td style="text-align: center">*uint64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">sfixed32</td>
+      <td style="text-align: left">Always four bytes.</td>
+      <td style="text-align: center">int32</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">int</td>
+      <td style="text-align: center">*int32</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">sfixed64</td>
+      <td style="text-align: left">Always eight bytes.</td>
+      <td style="text-align: center">int64</td>
+      <td style="text-align: center">long</td>
+      <td style="text-align: center">int/long</td>
+      <td style="text-align: center">*int64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">bool|</td>
+      <td style="text-align: left">bool</td>
+      <td style="text-align: center">boolean</td>
+      <td style="text-align: center">bool</td>
+      <td style="text-align: center">*bool</td>
+      <td style="text-align: center"> </td>
+    </tr>
+    <tr>
+      <td style="text-align: center">string</td>
+      <td style="text-align: left">A string must always contain UTF-8 encoded or 7-bit ASCII text.</td>
+      <td style="text-align: center">string</td>
+      <td style="text-align: center">String</td>
+      <td style="text-align: center">unicode (Python 2) or str (Python 3)</td>
+      <td style="text-align: center">*string</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">bytes</td>
+      <td style="text-align: left">May contain any arbitrary sequence of bytes.</td>
+      <td style="text-align: center">string</td>
+      <td style="text-align: center">ByteString</td>
+      <td style="text-align: center">bytes</td>
+      <td style="text-align: center">[]byte</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="13-枚举">1.3 枚举</h3>
+
+<p>proto 中可以使用枚举类型作为关键的选择类；同时可以为枚举常量定义别名。需要设置allow_alias option 为 true, 否则 protocol编译器会产生错误信息。</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>enum EnumAllowingAlias <span class="o">{</span>
+  option allow_alias <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  UNKNOWN <span class="o">=</span> 0<span class="p">;</span>
+  STARTED <span class="o">=</span> 1<span class="p">;</span>
+  RUNNING <span class="o">=</span> 1<span class="p">;</span>
+<span class="o">}</span>
+
+enum EnumNotAllowingAlias <span class="o">{</span>
+  UNKNOWN <span class="o">=</span> 0<span class="p">;</span>
+  STARTED <span class="o">=</span> 1<span class="p">;</span>
+  // RUNNING <span class="o">=</span> 1<span class="p">;</span>  // Uncommenting this line will cause a compile error inside Google and a warning message outside.
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="14-扩展">1.4 扩展</h3>
+
+<p>proto中允许使用扩展，通过定义相关的序列化字段，允许子类进行进一步的扩展；使用示例如下:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// 
+message Foo <span class="o">{</span>
+  // ...
+  // 定义可扩展字段
+  extensions 100 to 199<span class="p">;</span>
+<span class="o">}</span>
+
+// 继承并定义
+
+extend Foo <span class="o">{</span>
+  optional int32 bar <span class="o">=</span> 126<span class="p">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="15-导入定义">1.5 导入定义</h3>
+
+<p>可以通过导入（importing）其他.proto文件中的定义来使用它们。要导入其他.proto文件的定义，你需要在你的文件中添加一个导入声明，如：</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import <span class="s2">"myproject/other_protos.proto"</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="16-oneof">1.6 Oneof</h3>
+
+<p>如果你的消息中有很多可选字段， 并且同时至多一个字段会被设置， 你可以加强这个行为，使用oneof特性节省内存.</p>
+
+<p>Oneof字段就像可选字段， 除了它们会共享内存， 至多一个字段会被设置。 设置其中一个字段会清除其它oneof字段。 你可以使用case()或者WhichOneof() 方法检查哪个oneof字段被设置，使用示例如下:</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>message SampleMessage <span class="o">{</span>
+  oneof test_oneof <span class="o">{</span>
+     string name <span class="o">=</span> 4<span class="p">;</span>
+     SubMessage sub_message <span class="o">=</span> 9<span class="p">;</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>然后你可以增加oneof字段到 oneof 定义中. 你可以增加任意类型的字段, 但是不能使用 required, optional, repeated 关键字.</p>
+
+<p>在产生的代码中, oneof字段拥有同样的 getters 和setters， 就像正常的可选字段一样. 也有一个特殊的方法来检查到底那个字段被设置. 你可以在相应的语言API中找到oneof API介绍.</p>
+
+<p>Oneof 特性:</p>
+<ul>
+  <li>设置oneof会自动清楚其它oneof字段的值. 所以设置多次后，只有最后一次设置的字段有值.</li>
+  <li>oneof不支持扩展.</li>
+  <li>oneof不能 repeated.</li>
+  <li>反射API对oneof 字段有效.</li>
+  <li>如果使用C++,需确保代码不会导致内存泄漏. 下面的代码会崩溃， 因为sub_message 已经通过set_name()删除了.</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SampleMessage</span> <span class="n">message</span><span class="p">;</span>
+<span class="n">SubMessage</span><span class="o">*</span> <span class="n">sub_message</span> <span class="o">=</span> <span class="n">message</span><span class="p">.</span><span class="n">mutable_sub_message</span><span class="p">();</span>
+<span class="n">message</span><span class="p">.</span><span class="n">set_name</span><span class="p">(</span><span class="err">“</span><span class="n">name</span><span class="err">”</span><span class="p">);</span>      <span class="c1">// Will delete sub_message</span>
+<span class="n">sub_message</span><span class="p">.</span><span class="n">set_</span><span class="err">…</span>         
+</code></pre></div></div>
+
+<h3 id="17-包package">1.7 包(package)</h3>
+
+<p>当然可以为.proto文件新增一个可选的package声明符，用来防止不同的消息类型有命名冲突</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>package foo.bar<span class="p">;</span>
+message Open <span class="o">{</span> ... <span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="18-定义服务service">1.8 定义服务(Service)</h3>
+
+<p>可以在.proto文件中定义一个RPC服务接口，protocol buffer编译器将会根据所选择的不同语言生成服务接口代码及存根。如，想要定义一个RPC服务并具有一个方法，该方法能够接收 SearchRequest并返回一个SearchResponse，此时可以在.proto文件中进行如下定义：</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>service SearchService <span class="o">{</span>
+  rpc Search <span class="o">(</span>SearchRequest<span class="o">)</span> returns <span class="o">(</span>SearchResponse<span class="o">)</span><span class="p">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>protocol编译器将产生一个抽象接口SearchService以及一个相应的存根实现。存根将所有的调用指向RpcChannel，它是一 个抽象接口，必须在RPC系统中对该接口进行实现。如，可以实现RpcChannel以完成序列化消息并通过HTTP方式来发送到一个服务器。换句话说， 产生的存根提供了一个类型安全的接口用来完成基于protocolbuffer的RPC调用，而不是将你限定在一个特定的RPC的实现中。C++中的代码 如下所示：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="n">google</span><span class="o">::</span><span class="n">protobuf</span><span class="p">;</span>
+<span class="n">protobuf</span><span class="o">::</span><span class="n">RpcChannel</span><span class="o">*</span> <span class="n">channel</span><span class="p">;</span>
+<span class="n">protobuf</span><span class="o">::</span><span class="n">RpcController</span><span class="o">*</span> <span class="n">controller</span><span class="p">;</span>
+<span class="n">SearchService</span><span class="o">*</span> <span class="n">service</span><span class="p">;</span>
+<span class="n">SearchRequest</span> <span class="n">request</span><span class="p">;</span>
+<span class="n">SearchResponse</span> <span class="n">response</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">DoSearch</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// You provide classes MyRpcChannel and MyRpcController, which implement</span>
+  <span class="c1">// the abstract interfaces protobuf::RpcChannel and protobuf::RpcController.</span>
+  <span class="n">channel</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MyRpcChannel</span><span class="p">(</span><span class="s">"somehost.example.com:1234"</span><span class="p">);</span>
+  <span class="n">controller</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MyRpcController</span><span class="p">;</span>
+  <span class="c1">// The protocol compiler generates the SearchService class based on the</span>
+  <span class="c1">// definition given above.</span>
+  <span class="n">service</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SearchService</span><span class="o">::</span><span class="n">Stub</span><span class="p">(</span><span class="n">channel</span><span class="p">);</span>
+  <span class="c1">// Set up the request.</span>
+  <span class="n">request</span><span class="p">.</span><span class="n">set_query</span><span class="p">(</span><span class="s">"protocol buffers"</span><span class="p">);</span>
+  <span class="c1">// Execute the RPC.</span>
+  <span class="n">service</span><span class="o">-&gt;</span><span class="n">Search</span><span class="p">(</span><span class="n">controller</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">protobuf</span><span class="o">::</span><span class="n">NewCallback</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Done</span><span class="p">));</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">Done</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">delete</span> <span class="n">service</span><span class="p">;</span>
+  <span class="k">delete</span> <span class="n">channel</span><span class="p">;</span>
+  <span class="k">delete</span> <span class="n">controller</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>所有service类都必须实现Service接口，它提供了一种用来调用具体方法的方式，即在编译期不需要知道方法名及它的输入、输出类型。在服务器端，通过服务注册它可以被用来实现一个RPC Server。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="n">google</span><span class="o">::</span><span class="n">protobuf</span><span class="p">;</span>
+<span class="k">class</span> <span class="nc">ExampleSearchService</span> <span class="o">:</span> <span class="k">public</span> <span class="n">SearchService</span> <span class="p">{</span>
+ <span class="nl">public:</span>
+  <span class="kt">void</span> <span class="n">Search</span><span class="p">(</span><span class="n">protobuf</span><span class="o">::</span><span class="n">RpcController</span><span class="o">*</span> <span class="n">controller</span><span class="p">,</span>
+              <span class="k">const</span> <span class="n">SearchRequest</span><span class="o">*</span> <span class="n">request</span><span class="p">,</span>
+              <span class="n">SearchResponse</span><span class="o">*</span> <span class="n">response</span><span class="p">,</span>
+              <span class="n">protobuf</span><span class="o">::</span><span class="n">Closure</span><span class="o">*</span> <span class="n">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">request</span><span class="o">-&gt;</span><span class="n">query</span><span class="p">()</span> <span class="o">==</span> <span class="s">"google"</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">response</span><span class="o">-&gt;</span><span class="n">add_result</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">set_url</span><span class="p">(</span><span class="s">"http://www.google.com"</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">request</span><span class="o">-&gt;</span><span class="n">query</span><span class="p">()</span> <span class="o">==</span> <span class="s">"protocol buffers"</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">response</span><span class="o">-&gt;</span><span class="n">add_result</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">set_url</span><span class="p">(</span><span class="s">"http://protobuf.googlecode.com"</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">done</span><span class="o">-&gt;</span><span class="n">Run</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// You provide class MyRpcServer.  It does not have to implement any</span>
+  <span class="c1">// particular interface; this is just an example.</span>
+  <span class="n">MyRpcServer</span> <span class="n">server</span><span class="p">;</span>
+  <span class="n">protobuf</span><span class="o">::</span><span class="n">Service</span><span class="o">*</span> <span class="n">service</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ExampleSearchService</span><span class="p">;</span>
+  <span class="n">server</span><span class="p">.</span><span class="n">ExportOnPort</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">service</span><span class="p">);</span>
+  <span class="n">server</span><span class="p">.</span><span class="n">Run</span><span class="p">();</span>
+  <span class="k">delete</span> <span class="n">service</span><span class="p">;</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="19-选项options">1.9 选项（Options）</h3>
+
+<p>在定义.proto文件时能够标注一系列的options。Options并不改变整个文件声明的含义，但却能够影响特定环境下处理方式。完整的可用选项可以在google/protobuf/descriptor.proto找到。</p>
+
+<p>一些选项是文件级别的，意味着它可以作用于最外范围，不包含在任何消息内部、enum或服务定义中。一些选项是消息级别的，意味着它可以用在消息定 义的内部。当然有些选项可以作用在域、enum类型、enum值、服务类型及服务方法中。到目前为止，并没有一种有效的选项能作用于所有的类型。</p>
+
+<p>常用选项类型如下:</p>
+<ul>
+  <li>optimize_for (fileoption): 可以被设置为 SPEED, CODE_SIZE,or LITE_RUNTIME。这些值将通过如下的方式影响C++及java代码的生成：
+    <ul>
+      <li>SPEED (default): protocol buffer编译器将通过在消息类型上执行序列化、语法分析及其他通用的操作。这种代码是最优的。</li>
+      <li>CODE_SIZE: protocol buffer编译器将会产生最少量的类，通过共享或基于反射的代码来实现序列化、语法分析及各种其它操作。采用该方式产生的代码将比SPEED要少得多， 但是操作要相对慢些。当然实现的类及其对外的API与SPEED模式都是一样的。这种方式经常用在一些包含大量的.proto文件而且并不盲目追求速度的 应用中。</li>
+      <li>LITE_RUNTIME: protocol buffer编译器依赖于运行时核心类库来生成代码（即采用libprotobuf-lite 替代libprotobuf）。这种核心类库由于忽略了一 些描述符及反射，要比全类库小得多。这种模式经常在移动手机平台应用多一些。编译器采用该模式产生的方法实现与SPEED模式不相上下，产生的类通过实现 MessageLite接口，但它仅仅是Messager接口的一个子集。</li>
+    </ul>
+  </li>
+  <li>cc_generic_services, java_generic_services, py_generic_services (file options):protocol buffer编译器是否应该基于服务定义产生抽象服务代码。</li>
+  <li>message_set_wire_format (message option)：如果该值被设置为true，该消息将使用一种不同的二进制格式来与Google内部的MessageSet的老格式相兼容。对于Google外部的用户来说，该选项将不会被用到。</li>
+  <li>packed (field option): 如果该选项在一个整型基本类型上被设置为真，则采用更紧凑的编码方式。</li>
+</ul>
+
+<h3 id="110-自定义选项">1.10 自定义选项</h3>
+
+<p>ProtocolBuffers允许自定义并使用选项。该功能应该属于一个高级特性，对于大部分人是用不到的。由于options是定在 google/protobuf/descriptor.proto中的，因此你可以在该文件中进行扩展，定义自己的选项。如：</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import <span class="s2">"google/protobuf/descriptor.proto"</span><span class="p">;</span>
+extend google.protobuf.MessageOptions <span class="o">{</span>
+  optional string my_option <span class="o">=</span> 51234<span class="p">;</span>
+<span class="o">}</span>
+message MyMessage <span class="o">{</span>
+  option <span class="o">(</span>my_option<span class="o">)</span> <span class="o">=</span> <span class="s2">"Hello world!"</span><span class="p">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>在上述代码中，通过对MessageOptions进行扩展定义了一个新的消息级别的选项。当使用该选项时，选项的名称需要使用（）包裹起来，以表明它是一个扩展。在C++代码中可以看出my_option是以如下方式被读取的。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">string</span> <span class="n">value</span> <span class="o">=</span> <span class="n">MyMessage</span><span class="o">::</span><span class="n">descriptor</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">().</span><span class="n">GetExtension</span><span class="p">(</span><span class="n">my_option</span><span class="p">);</span>
+<span class="k">continue</span>
+</code></pre></div></div>
+:ET

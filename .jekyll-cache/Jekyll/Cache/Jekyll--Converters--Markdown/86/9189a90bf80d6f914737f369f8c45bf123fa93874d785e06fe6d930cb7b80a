@@ -1,0 +1,260 @@
+I"�<h1 id="github-markdown-规则">github MarkDown 规则</h1>
+
+<p><em>详细内容可以查看<a href="https://github.com/wangpengcheng/wangpengcheng.github.io/blob/master/_posts/2019-4-10-markdown_example.md">markdown示例</a></em></p>
+
+<hr />
+<h2 id="横线">横线</h2>
+<p>markdown 使用<code class="language-plaintext highlighter-rouge">***、---、___</code>可以显示横线效果</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>***
+---
+___
+
+</code></pre></div></div>
+<p>渲染效果如下：</p>
+
+<hr />
+
+<hr />
+
+<hr />
+
+<h2 id="基本标题">基本标题</h2>
+<hr />
+<blockquote>
+  <p>#、## 、### 分别代表一级标题、二级标题、三级标题等
+ 例：# 一级标题 ## 二级标题 ### 三级标题</p>
+</blockquote>
+
+<h1 id="一级标题">一级标题</h1>
+<h2 id="二级标题">二级标题</h2>
+<h3 id="三级标题">三级标题</h3>
+
+<h2 id="文本">文本</h2>
+<hr />
+<p>markdown语法中</p>
+
+<p>加粗是’** **‘或者’_ _’</p>
+
+<p>斜体是 ‘* *‘或者’_ _’</p>
+
+<p>删除线 ‘~~ ~~’</p>
+
+<p>引用文本关键字’&gt;’;</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>*This text will be italic*
+_This will also be italic_
+
+**This text will be bold**
+__This will also be bold__
+
+_You **can** combine them_
+
+&gt; 这是一段引用文本
+
+</code></pre></div></div>
+
+<p>分别表示内容如下：</p>
+
+<p>This text will be italic*
+<em>This will also be italic</em></p>
+
+<p><strong>This text will be bold</strong>
+<strong>This will also be bold</strong></p>
+
+<p><em>You <strong>can</strong> combine them</em></p>
+<blockquote>
+  <p>这是一段引用文本
+这是一段<code class="language-plaintext highlighter-rouge">中间</code>引用文本</p>
+</blockquote>
+
+<h2 id="list-列表">list 列表</h2>
+<hr />
+<p>使用 “ * “和” - “表示列表</p>
+<blockquote>
+  <p>实际代码：</p>
+</blockquote>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Sometimes you want numbered lists:
+
+1. One
+2. Two
+3. Three
+
+Sometimes you want bullet points:
+
+* Start a line with a star
+* Profit!
+
+Alternatively,
+
+- Dashes work just as well
+- And if you have sub points, put two spaces before the dash or star:
+  - Like this
+  - And this
+  
+</code></pre></div></div>
+
+<p>渲染效果：</p>
+
+<p>Sometimes you want numbered lists:</p>
+
+<ol>
+  <li>One</li>
+  <li>Two</li>
+  <li>Three</li>
+</ol>
+
+<p>Sometimes you want bullet points:</p>
+
+<ul>
+  <li>Start a line with a star</li>
+  <li>Profit!</li>
+</ul>
+
+<p>Alternatively,</p>
+
+<ul>
+  <li>Dashes work just as well</li>
+  <li>And if you have sub points, put two spaces before the dash or star:
+    <ul>
+      <li>Like this</li>
+      <li>And this</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="引用代码">引用代码</h2>
+<hr />
+<p>使用 “ ``` “表示引用代码；
+例如</p>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">```</span><span class="nl"> c++
+</span><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">;</span>
+</code></pre></div></div>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>显示状况如下：
+``` c++
+int a = 1;
+int b = 2;
+int c = a+b;
+</code></pre></div></div>
+<h2 id="使用链接">使用链接</h2>
+<hr />
+<blockquote>
+  <p>可以利用<code class="language-plaintext highlighter-rouge">[]()</code>来使用链接，链接地址可以指向图片，文章锚点或者网页链接</p>
+</blockquote>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[百度](https://www.baidu.com)
+[图片](https://camo.githubusercontent.com/15675678891dead0d516b6ee7a57ed12101ce69a/687474703a2f2f7777772e62616964752e636f6d2f696d672f62646c6f676f2e676966)
+</code></pre></div></div>
+
+<p>效果：
+<a href="https://www.baidu.com">百度</a>
+<a href="https://camo.githubusercontent.com/15675678891dead0d516b6ee7a57ed12101ce69a/687474703a2f2f7777772e62616964752e636f6d2f696d672f62646c6f676f2e676966">图片</a></p>
+
+<h2 id="extras">Extras</h2>
+<hr />
+<h3 id="使用表格">使用表格</h3>
+
+<p>markdown 使用如下方式来表示表格</p>
+
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>表头1  | 表头2|
+--------- | --------|
+表格单元  | 表格单元 |
+表格单元  | 表格单元 |
+
+| 表头1  | 表头2|
+| ---------- | -----------|
+| 表格单元   | 表格单元   |
+| 表格单元   | 表格单元   |
+
+<span class="gu">### 对齐</span>
+表格可以指定对齐方式
+
+| 左对齐 | 居中  | 右对齐 |
+| :------------ |:---------------:| -----:|
+| col 3 is      | some wordy text | <span class="se">\$</span>1600 |
+| col 2 is      | centered        |   <span class="se">\$</span>12 |
+| zebra stripes | are neat        |    <span class="se">\$</span>1 |
+
+</code></pre></div></div>
+<p>渲染效果：</p>
+
+<hr />
+
+<table>
+  <thead>
+    <tr>
+      <th>表头1</th>
+      <th>表头2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>表格单元</td>
+      <td>表格单元</td>
+    </tr>
+    <tr>
+      <td>表格单元</td>
+      <td>表格单元</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>表头1</th>
+      <th>表头2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>表格单元</td>
+      <td>表格单元</td>
+    </tr>
+    <tr>
+      <td>表格单元</td>
+      <td>表格单元</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="对齐">对齐</h3>
+<p>表格可以指定对齐方式</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">左对齐</th>
+      <th style="text-align: center">居中</th>
+      <th style="text-align: right">右对齐</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">col 3 is</td>
+      <td style="text-align: center">some wordy text</td>
+      <td style="text-align: right">$1600</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">col 2 is</td>
+      <td style="text-align: center">centered</td>
+      <td style="text-align: right">$12</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">zebra stripes</td>
+      <td style="text-align: center">are neat</td>
+      <td style="text-align: right">$1</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+<p><em>参考链接：</em></p>
+<ul>
+  <li><a href="https://guides.github.com/features/mastering-markdown/">Mastering Markdown</a></li>
+  <li><a href="https://www.cnblogs.com/yabin/p/6366151.html">Github上Markdown基本语法</a></li>
+  <li><a href="https://blog.csdn.net/guodongxiaren/article/details/23690801">GitHub上README写法暨GFM语法解读</a></li>
+</ul>
+:ET

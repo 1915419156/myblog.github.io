@@ -1,0 +1,2 @@
+I"U<p><code class="language-plaintext highlighter-rouge">.cpp.ii</code> appended to source file name, as in <code class="language-plaintext highlighter-rouge">x.cu.cpp.ii.</code> This output file can be compiled by the host compiler that was used by nvcc to preprocess the <code class="language-plaintext highlighter-rouge">.cu</code>file.</p>
+:ET

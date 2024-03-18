@@ -1,0 +1,2 @@
+I"F<p>p是<code class="language-plaintext highlighter-rouge">shared_ptr p2</code>的拷贝,唯一的区别是<code class="language-plaintext highlighter-rouge">p</code>将使用可调用对象<code class="language-plaintext highlighter-rouge">d</code>来代替<code class="language-plaintext highlighter-rouge">delete</code></p>
+:ET

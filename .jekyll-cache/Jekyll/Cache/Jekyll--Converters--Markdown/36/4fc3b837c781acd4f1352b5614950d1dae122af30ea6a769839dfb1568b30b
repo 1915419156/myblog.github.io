@@ -1,0 +1,181 @@
+I"Q<p>看到这篇文章比较有趣就转载了</p>
+
+<p><a href="https://blog.csdn.net/shanghairuoxiao/article/details/76577357">原文地址</a></p>
+
+<h1 id="字符串实现加法和乘法">字符串实现加法和乘法</h1>
+
+<h2 id="通过字符串实现加法">通过字符串实现加法</h2>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="cp">#include &lt;iostream&gt;
+#include &lt;string&gt;
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="n">string</span> <span class="nf">add</span><span class="p">(</span><span class="n">string</span> <span class="n">strLeft</span><span class="p">,</span> <span class="n">string</span> <span class="n">strRight</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//将字符串转换为数字</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">strLeft</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">strLeft</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="sc">'0'</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">strRight</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">strRight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="sc">'0'</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">int</span> <span class="n">carry</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="c1">//结果可能的最大位数</span>
+
+    <span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">maxBits</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">strLeft</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">strRight</span><span class="p">.</span><span class="n">size</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> 
+    <span class="c1">//创建结果字符串</span>
+
+    <span class="n">string</span> <span class="n">strResult</span><span class="p">(</span><span class="n">maxBits</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">maxBits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">strLeft</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="c1">//先将左值拷贝到结果字符串中</span>
+    
+    <span class="k">while</span><span class="p">(</span><span class="n">j</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">strResult</span><span class="p">[</span><span class="n">i</span><span class="o">--</span><span class="p">]</span> <span class="o">=</span> <span class="n">strLeft</span><span class="p">[</span><span class="n">j</span><span class="o">--</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="n">maxBits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">strRight</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="c1">//循环计算，将加数的每一个添加上来</span>
+
+    <span class="k">for</span><span class="p">(</span> <span class="p">;</span><span class="n">j</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">j</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">//carry用来统计是否进位</span>
+
+        <span class="n">carry</span> <span class="o">=</span> <span class="p">(</span><span class="n">strResult</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">strRight</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">carry</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="c1">//计算各个位数对应的值</span>
+
+        <span class="n">strResult</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">strResult</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">strRight</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">carry</span><span class="p">)</span> <span class="o">%</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="c1">//计算最后一位的下一位</span>
+
+        <span class="n">strResult</span><span class="p">[</span><span class="o">--</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">carry</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">strResult</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">strResult</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="sc">'0'</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">strResult</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'0'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">string</span><span class="p">(</span><span class="n">strResult</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">strResult</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+    <span class="k">else</span>
+        <span class="k">return</span> <span class="n">strResult</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">string</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">;</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"请输入两个数："</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">a</span> <span class="o">&gt;&gt;</span> <span class="n">b</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"结果等于："</span><span class="p">;</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"请输入两个数："</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="乘法计算">乘法计算</h2>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * 对于大数，范围超过了最大整数的时候，通过字符串在实现数据的乘法
+ */</span>
+
+<span class="cp">#include &lt;iostream&gt;  
+#include &lt;string&gt;  
+#include &lt;vector&gt;  
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>  
+
+<span class="c1">//求两个大数的乘积（两数均为正数）  </span>
+<span class="n">string</span> <span class="nf">GetProductOfTwoBigNum</span><span class="p">(</span> <span class="n">string</span> <span class="n">strNumLeft</span><span class="p">,</span> <span class="n">string</span> <span class="n">strNumRight</span> <span class="p">)</span>  
+<span class="p">{</span>  
+    <span class="k">if</span> <span class="p">(</span> <span class="n">strNumRight</span><span class="p">.</span><span class="n">empty</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">strNumRight</span><span class="p">.</span><span class="n">empty</span><span class="p">()</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="k">return</span> <span class="n">string</span><span class="p">(</span><span class="s">"0"</span><span class="p">);</span>  
+    <span class="p">}</span>  
+
+    <span class="c1">//转换为数字  </span>
+    <span class="k">for</span><span class="p">(</span> <span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">strNumLeft</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="n">strNumLeft</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="sc">'0'</span><span class="p">;</span>  
+    <span class="p">}</span>  
+    <span class="k">for</span><span class="p">(</span> <span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">strNumRight</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="n">strNumRight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="sc">'0'</span><span class="p">;</span>  
+    <span class="p">}</span>  
+
+
+    <span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">nMaxBits</span> <span class="o">=</span> <span class="n">strNumLeft</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">+</span> <span class="n">strNumRight</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span><span class="c1">//最大位数，多增加一位，便于编码  </span>
+    <span class="n">string</span> <span class="n">strProduct</span><span class="p">(</span><span class="n">nMaxBits</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kt">char</span> <span class="n">szTemp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="c1">//每位乘积，辅助变量  </span>
+    <span class="kt">char</span> <span class="n">szCarrayTemp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="c1">//进位信息  </span>
+    <span class="c1">//双重循环进行遍历乘法</span>
+
+    <span class="k">for</span><span class="p">(</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">strNumRight</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">i</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="n">strNumLeft</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="k">for</span><span class="p">(</span> <span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">strNumLeft</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">j</span> <span class="p">)</span>  
+        <span class="p">{</span>  
+            <span class="c1">//位数相乘的临时值</span>
+
+            <span class="n">szTemp</span> <span class="o">=</span> <span class="p">(</span> <span class="n">strNumRight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">strNumLeft</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">strProduct</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">%</span> <span class="mi">10</span><span class="p">;</span>
+            <span class="c1">//临时进位</span>
+
+            <span class="n">szCarrayTemp</span> <span class="o">=</span> <span class="p">(</span> <span class="n">strNumRight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">strNumLeft</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">strProduct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">;</span>  
+            <span class="c1">//更改结果值</span>
+            
+            <span class="n">strProduct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">szTemp</span><span class="p">;</span>  
+            <span class="c1">//添加进位</span>
+
+            <span class="n">strProduct</span><span class="p">[</span><span class="o">--</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">szCarrayTemp</span><span class="p">;</span>      
+        <span class="p">}</span>  
+    <span class="p">}</span>  
+
+    <span class="c1">//返回遍历strProduct，从而取出计算的结果  </span>
+    <span class="n">string</span> <span class="n">strResult</span><span class="p">;</span>  
+    <span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  
+    <span class="k">while</span><span class="p">(</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">strProduct</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">strProduct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="o">++</span><span class="n">k</span><span class="p">;</span>  
+    <span class="p">}</span>  
+    <span class="k">for</span><span class="p">(</span> <span class="p">;</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">strProduct</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">k</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="n">strResult</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span> <span class="n">strProduct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="sc">'0'</span><span class="p">);</span><span class="c1">//转换为字符  </span>
+    <span class="p">}</span>  
+
+    <span class="k">if</span> <span class="p">(</span> <span class="n">strResult</span><span class="p">.</span><span class="n">empty</span><span class="p">()</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="n">strResult</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span> <span class="sc">'0'</span> <span class="p">);</span>  
+    <span class="p">}</span>  
+
+    <span class="k">return</span> <span class="n">strResult</span><span class="p">;</span>  
+<span class="p">}</span>  
+
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>  
+<span class="p">{</span>  
+    <span class="n">string</span> <span class="n">strNumLeft</span><span class="p">;</span>  
+    <span class="n">string</span> <span class="n">strNumRight</span><span class="p">;</span>  
+
+
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"输入两个乘数:"</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>  
+    <span class="k">while</span><span class="p">(</span> <span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">strNumLeft</span> <span class="o">&gt;&gt;</span> <span class="n">strNumRight</span> <span class="p">)</span>  
+    <span class="p">{</span>  
+        <span class="n">string</span> <span class="n">strResult</span> <span class="o">=</span> <span class="n">GetProductOfTwoBigNum</span><span class="p">(</span> <span class="n">strNumLeft</span><span class="p">,</span> <span class="n">strNumRight</span> <span class="p">);</span>  
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"两数之积："</span> <span class="o">&lt;&lt;</span> <span class="n">strResult</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>  
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"输入两个乘数："</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>  
+    <span class="p">}</span>  
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>  
+<span class="p">}</span>
+</code></pre></div></div>
+:ET

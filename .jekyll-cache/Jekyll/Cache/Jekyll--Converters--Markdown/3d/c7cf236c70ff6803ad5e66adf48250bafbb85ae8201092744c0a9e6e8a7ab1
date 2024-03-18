@@ -1,0 +1,2 @@
+I"z<p>删除从位置<code class="language-plaintext highlighter-rouge">pos</code>开始的<code class="language-plaintext highlighter-rouge">len</code>个字符。如果len 被省略则删除从<code class="language-plaintext highlighter-rouge">pos</code>开始至s末尾的所有字符。返回一个指向<code class="language-plaintext highlighter-rouge">s</code>的引用</p>
+:ET

@@ -1,0 +1,2 @@
+I"x<p>当等待超时,返回<code class="language-plaintext highlighter-rouge">std::future_status::timeout</code></p>
+:ET

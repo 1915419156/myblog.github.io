@@ -1,0 +1,2 @@
+I"<p>Specify the directory that contains the libdevice library files when option <code class="language-plaintext highlighter-rouge">--dont-use-profile</code> is used. Libdevice library files are located in the nvvm/libdevice directory in the CUDA Toolkit.</p>
+:ET

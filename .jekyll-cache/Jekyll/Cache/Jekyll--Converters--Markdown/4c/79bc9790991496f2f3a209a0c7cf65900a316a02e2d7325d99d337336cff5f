@@ -1,0 +1,115 @@
+I",<h1 id="leetcode-1108-ip-地址无效化">leetcode 1108 IP 地址无效化</h1>
+
+<h2 id="题目描述">题目描述:</h2>
+
+<p><a href="https://leetcode-cn.com/problems/defanging-an-ip-address/">链接地址</a></p>
+
+<p>给你一个有效的 IPv4 地址 address，返回这个 IP 地址的无效化版本。</p>
+
+<p>所谓无效化 IP 地址，其实就是用 <code class="language-plaintext highlighter-rouge">[.]</code> 代替了每个 <code class="language-plaintext highlighter-rouge">.</code>。</p>
+
+<p>示例 1：</p>
+
+<p>输入：address = “1.1.1.1”
+输出：”1[.]1[.]1[.]1”</p>
+
+<p>示例 2：</p>
+
+<p>输入：address = “255.100.50.0”
+输出：”255[.]100[.]50[.]0”</p>
+
+<p>提示：</p>
+<ul>
+  <li>给出的 address 是一个有效的 IPv4 地址</li>
+</ul>
+
+<h2 id="主要思路">主要思路：</h2>
+<p>这里有两种思路：</p>
+<ul>
+  <li>直接使用string 的replace和find函数，进行最简单的操作。</li>
+  <li>使用简单使用string迭代器，便利进行判断时，，当存在”.”时，将字符串替换掉。</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;stdio.h&gt;
+</span>
+<span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="n">string</span> <span class="n">defangIPaddr</span><span class="p">(</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">address</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">result</span><span class="o">=</span><span class="s">""</span><span class="p">;</span>
+            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">address</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="o">++</span><span class="n">i</span><span class="p">){</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">address</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="sc">'.'</span><span class="p">){</span>
+                <span class="n">result</span><span class="o">+=</span><span class="s">"[.]"</span><span class="p">;</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="n">result</span><span class="o">+=</span><span class="n">address</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//这个要在c++11中成立，可能存在内存溢出</span>
+    <span class="n">string</span> <span class="n">defangIPaddr2</span><span class="p">(</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">address</span><span class="p">){</span>
+        <span class="kt">int</span> <span class="n">len</span><span class="o">=</span><span class="n">address</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+        <span class="kt">char</span> <span class="n">result</span><span class="p">[</span><span class="n">len</span><span class="o">+</span><span class="mi">12</span><span class="p">];</span>
+        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">len</span><span class="p">;</span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">address</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="sc">'.'</span><span class="p">){</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="sc">'['</span><span class="p">;</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="sc">'.'</span><span class="p">;</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="sc">']'</span><span class="p">;</span>
+                <span class="n">j</span><span class="o">+=</span><span class="mi">3</span><span class="p">;</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">address</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+                <span class="o">++</span><span class="n">j</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">string</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+    <span class="p">}</span>
+
+<span class="p">};</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="n">Solution</span> <span class="n">my_solution</span><span class="p">;</span>
+    <span class="c1">//input string</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">input_string1</span><span class="o">=</span><span class="s">"1.1.1.1"</span><span class="p">;</span><span class="c1">//目标输出"1[.]1[.]1[.]1"</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">input_string2</span><span class="o">=</span><span class="s">"255.100.50.0"</span><span class="p">;</span><span class="c1">//目标输出"255[.]100[.]50[.]0"</span>
+    <span class="c1">//output string</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">output1</span><span class="o">=</span><span class="s">""</span><span class="p">;</span>
+    <span class="c1">//my result number</span>
+    <span class="k">auto</span>  <span class="n">my_result1</span><span class="o">=</span><span class="n">my_solution</span><span class="p">.</span><span class="n">defangIPaddr</span><span class="p">(</span><span class="n">input_string1</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">my_result2</span><span class="o">=</span><span class="n">my_solution</span><span class="p">.</span><span class="n">defangIPaddr</span><span class="p">(</span><span class="n">input_string2</span><span class="p">);</span>
+    <span class="c1">//print_vector(my_result);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"result1: "</span><span class="o">&lt;&lt;</span><span class="n">my_result1</span><span class="o">&lt;&lt;</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="o">&lt;&lt;</span><span class="s">"resutl2:"</span><span class="o">&lt;&lt;</span><span class="n">my_result2</span><span class="o">&lt;&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+    <span class="c1">//print_vector(my_result);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p>/*</p>
+<h2 id="优质解答">优质解答：</h2>
+<p>//思路基本相同，find函数执行然后进行迭代</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="n">string</span> <span class="n">defangIPaddr</span><span class="p">(</span><span class="n">string</span> <span class="n">address</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// 2019-8-22 11:20:00 by czy</span>
+        <span class="n">string</span> <span class="n">addr</span> <span class="o">=</span> <span class="n">address</span><span class="p">;</span>
+        <span class="kt">int</span> <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">addr</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">'.'</span><span class="p">,</span> <span class="n">pos</span><span class="p">);</span>
+            <span class="c1">//cout &lt;&lt; "pos: " &lt;&lt; pos &lt;&lt; endl;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">pos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="n">addr</span> <span class="o">=</span> <span class="n">addr</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="s">"["</span><span class="p">);</span>
+            <span class="n">addr</span> <span class="o">=</span> <span class="n">addr</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="s">"]"</span><span class="p">);</span>
+            <span class="n">pos</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+            <span class="c1">//cout &lt;&lt; "addr: " &lt;&lt; addr &lt;&lt; endl;</span>
+            <span class="c1">//system("pause");</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">addr</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+:ET

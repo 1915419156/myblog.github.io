@@ -1,0 +1,2 @@
+I"5<p>p接管了内置指针q所指向的对象的所有权。q必须能转换为<code class="language-plaintext highlighter-rouge">T*</code>类型。p将使用可调用对象<code class="language-plaintext highlighter-rouge">d</code>来代替<code class="language-plaintext highlighter-rouge">delete</code></p>
+:ET

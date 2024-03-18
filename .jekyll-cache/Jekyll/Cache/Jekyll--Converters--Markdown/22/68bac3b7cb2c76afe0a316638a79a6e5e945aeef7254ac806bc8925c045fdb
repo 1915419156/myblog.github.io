@@ -1,0 +1,2 @@
+I"&<p>释放原有对象的同时，若传递了可选的内置参数指针<code class="language-plaintext highlighter-rouge">q</code>，会令<code class="language-plaintext highlighter-rouge">p</code>指向<code class="language-plaintext highlighter-rouge">q</code>，否则会将p置为空</p>
+:ET

@@ -1,0 +1,2 @@
+I"(<p>Specify the directory in which the compiler executable resides. The host compiler executable name can be also specified to ensure that the correct host compiler is selected. In addition, driver prefix options (<code class="language-plaintext highlighter-rouge">--input-drive-prefix</code>, <code class="language-plaintext highlighter-rouge">--dependency-drive-prefix</code>, or <code class="language-plaintext highlighter-rouge">--drive-prefix</code>) may need to be specified, if nvcc is executed in a Cygwin shell or a MinGW shell on Windows.</p>
+:ET

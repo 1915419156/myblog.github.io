@@ -1,0 +1,583 @@
+I"�<blockquote>
+  <p>2019-08-02 16:09:52</p>
+</blockquote>
+
+<h2 id="算法">算法</h2>
+
+<h3 id="算法总览和分类">算法总览和分类</h3>
+
+<p><strong>STL算法总览</strong></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-16-13-21.png" alt="STL算法总览01" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-16-14-40.png" alt="STL算法总览02" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-16-18-06.png" alt="STL算法总览03" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-16-18-57.png" alt="STL算法总览04" /></p>
+
+<p><strong>算法分类</strong></p>
+
+<ul>
+  <li>质变算法：会改变操作对象之值；如copy、swap、replace、fill、remove、permutation、aprtition、random shuffling、sort等</li>
+  <li>非质变算法：不改变操作对象之值：find、search、count、for_each、equal、mismatch、max、min等</li>
+</ul>
+
+<p><strong>STL算法的一般形式</strong></p>
+
+<p>质变算法一半提供两个版本：in-place–就地改变操作对象;copy–将操作对象的内容复制一份副本(通常以_copy结尾)，操作后返回。</p>
+
+<h3 id="63-数值算法">6.3 数值算法<stl_numeric.h></stl_numeric.h></h3>
+
+<p>数值算法一般包含在表头<numeric>中，实现是在<stl_numeric.h>文件中</stl_numeric.h></numeric></p>
+
+<ul>
+  <li>accumulate 关键操作: init=init+<em>i(第一版本)、init=binary_op(init,</em>i*)(第二个版本)</li>
+  <li>adjacent_difference:计算相邻元素的差额关键代码： <em>i-</em>(i-1)；</li>
+  <li>inner_product:能够计算一般内积，<code class="language-plaintext highlighter-rouge">result=result+(*i)**(first2+(i-first))</code></li>
+  <li>partial_sum计算局部总和</li>
+  <li>power:计算指数(<a href="https://blog.csdn.net/a1351937368/article/details/77746574/">C++中位运算的使用方法</a>;<a href="https://blog.csdn.net/u012062760/article/details/46401115">
+STL源码分析之power算法</a>;<a href="https://blog.csdn.net/MoreWindows/article/details/7174143">快速计算x的n次幂</a>)</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">T</span> <span class="nf">power</span><span class="p">(</span><span class="n">T</span> <span class="n">x</span><span class="p">,</span><span class="n">Integer</span> <span class="n">n</span><span class="p">,</span><span class="n">Monoidoperation</span> <span class="n">op</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+        <span class="k">return</span> <span class="n">identity_element</span><span class="p">(</span><span class="n">op</span><span class="p">);</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="c1">//进行位运算直到为偶数，这里主要是为了过滤掉低位的0</span>
+
+        <span class="k">while</span><span class="p">((</span><span class="n">n</span><span class="o">&amp;</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+            <span class="n">n</span><span class="o">&gt;&gt;=</span><span class="mi">1</span><span class="p">;</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="c1">//重新计算x，n变为偶数</span>
+
+        <span class="n">T</span> <span class="n">result</span><span class="o">=</span><span class="n">x</span><span class="p">;</span>
+        <span class="n">n</span><span class="o">&gt;&gt;=</span><span class="mi">1</span><span class="p">;</span>
+        <span class="c1">//</span>
+
+        <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="o">!=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">);</span>
+            <span class="c1">//发现是奇数;将奇数去除，即乘一个x</span>
+
+            <span class="k">if</span><span class="p">((</span><span class="n">n</span><span class="o">&amp;</span><span class="mi">1</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="p">){</span>
+                <span class="n">result</span><span class="o">=</span><span class="n">op</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="n">x</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="c1">//除以2</span>
+
+            <span class="n">n</span><span class="o">&gt;&gt;=</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cm">/*
+
+第一步判断n是否为0；
+第一个while循环，尽可能的将底数变的更大，更好进行后续的计算，经过第一个while之后，n肯定是一个奇数了，再进入第二个循环，如果是1，则直接返回。
+第二个while循环感觉就是求当前底数（x的偶数次平方，y）的奇数（m）次平方的过程，也就是求m的二进制各个位是否为1的过程，如果当前位M为1，则结果额外乘以y的2^M次方~
+
+*/</span>
+
+</code></pre></div></div>
+
+<p>在这里顺道测试了一下GCC的stl的性能，发现结果比较感人啊，迷之编译器优化。。。。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="cp">#include&lt;bits/stdc++.h&gt;
+#include&lt;cmath&gt;
+</span><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+<span class="c1">//朴素算法</span>
+<span class="kt">long</span> <span class="nf">pusu</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">long</span> <span class="n">num</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">num</span><span class="o">*=</span><span class="n">x</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">num</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">//分治算法----快速幂</span>
+<span class="kt">long</span> <span class="nf">fenzhi</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">long</span> <span class="n">num</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">((</span><span class="n">n</span><span class="o">&amp;</span><span class="mi">1</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">num</span><span class="o">*=</span><span class="n">x</span><span class="p">;</span>
+            <span class="n">n</span><span class="o">--</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">x</span><span class="o">*=</span><span class="n">x</span><span class="p">;</span>
+        <span class="n">n</span><span class="o">/=</span><span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">num</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">//stl算法</span>
+<span class="kt">long</span> <span class="nf">stl_pow</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">while</span> <span class="p">((</span><span class="n">n</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">n</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="n">x</span> <span class="o">*=</span> <span class="n">x</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="kt">long</span> <span class="n">result</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+    <span class="n">n</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">n</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">x</span> <span class="o">*=</span> <span class="n">x</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">n</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">*=</span> <span class="n">x</span><span class="p">;</span>
+        <span class="n">n</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+    <span class="c1">//cin&gt;&gt;x&gt;&gt;n;</span>
+   <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">k</span><span class="p">;</span><span class="o">++</span><span class="n">i</span><span class="p">){</span>
+    <span class="o">++</span><span class="n">x</span><span class="p">;</span> 
+  <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="n">k</span><span class="p">;</span><span class="o">++</span><span class="n">j</span><span class="p">){</span>
+    <span class="o">++</span><span class="n">n</span><span class="p">;</span>
+    <span class="kt">long</span> <span class="n">result</span><span class="p">;</span>
+    <span class="kt">clock_t</span> <span class="n">start_time</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+    <span class="kt">long</span> <span class="n">temp1</span><span class="o">=</span><span class="n">pusu</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"朴素算法结果:"</span><span class="o">&lt;&lt;</span><span class="n">temp1</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+    <span class="kt">clock_t</span> <span class="n">end_time</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Running time is: %lfms</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">end_time</span><span class="o">-</span><span class="n">start_time</span><span class="p">)</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="o">*</span><span class="mi">1000</span><span class="p">);</span>
+    <span class="kt">clock_t</span> <span class="n">start_time1</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+    <span class="kt">long</span> <span class="n">temp2</span><span class="o">=</span><span class="n">fenzhi</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"分治算法结果:"</span><span class="o">&lt;&lt;</span><span class="n">temp2</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+    <span class="kt">clock_t</span> <span class="n">end_time1</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Running time is: %lfms</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">end_time1</span><span class="o">-</span><span class="n">start_time1</span><span class="p">)</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="o">*</span><span class="mi">1000</span><span class="p">);</span>
+    <span class="kt">clock_t</span> <span class="n">start_time2</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+   <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"STL_power:"</span><span class="o">&lt;&lt;</span><span class="n">stl_pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>    
+   <span class="kt">clock_t</span> <span class="n">end_time2</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+   <span class="n">printf</span><span class="p">(</span><span class="s">"Running time is: %lfms</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">end_time2</span><span class="o">-</span><span class="n">start_time2</span><span class="p">)</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="o">*</span><span class="mi">1000</span><span class="p">);</span>
+   <span class="kt">clock_t</span> <span class="n">start_time3</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+   <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"STL结果:"</span><span class="o">&lt;&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span> 
+   <span class="kt">clock_t</span> <span class="n">end_time3</span><span class="o">=</span><span class="n">clock</span><span class="p">();</span>
+   <span class="n">printf</span><span class="p">(</span><span class="s">"Running time is: %lfms</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">end_time3</span><span class="o">-</span><span class="n">start_time3</span><span class="p">)</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="o">*</span><span class="mi">1000</span><span class="p">);</span>
+   <span class="n">printf</span><span class="p">(</span><span class="s">"x %d,n %d </span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">n</span><span class="p">);</span>
+   <span class="n">printf</span><span class="p">(</span><span class="s">"--------------------</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/* 结果
+
+朴素算法结果:4096
+Running time is: 0.097000ms
+分治算法结果:4096
+Running time is: 0.006000ms
+STL_power:4096
+Running time is: 0.009000ms
+STL结果:4096
+Running time is: 0.025000ms
+x 4,n 6 
+--------------------
+朴素算法结果:16384
+Running time is: 0.006000ms
+分治算法结果:16384
+Running time is: 0.005000ms
+STL_power:16384
+Running time is: 0.007000ms
+STL结果:16384
+Running time is: 0.009000ms
+x 4,n 7 
+--------------------
+朴素算法结果:390625
+Running time is: 0.005000ms
+分治算法结果:390625
+Running time is: 0.007000ms
+STL_power:390625
+Running time is: 0.007000ms
+STL结果:390625
+Running time is: 0.009000ms
+x 5,n 8 
+--------------------
+朴素算法结果:1953125
+Running time is: 0.006000ms
+分治算法结果:1953125
+Running time is: 0.007000ms
+STL_power:1953125
+Running time is: 0.006000ms
+STL结果:1.95312e+06
+Running time is: 0.009000ms
+x 5,n 9 
+--------------------
+
+*/</span>
+
+
+</code></pre></div></div>
+
+<h3 id="64-基本算法">6.4 基本算法</h3>
+
+<p>基本常用算法定义在<stl_algobase.h>中，其它算法定义于<stl_algo.h></stl_algo.h></stl_algobase.h></p>
+
+<p>基本函数有: equal,fill,fill_n,iter_swap,lexicographical_compare,max,min,mismatch,swap;这些在之前的c++primer阅读笔记中有介绍，不再过多赘述。</p>
+
+<p>lexicographical_compare：字典排列方式对两个序列，进行比较</p>
+
+<ul>
+  <li>如果第一序列的元素较小，返回true,否则返回false</li>
+  <li>如果达到last1而尚未达到last2,返回true</li>
+  <li>如果达到last2而尚未达到last1,返回false</li>
+  <li>同时达到，返回false</li>
+</ul>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-21-23-34.png" alt="copy算法的完整脉络" /></p>
+
+<p>当复制位置的起点在复制区间内时，将会发生错误。为了防止上述错误的发生，一般都会先把目标区段使用memmove()复制下来，再进行操作。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-21-26-47.png" alt="copy算法需要特别注意区间重叠的情况" /></p>
+
+<p>copy改变的是[result,result+(last-first))中的迭代器所指对象，而并非更改迭代器本身。它会为输出区间的元素赋予新值，而不是产生新的元素。它不能改变输出区间的迭代器个数。因此不能将元素插入空容器中。</p>
+
+<p><strong>copy_backward 反向拷贝</strong></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-21-42-23.png" alt="copy_backward操作示意图" /></p>
+
+<h3 id="65-set-相关算法">6.5 set 相关算法</h3>
+
+<p>STL提供了四种set(集合)相关的算法，分别是并集(union),交集(intersection)，差集(difference)、对称集(symmetic difference)</p>
+
+<p>set_union:求并集–set_union(first1,last1,first2,last2,ostream_iterator<int>(cout,""));</int></p>
+
+<p>比较的关键代码：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">InputIterator1</span><span class="p">,</span><span class="k">class</span> <span class="nc">InputIterator2</span><span class="p">,</span><span class="k">class</span> <span class="nc">OutputIterator</span><span class="p">&gt;</span>
+<span class="n">OutputIterator</span> <span class="nf">set_union</span><span class="p">(</span><span class="n">InputIterator1</span> <span class="n">first1</span><span class="p">,</span><span class="n">InputIterator1</span> <span class="n">last1</span><span class="p">,</span>
+                        <span class="n">InputIterator2</span> <span class="n">first2</span><span class="p">,</span><span class="n">InputIterator2</span> <span class="n">last2</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">first1</span><span class="o">!=</span><span class="n">last1</span><span class="o">&amp;&amp;</span><span class="n">first2</span><span class="o">!=</span><span class="n">last2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//在两个区间之内分别移动迭代器，首先将元素较小者(假设为A区)记录于目标区域；然后移动A区迭代器使之前进；同时另一个迭代器不懂，然后进行新一次的比较大小、记录值、迭代器、迭代器移动，直到两区中有一个区达到尾端。如果元素相等，取S1者记录于目标区，并同时移动两个迭代器</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="o">*</span><span class="n">first1</span><span class="o">&lt;*</span><span class="n">first2</span><span class="p">){</span>
+            <span class="o">*</span><span class="n">result</span><span class="o">=*</span><span class="n">first1</span><span class="p">;</span>
+            <span class="o">++</span><span class="n">first1</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="o">*</span><span class="n">first2</span><span class="o">&lt;*</span><span class="n">first1</span><span class="p">){</span>
+            <span class="o">*</span><span class="n">result</span><span class="o">=*</span><span class="n">first2</span><span class="p">;</span>
+            <span class="o">++</span><span class="n">first2</span><span class="p">;</span>
+        <span class="c1">//*first2==*first1</span>
+
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="o">*</span><span class="n">result</span><span class="o">=*</span><span class="n">first1</span><span class="p">;</span>
+            <span class="o">++</span><span class="n">first1</span><span class="p">;</span>
+            <span class="o">++</span><span class="n">first2</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="o">++</span><span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-21-52-12.png" alt="set_union分析" /></p>
+
+<h4 id="652-set_intersection构造交集">6.5.2 set_intersection构造交集</h4>
+
+<p>基本上就是上面的条件判断反过来了，当相等时迭代器才增加。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-22-08-15.png" alt="set_intersection步进分析" /></p>
+
+<h4 id="653-set_difference">6.5.3 set_difference</h4>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-22-12-26.png" alt="set_difference步进分析" /></p>
+
+<h4 id="654-set_symmetric_difference-构造对称差集">6.5.4 set_symmetric_difference 构造对称差集</h4>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-02-22-14-24.png" alt="set_symmetric_difference" /></p>
+
+<h3 id="67-其它算法">6.7 其它算法</h3>
+
+<p><strong>find_end:查找最后一次出现的点</strong></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-15-00-00.png" alt="find_end算法和find_first_of" /></p>
+
+<p><strong>includes(应用于有序区间)</strong></p>
+
+<p>判断序列s2是否“涵盖于”序列s1。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-15-04-04.png" alt="includes算法的工作原理" /></p>
+
+<p><strong>merge</strong>
+将两个经过排序的集合S1和S2，合并起来置于另一段空间。所得结果也是一个有序(sorted)序列。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-15-09-03.png" alt="merge算法的工作原理示意" /></p>
+
+<p><strong>paritition</strong> 
+将区间中的元素重新排列，通过条件进行筛选。这个算法并不保证保留元素的原始相对位置，如果需要保留原始相对位置，应该使用stable_partition</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-15-16-55.png" alt="" /></p>
+
+<p><strong>remove</strong></p>
+
+<p>remove并不真正的删除这个元素，而是将每一个不与value相等的匀速轮番赋值给first之后的空间。返回值表示重新整理之后的最后元素的下一个位置。例如{0,1,0,2,0,3,0,4};执行remove(0)；最终结果为{1,2,3,4,0,3,0,4};返回的Forwarallterator指向第五个位置。如果要进行删除需要使用erase()来将迭代器后面的数据进行删除。注意array不适合使用remove()和remove_if()；因为它无法缩小尺寸，导致残余数据永远存在。应该使用remove_copy()和remove_copy_if();</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-15-38-28.png" alt="remove相关参数" /></p>
+
+<p><strong>rotate</strong></p>
+
+<p>rotate可以实现非对称的位置交换。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-15-50-41.png" alt="rotate操作示意图" />
+关键代码：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">ForwardIterator</span><span class="p">,</span><span class="k">class</span> <span class="nc">Distance</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">__rotate</span><span class="p">(</span><span class="n">ForwardIterator</span> <span class="n">first</span><span class="p">,</span><span class="n">ForwardIterator</span> <span class="n">middle</span><span class="p">,</span><span class="n">ForwardIterator</span> <span class="n">last</span><span class="p">,</span><span class="n">Distance</span><span class="o">*</span><span class="p">,</span><span class="n">forward_iterator_tag</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">ForwardIterator</span> <span class="n">i</span><span class="o">=</span><span class="n">middle</span><span class="p">;;)</span>
+    <span class="p">{</span>
+        <span class="c1">//前段后段的元素一一交换</span>
+
+        <span class="n">iter_swap</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">i</span><span class="p">);</span>
+        <span class="c1">//双双前景</span>
+
+        <span class="o">++</span><span class="n">first</span><span class="p">;</span>
+        <span class="o">++</span><span class="n">i</span><span class="p">;</span>
+        <span class="c1">//判断那个先行结束</span>
+
+        <span class="c1">//前段先行结束</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">first</span><span class="o">==</span><span class="n">middle</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//后段同时结束，整个就结束了</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="n">last</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+            <span class="c1">//调整位置，对新的前后段再做交换</span>
+
+            <span class="n">middle</span><span class="o">=</span><span class="n">i</span><span class="p">;</span>
+            <span class="c1">//后段先结束</span>
+
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="n">last</span><span class="p">){</span>
+            <span class="c1">//调整，准备对新的前后段再做交换</span>
+
+            <span class="n">i</span><span class="o">=</span><span class="n">middle</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-15-59-28.png" alt="rotate forward iterator版操作示意图" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-16-00-32.png" alt="rotate bidirectional iterator版操作示意图" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-16-02-20.png" alt="search_n的工作原理" /></p>
+
+<p><strong>unique</strong>移除重复的元素</p>
+
+<p>注意:unique只移除相邻的重复元素，如果你想移除所有重复元素，必须先行排序。
+所有保留下来的元素，其原始值相对次序不变</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-18-29-47.png" alt="unique算法" /></p>
+
+<p><strong>lower_bound/upper_bound(应用于有序区间)</strong></p>
+
+<p>这个是二分查找的一种版本，试图在已经排序的[first,last)中寻找匀速value。返回满嘴条件的第一个元素。upper_bound是返回最后一个值</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-18-33-55.png" alt="" /></p>
+
+<p><strong>next_permutation</strong></p>
+
+<p>取得[first,last)所标示的下一个排列组合，有就返回true,否则返回false。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-19-16-15.png" alt="" /></p>
+
+<p><strong>next_permutation</strong>
+与上面基本相同</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-19-17-59.png" alt="next_permutation算法流程" /></p>
+
+<p><strong>random_shuffle</strong></p>
+
+<p>将元素次序随机重排。</p>
+
+<h4 id="679-sort">6.7.9 sort</h4>
+
+<p>这个算法接受两个RandomAccesslterators(随机存取迭代器)，然后将区间内的所有元素以渐增方式由小到大重新排列。并且存在允许用户使用仿函数来进行排序。STL的所有关系型容器都拥有自动排序功能(底层采用RB-tree)；所以不需要用到这个sort算法。序列式容器中的stack,queue,priority-queue都有特定的出入口，不允许用户对元素排序。vector和dequeue适合使用sort算法。list的迭代器鼠疫Bldirectionaltterators不适合使用sort算法。</p>
+
+<p>STL的sort算法数据量大的时候采用Quick Sort(现在已经开始使用IntroSort 最坏算法复杂度为O(NlogN)) ;数据量小的时候使用Insertion Sort。主要是因为插入排序在数据量很小的时候有不错的效果。并且没有额外的开销和负荷。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-19-32-57.png" alt="插入排序" /></p>
+
+<p>注意:这里是采用交换的方式进行的排序，不是链表的指直接插入。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-19-36-26.png" alt="快排流程" /></p>
+
+<p>快速排序的一般流程</p>
+
+<ol>
+  <li>如果S的元素个数为0或者1，结束</li>
+  <li>取S中的任何一个元素，当做轴(pivot)v。</li>
+  <li>将s分割为L,R；两段，使得L内的每一个元素都小于或者等于v,R内的每一个元素都大于或等于v。</li>
+  <li>对L,R递归执行Quick Sort</li>
+</ol>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-20-45-44.png" alt="" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-20-46-22.png" alt="" /></p>
+
+<p>下面是快速排序的具体代码</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">RandomAccessIterator</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="kt">void</span> <span class="nf">sort</span><span class="p">(</span><span class="n">RandomAccessIterator</span> <span class="n">first</span><span class="p">,</span>
+                <span class="n">RandomAccessIterator</span> <span class="n">last</span>
+                <span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">first</span><span class="o">!=</span><span class="n">last</span><span class="p">){</span>
+        <span class="n">__introsort_loop</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">value_type</span><span class="p">(</span><span class="n">first</span><span class="p">),</span><span class="n">__lg</span><span class="p">(</span><span class="n">last</span><span class="o">-</span><span class="n">first</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">);</span>
+        <span class="n">__final_insertion_sort</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//__lg()用来控制分割恶化的情况</span>
+
+<span class="c1">//找出2^k&lt;=n的最大值K,例如n=7,k=2,n=20,k=4;</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Size</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="n">Size</span> <span class="nf">__lg</span><span class="p">(</span><span class="n">Size</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">Size</span> <span class="n">k</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">n</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">;</span><span class="n">n</span><span class="o">&gt;&gt;=</span><span class="mi">1</span><span class="p">)</span> <span class="o">++</span><span class="n">k</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">k</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">//返回a,b，c之间的居中者</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">__median</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">a</span><span class="p">,</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">b</span><span class="p">,</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">c</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="o">&lt;</span><span class="n">b</span><span class="p">){</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">b</span><span class="o">&lt;</span><span class="n">c</span><span class="p">){</span>
+            <span class="k">return</span> <span class="n">b</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="o">&lt;</span><span class="n">c</span><span class="p">){</span>
+            <span class="k">return</span> <span class="n">c</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="k">return</span> <span class="n">a</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">a</span><span class="o">&lt;</span><span class="n">c</span><span class="p">){</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">b</span><span class="o">&lt;</span><span class="n">c</span><span class="p">){</span>
+        <span class="k">return</span> <span class="n">c</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">b</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//数组分割返回分割后的右段的第一个位置</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">RandomAccessIterator</span><span class="p">,</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">RandomAccessIterator</span> <span class="nf">__unguarded_partition</span><span class="p">(</span>
+                                            <span class="n">RandomAccessIterator</span> <span class="n">first</span><span class="p">,</span>
+                                            <span class="n">RandomAccessIterator</span> <span class="n">last</span><span class="p">,</span>
+                                            <span class="n">T</span> <span class="n">pivot</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">){</span>
+        <span class="c1">//找到&gt;=pivot的元素就停下来</span>
+
+        <span class="k">while</span><span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="o">&lt;</span><span class="n">pivot</span><span class="p">){</span><span class="o">++</span> <span class="n">first</span><span class="p">;}</span>
+        <span class="c1">//调整指针位置</span>
+
+        <span class="o">--</span><span class="n">last</span><span class="p">;</span>
+        <span class="c1">//找到&lt;=pivot的元素就停下来。</span>
+
+        <span class="k">while</span><span class="p">(</span><span class="n">pivot</span><span class="o">&lt;*</span><span class="n">last</span><span class="p">)</span> <span class="o">--</span><span class="n">last</span><span class="p">;</span>
+        <span class="c1">//注意一下只适用于 random iterator</span>
+        <span class="c1">//交错，结束循环</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">first</span><span class="o">&lt;</span><span class="n">last</span><span class="p">))</span> <span class="k">return</span> <span class="n">first</span><span class="p">;</span>
+        <span class="c1">//大小值交换</span>
+
+        <span class="n">iter_swap</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+        <span class="c1">//调整</span>
+
+        <span class="o">++</span><span class="n">first</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//当匀速个数为40时，__introsoft_loop()的最后一个参数将是5*2，意思是最多允许分割10层。IntroSort算法如下：</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">RandomAccessIterator</span><span class="p">,</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span><span class="k">class</span> <span class="nc">Size</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">__introsort_loop</span><span class="p">(</span><span class="n">RandomAccessIterator</span> <span class="n">first</span><span class="p">,</span>
+                      <span class="n">RandomAccessIterator</span> <span class="n">last</span><span class="p">,</span>
+                      <span class="n">T</span><span class="o">*</span><span class="p">,</span>
+                      <span class="n">Size</span> <span class="n">depth_limit</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//__stl_threshold是一个全局常数，稍早定义为const int 16</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="n">last</span><span class="o">-</span><span class="n">first</span><span class="o">&gt;</span><span class="n">__stl_threshold</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">depth_limit</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+            <span class="c1">//分割恶化，改用heapsort</span>
+
+            <span class="n">partial_sort</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="o">--</span><span class="n">depth_limit</span><span class="p">;</span>
+        <span class="c1">//选择一个够好的轴枢并决定分割点,并赋值给cut</span>
+
+        <span class="n">RandomAccessIterator</span> <span class="n">cut</span><span class="o">=</span><span class="n">__unguarded_partition</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">T</span><span class="p">(</span><span class="n">__median</span><span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="p">,</span><span class="o">*</span><span class="p">(</span><span class="n">first</span><span class="o">+</span><span class="p">(</span><span class="n">last</span><span class="o">-</span><span class="n">first</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span><span class="o">*</span><span class="p">(</span><span class="n">last</span><span class="o">-</span><span class="mi">1</span><span class="p">))));</span>
+        <span class="c1">//根据cut对右半段递归进行sort</span>
+
+        <span class="n">__introsort_loop</span><span class="p">(</span><span class="n">cut</span><span class="p">,</span><span class="n">last</span><span class="p">,</span><span class="n">value_type</span><span class="p">(</span><span class="n">first</span><span class="p">),</span><span class="n">depth_limit</span><span class="p">);</span>
+        <span class="n">last</span><span class="o">=</span><span class="n">cut</span><span class="p">;</span>
+
+        <span class="c1">//这里是回到while循环，准备对左半段递归进行sort</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+<h4 id="6710-equal_range应用于有序区间">6.7.10 equal_range(应用于有序区间)</h4>
+
+<p>是二分查找法的一个版本。试图在已排序的[first,last)中寻找value。它返回一对迭代器i和j,i是在不破坏次序的前提下，value可以插入的第一个位置，j则是最后一个。因此i-j内都是value。</p>
+
+<h4 id="6711-inplace_merge应用于有序区间">6.7.11 inplace_merge(应用于有序区间)</h4>
+
+<p>将两个已经有序的序列重新结合成为一个新的有序序列。注意，这个算法会使用额外的内存空间(暂时缓冲区)。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-21-16-48.png" alt="" /></p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-21-28-12.png" alt="" /></p>
+
+<h4 id="6712-nth_element">6.7.12 nth_element</h4>
+
+<p>重新排列，使得迭代器nth所指的元素，与整个迭代队列完整排序之后，同一位置的元素同值。同时保证[nth,last)内没有任何一个元素不大于[first,nth)；但对于[first,nth)和[nth,last)两个子区间内的元素次序则无任何保证。</p>
+
+<p><img src="https://wangpengcheng.github.io/img/2019-08-03-22-07-31.png" alt="nth_element操作实例拆解" /></p>
+
+<h4 id="6713-merge-sort">6.7.13 merge sort</h4>
+
+<p>利用分治思想，以各个击破的方式来对区间进行排序：</p>
+
+<ul>
+  <li>将区间对半分开，左右两段各自排序。</li>
+  <li>使用inplace_merge重新组合为一个完整的有序序列</li>
+  <li>递归对半操作，直到每一小段的长度为0或者1.</li>
+</ul>
+
+<p>merge sort的算法复杂度是是O(NlongN)但是因为使用了额外的资源，因此性能反而不如Quick Sort</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">BidirectorIter</span><span class="p">&gt;</span>
+<span class="kt">void</span> <span class="nf">mergesort</span><span class="p">(</span><span class="n">BidirectorIter</span> <span class="n">first</span><span class="p">,</span><span class="n">BidirectorIter</span> <span class="n">last</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">typename</span> <span class="n">iterator_traits</span><span class="o">&lt;</span><span class="n">BidirectorIter</span><span class="o">&gt;::</span><span class="n">difference_type</span> <span class="n">n</span><span class="o">=</span><span class="n">distance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="o">||</span><span class="n">n</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="n">BidirectorIter</span> <span class="n">mid</span><span class="o">=</span><span class="n">first</span><span class="o">+</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+        <span class="n">mergesort</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">mid</span><span class="p">);</span>
+        <span class="n">mergesort</span><span class="p">(</span><span class="n">mid</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+        <span class="n">inplace_merge</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="n">mid</span><span class="p">,</span><span class="n">last</span><span class="p">);</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+:ET

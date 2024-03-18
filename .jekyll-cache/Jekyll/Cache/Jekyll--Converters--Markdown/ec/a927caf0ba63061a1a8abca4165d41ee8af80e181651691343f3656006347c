@@ -1,0 +1,2 @@
+I"�<p>c维护桶的大小，返回<code class="language-plaintext highlighter-rouge">float</code>值。c会在需要时添加新的桶。以使得<code class="language-plaintext highlighter-rouge">load_factor&lt;=max_load_factor</code></p>
+:ET

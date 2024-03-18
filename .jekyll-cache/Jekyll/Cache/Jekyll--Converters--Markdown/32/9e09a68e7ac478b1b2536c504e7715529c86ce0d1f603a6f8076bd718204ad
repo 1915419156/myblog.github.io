@@ -1,0 +1,2 @@
+I"�<p> 在 ai_flags 含 AI_V4MAPPED和 AI_ALL前提下：以 sockaddr_in6{} 返回所有 AAAA 记录，并且以 sockaddr_in6{}作为IPV4映射的IPV6地址返回所有A记录</p>
+:ET

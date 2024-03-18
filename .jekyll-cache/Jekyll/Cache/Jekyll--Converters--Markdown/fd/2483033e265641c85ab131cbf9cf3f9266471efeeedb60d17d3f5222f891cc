@@ -1,0 +1,2 @@
+I"g<p>将类型为<code class="language-plaintext highlighter-rouge">T</code>的值写到输出流<code class="language-plaintext highlighter-rouge">os</code>中，每个值后面都输出一个<code class="language-plaintext highlighter-rouge">d</code>。<code class="language-plaintext highlighter-rouge">d</code>指向一个空字符结尾的字符数组</p>
+:ET

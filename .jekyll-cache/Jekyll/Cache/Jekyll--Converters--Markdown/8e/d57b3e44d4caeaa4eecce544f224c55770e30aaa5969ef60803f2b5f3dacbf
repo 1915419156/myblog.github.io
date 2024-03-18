@@ -1,0 +1,376 @@
+I"�m<blockquote>
+  <p>2019-4-27 20:17:29 编写笔记如下</p>
+</blockquote>
+
+<h2 id="第五章-语句">第五章 语句</h2>
+<p>没什么好写的。</p>
+
+<h2 id="第六章-函数">第六章 函数</h2>
+
+<h3 id="函数基础">函数基础</h3>
+
+<p>在函数中可以使用<code class="language-plaintext highlighter-rouge">static</code>来进行静态局部变量的全局作用域。使得局部变量的生存周期可以一直持续到程序结束。
+注意当使用指针作为函数传入参数的时候，函数内部会拷贝传入参数指针，指针不同但是指向的地址和变量相同。当使用引用时，是传给函数使用对象的另外一个名字。因此在函数参数传递时应该，尽量使用引用参数。如下：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">bool</span> <span class="n">isShorter</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span> <span class="o">&amp;</span><span class="n">sl</span><span class="p">;</span><span class="k">const</span> <span class="n">string</span> <span class="o">&amp;</span><span class="n">s2</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">s1</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">&lt;</span><span class="n">s2</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kt">int</span>  <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+
+<span class="p">}</span>
+
+<span class="c1">//第二个形参argv是一个数组，它的元素是指向c风格字符串的指针；因为第二个形参是数组，所以main函数也可以定义成：</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* code */</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</code></pre></div></div>
+
+<h3 id="initialzer_list-形参">initialzer_list 形参</h3>
+
+<p>当函数的实参数量未知；但是全部实参的类型相同，我们可以使用initializer_list类型的形参。详细描述如下表：</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">操作</th>
+      <th style="text-align: left">解释</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">initializer_list &lt;T&gt; lst</code></td>
+      <td style="text-align: left">默认初始化；类型的空列表</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">initializer_list &lt;T&gt; lst {a,b,c...}</code></td>
+      <td style="text-align: left">lst的元素数量和初始值一样多；lst的元素是对应初始值的副本；列表中的元素是const</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">lst2(lst) or lst2=lst</code></td>
+      <td style="text-align: left">拷贝复制一个元素</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">lst.size()</code></td>
+      <td style="text-align: left">列表中的元素数量</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">lst.begin()</code></td>
+      <td style="text-align: left">返回指向lst中首元素的指针</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">lst.end()</code></td>
+      <td style="text-align: left">返回指向lst中尾元素下一位置的指针</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>下面是代码示例：</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">error_msg</span><span class="p">(</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">il</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="k">auto</span> <span class="n">beg</span><span class="o">=</span><span class="n">il</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span><span class="n">beg</span><span class="o">!=</span><span class="n">il</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="o">++</span><span class="n">beg</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">cout</span><span class="o">&lt;&lt;*</span><span class="n">beg</span><span class="o">&lt;&lt;</span><span class="s">" "</span><span class="p">;</span><span class="c1">//连续输出错误的函数信息</span>
+    <span class="p">}</span>
+    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<h4 id="省略符形参">省略符形参</h4>
+
+<p>为了方便c++程序访问某些特殊的c代码而设置的，这些大妈使用了名为<code class="language-plaintext highlighter-rouge">varargs</code>的c标准库功能。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="n">parm_list</span><span class="p">,...);</span>
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">(...);</span>
+
+</code></pre></div></div>
+<h4 id="值是如何被返回的">值是如何被返回的</h4>
+<p>返回复制一个临时变量，该临时变量就是函数调用的结果。
+注意：</p>
+<ol>
+  <li>不要返回局部对象的引用或者指针，因为局部变量的引用和指针会随着局部变量的结束而终止，因此，返回的引用和指针会不在有效的内存区域内。</li>
+  <li>函数的返回类型决定函数是否是左值，调用一个返回引用的函数得到左值，其它返回类型得到右值。</li>
+  <li>数组不能被返回，但是函数可以通过返回数组指针来进行返回操作。</li>
+  <li>c++11新标准，允许使用尾置返回类型；或者使用<code class="language-plaintext highlighter-rouge">decltype</code>声明返回指针的类型；例如：</li>
+</ol>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1">//func 接受一个int类型的实际参数，返回一个指针，该指针指向含有10个整数的数组</span>
+    
+    <span class="k">auto</span> <span class="n">funct</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">int</span><span class="p">(</span><span class="o">*</span><span class="p">)[</span><span class="mi">10</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">odd</span><span class="p">[]</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">};</span>
+    <span class="kt">int</span> <span class="n">odd</span><span class="p">[]</span><span class="o">=</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">10</span><span class="p">};</span>
+
+    <span class="k">decltype</span><span class="p">(</span><span class="n">odd</span><span class="p">)</span> <span class="o">*</span><span class="n">arrPtr</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span><span class="o">?&amp;</span><span class="n">odd</span><span class="o">:&amp;</span><span class="n">even</span><span class="p">;</span><span class="c1">//返回一个指向数组的指针</span>
+
+    <span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="函数重载overloaded-和over">函数重载(overloaded 和over)</h4>
+
+<p><em>参考链接：</em> <a href="https://www.cnblogs.com/luxiaoxun/archive/2012/08/09/2630751.html">C++的重载(overload)与重写(override)</a>；<a href="https://blog.csdn.net/qq_34793133/article/details/80938099">C++中 overload 、override、overwrite 之间的区别</a>;</p>
+
+<p>因为c++是强类型语言，因此当相同函数名称处理不同的输入数据时需要设置多个函数，实现相同函数名称的查找匹配最佳值。这一点c++中的模板很好的解决了这个问题，但是函数的重载也很好的解决了这个问题。例如：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//定义重载函数</span>
+
+<span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">cp</span><span class="p">);</span><span class="c1">//函数1</span>
+
+<span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="k">const</span> <span class="kt">int</span> <span class="o">*</span><span class="n">beg</span><span class="p">,</span><span class="k">const</span> <span class="kt">int</span> <span class="o">*</span><span class="n">end</span><span class="p">);</span><span class="c1">//函数2</span>
+
+<span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="k">const</span> <span class="kt">int</span> <span class="n">ia</span><span class="p">[],</span><span class="kt">size_t</span> <span class="n">size</span><span class="p">);</span><span class="c1">//函数3</span>
+
+<span class="c1">//接受参数不同，使用也不相同</span>
+
+<span class="kt">int</span> <span class="n">j</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">};</span>
+
+<span class="n">print</span><span class="p">(</span><span class="s">"Hello word "</span><span class="p">);</span><span class="c1">//调用函数1</span>
+
+<span class="n">print</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">end</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="o">-</span><span class="n">begin</span><span class="p">(</span><span class="n">j</span><span class="p">));</span><span class="c1">//调用函数2</span>
+
+<span class="n">print</span><span class="p">(</span><span class="n">begin</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="n">end</span><span class="p">(</span><span class="n">j</span><span class="p">));</span><span class="c1">//调用函数3</span>
+
+</code></pre></div></div>
+<p>注意：</p>
+
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">main</code>函数不能重载。</li>
+  <li>c++中函数名字查找发生在类型检查之前。因此建议，函数重载，针对不同输入直接取名不同。</li>
+  <li>当函数传入参数是拷贝传递时<code class="language-plaintext highlighter-rouge">const int a</code>与<code class="language-plaintext highlighter-rouge">int a</code>是同一个函数，即重写了前一个函数。当使用<code class="language-plaintext highlighter-rouge">&amp;</code>作为引用参数时，使用<code class="language-plaintext highlighter-rouge">const</code>为新参数。例如<code class="language-plaintext highlighter-rouge">int &amp;a</code>与<code class="language-plaintext highlighter-rouge">const int &amp;a</code>是两个不同的函数。</li>
+  <li>注意当查找同名函数时，编译器首先查找当前作用域(局部作用域)内的同名函数。</li>
+</ol>
+
+<h5 id="overload-overrideoverwrite-之间的区别">overload 、override、overwrite 之间的区别</h5>
+
+<h5 id="overload--重载">Overload  重载</h5>
+<p>在C++程序中，可以将语义、功能相似的几个函数用同一个名字表示，但参数不同（包括类型、顺序不同），即<strong>函数重载</strong>。条件：</p>
+
+<ul>
+  <li>相同的范围(在同一个类中)</li>
+  <li>函数名字相同</li>
+  <li>参数不同</li>
+  <li>重载解析中不考虑返回类型，而且在不同的作用域里声明的函数也不算是重载。重载可以理解为一个类内部的函数重载</li>
+</ul>
+
+<h5 id="override-覆盖">Override 覆盖</h5>
+<p>是指派生类函数覆盖基类函数，实际上是c++多态的衍生品；特征是：</p>
+
+<ul>
+  <li>不同的范围(分别位于派生类与基类)</li>
+  <li>函数名字相同；</li>
+  <li>参数名字相同</li>
+  <li>基类函数必须有<code class="language-plaintext highlighter-rouge">virtual</code>关键字。</li>
+</ul>
+
+<p>示例：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;iostream&gt;
+</span><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+<span class="k">class</span> <span class="nc">base</span>
+<span class="p">{</span>
+  <span class="nl">public:</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">Fun1</span><span class="p">()</span>
+    <span class="p">{</span>
+        
+        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"Base Fun1..."</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+     <span class="p">}</span>
+ 
+      <span class="k">virtual</span> <span class="kt">void</span> <span class="n">Fun2</span><span class="p">()</span>
+     <span class="p">{</span>
+         <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"Base Fun2..."</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+     <span class="p">}</span>
+ 
+      <span class="kt">void</span> <span class="n">Fun3</span><span class="p">()</span>
+    <span class="p">{</span>
+        
+        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"Base Fun3..."</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+     <span class="p">}</span>
+<span class="p">};</span>
+ 
+<span class="k">class</span> <span class="nc">Derived</span><span class="o">:</span><span class="k">public</span> <span class="n">Base</span>
+<span class="p">{</span>
+   <span class="nl">public:</span>
+   <span class="kt">void</span> <span class="n">Fun1</span><span class="p">()</span>
+    <span class="p">{</span>
+        
+        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"Derived Fun1..."</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+     <span class="p">}</span>
+ 
+    <span class="kt">void</span> <span class="n">Fun1</span><span class="p">()</span>
+    <span class="p">{</span>
+        
+        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"Derived Fun2..."</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+     <span class="p">}</span>
+ 
+      <span class="kt">void</span> <span class="n">Fun3</span><span class="p">()</span>
+    <span class="p">{</span>
+        
+        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"Derived Fun3..."</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+     <span class="p">}</span>
+<span class="p">};</span>
+ 
+ 
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">Base</span><span class="o">*</span> <span class="n">p</span><span class="p">;</span>
+  <span class="n">Derived</span> <span class="n">d</span><span class="p">;</span>
+  <span class="n">p</span><span class="o">=&amp;</span><span class="n">d</span><span class="p">;</span>
+ 
+ <span class="n">p</span><span class="o">-&gt;</span><span class="n">Fun1</span><span class="p">();</span>  <span class="c1">//因为Fun1是虚函数，所以调p指向的对象的Fun1</span>
+
+ <span class="n">p</span><span class="o">-&gt;</span><span class="n">Fun2</span><span class="p">();</span>   <span class="c1">//同Fun1</span>
+ 
+ <span class="n">p</span><span class="o">-&gt;</span><span class="n">Fun3</span><span class="p">();</span>   <span class="c1">//Fun3不是虚函数，所以根据指针的类型，是基类指针，调基类的Fun3</span>
+  
+<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/*
+结果：
+Derived Fun1...
+Derived Fun2...
+Base Fun3...
+*/</span>
+</code></pre></div></div>
+<h5 id="overwrite重定义">overwrite：重定义</h5>
+<p>是指派生类的函数屏蔽了与其同名的基类函数，规则如下：</p>
+
+<ul>
+  <li>如果派生类的函数与基类的函数同名，但是参数不同。此时，不论有无<code class="language-plaintext highlighter-rouge">virtual</code>关键字，基类的函数将被隐藏。</li>
+  <li>如果派生类的函数与基类的函数同名，并且参数也相同，但是基类函数没有<code class="language-plaintext highlighter-rouge">virtual</code>关键字。此时，基类的函数被隐藏（注意别与覆盖混淆)</li>
+  <li>重定义分两种：
+    <ul>
+      <li>对基类数据成员的重定义：不改变基类的数据成员，改变派生类的数据成员。</li>
+      <li>对基类成员函数的重定义
+        <ul>
+          <li>派生类的成员函数与基类完全相同；基类中的函数被隐藏</li>
+          <li>派生类的成员函数与语言基类成员函数名相同但参数不同；使用派生类的函数，如果要方位基类方法使用<code class="language-plaintext highlighter-rouge">&lt;class_name&gt;.Base::&lt;function&gt;</code>或者<code class="language-plaintext highlighter-rouge">&lt;class_name&gt;.Base::&lt;成员变量名&gt;</code>；</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="特殊用途语言实参">特殊用途语言实参</h4>
+<p>c++中存在特殊用途的语言实参：</p>
+
+<h5 id="默认实参">默认实参</h5>
+<p>函数可以使用默认初始值，这点称为默认实参例如：<code class="language-plaintext highlighter-rouge">string function1(int hz=24,int wid=80,char backgrnd='n');</code>
+注意：</p>
+
+<ol>
+  <li>默认实参最好放在头文件中</li>
+  <li>已经给予初始值的默认实参不得再定义初始值，只能给未定义的给予初始值；重复声明会发生错误。</li>
+</ol>
+
+<h5 id="内联函数和constexpr函数">内联函数和<code class="language-plaintext highlighter-rouge">constexpr</code>函数</h5>
+
+<p>内联函数说明只是向编译器发出的一个请求，编译器可以选择忽略这个请求，在编译时将其替换。可以多次定义</p>
+
+<p><code class="language-plaintext highlighter-rouge">constexpr</code>函数用于指示常量表达式。</p>
+
+<h5 id="帮助调试">帮助调试</h5>
+<p>c++中有许多帮助调试的信息；其中包括<code class="language-plaintext highlighter-rouge">assert</code>预处理宏；在<code class="language-plaintext highlighter-rouge">&lt;assert&gt;</code>头文件中定义。<code class="language-plaintext highlighter-rouge">assert(expr)</code>中判断表达式为假时，函数终止。
+同时还存在NDEBUG预处理变量;使用静态预处理变量，说明当前文件信息。</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">关键字</th>
+      <th style="text-align: left">作用</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">__FILE__</code></td>
+      <td style="text-align: left">存放文件名字的字符串字面值</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">__LINE__</code></td>
+      <td style="text-align: left">存放当前行号整形字面值</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">__TIME__</code></td>
+      <td style="text-align: left">存放编译时间字符串字面值</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><code class="language-plaintext highlighter-rouge">__DATE__</code></td>
+      <td style="text-align: left">存放编译日期字符串字面值</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>例如：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="cp">#include &lt;iostream&gt;
+</span><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"function name"</span><span class="o">&lt;&lt;</span><span class="n">__func__</span><span class="o">&lt;&lt;</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"file name "</span><span class="o">&lt;&lt;</span><span class="n">__FILE__</span><span class="o">&lt;&lt;</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"line "</span><span class="o">&lt;&lt;</span><span class="n">__LINE__</span><span class="o">&lt;&lt;</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">"time"</span><span class="o">&lt;&lt;</span><span class="n">__TIME__</span><span class="o">&lt;&lt;</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/*输出：
+function namemain
+file name test.cpp
+line 8
+time20:39:05
+*/</span>
+
+</code></pre></div></div>
+<h4 id="函数指针">函数指针</h4>
+<p>指针的实质是指向内存的地址的一个变量，函数存在于堆栈中，因此指针也可以指向函数，成为函数指针。例如：</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1">//定义函数function2</span>
+
+<span class="kt">bool</span> <span class="nf">function2</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span> <span class="o">&amp;</span><span class="p">,</span><span class="k">const</span> <span class="n">string</span> <span class="o">&amp;</span><span class="p">);</span>
+<span class="c1">//定义指针指定输入参数的指针</span>
+
+<span class="kt">bool</span> <span class="o">*</span><span class="nf">pf</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span> <span class="o">&amp;</span><span class="p">,</span><span class="k">const</span> <span class="n">string</span> <span class="o">&amp;</span><span class="p">);</span>
+
+<span class="n">pf</span><span class="o">=</span><span class="n">function2</span><span class="p">;</span><span class="c1">//将指针pf指向lengthCompare的函数</span>
+
+<span class="k">auto</span> <span class="n">b1</span><span class="o">=</span><span class="n">pf</span><span class="p">(</span><span class="s">"hello"</span><span class="p">,</span><span class="s">"goodbye"</span><span class="p">);</span><span class="c1">//调用函数</span>
+
+<span class="k">auto</span> <span class="n">b2</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">pf</span><span class="p">)(</span><span class="s">"hello"</span><span class="p">,</span><span class="s">"goodbye"</span><span class="p">);</span><span class="c1">//一个等价的调用</span>
+
+<span class="c1">//使用指针函数，方便我们在某些状况下使用指定的重载函数，避免产生隐式转换的错误</span>
+
+<span class="kt">void</span> <span class="n">ff</span><span class="p">(</span><span class="kt">int</span><span class="o">*</span> <span class="p">)</span><span class="c1">//重载函数1</span>
+
+<span class="kt">void</span> <span class="n">ff</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span><span class="p">)</span><span class="c1">//重载函数2</span>
+
+<span class="c1">//定义函数指针，并初始化</span>
+<span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">pf1</span><span class="p">)(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="p">)</span><span class="o">=</span><span class="n">ff</span><span class="p">;</span>
+
+</code></pre></div></div>
+<p>我们也可以使用函数指针，作为函数返回值，指向一个函数；只要返回类型写成指针形式。使用类型别名可以声明一个返回函数指针的函数。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="n">F</span><span class="o">=</span><span class="kt">int</span><span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">,</span><span class="kt">int</span><span class="p">);</span><span class="c1">//F是函数类型，不是指针</span>
+
+<span class="k">using</span> <span class="n">PF</span><span class="o">=</span><span class="kt">int</span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="kt">int</span> <span class="o">*</span><span class="p">,</span><span class="kt">int</span><span class="p">);</span><span class="c1">//PF是指针类型</span>
+
+
+<span class="n">PF</span> <span class="nf">f1</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span><span class="c1">//正确：PF是指向函数的指针，f1返回指向函数的指针</span>
+
+<span class="n">F</span> <span class="nf">f1</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span> <span class="c1">//错误：F是函数类型，f1不能返回一个函数</span>
+
+<span class="n">F</span> <span class="o">*</span><span class="n">f1</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="err">；</span><span class="c1">//正确：显式地指定返回类型是指向函数的指针</span>
+
+</code></pre></div></div>
+
+:ET

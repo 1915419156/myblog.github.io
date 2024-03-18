@@ -1,0 +1,2 @@
+I"<p>释放从<code class="language-plaintext highlighter-rouge">T*</code>指针p中地址开始的内存，这块内存保存了n个类型为T的对象；p必须是一个先前由<code class="language-plaintext highlighter-rouge">allocator</code>返回的指针，且n必须是p创建时所要求的大小。调用<code class="language-plaintext highlighter-rouge">dealocator</code>之前，用户必须对每个在这块内存中创建的对象调用<code class="language-plaintext highlighter-rouge">destroy</code></p>
+:ET
